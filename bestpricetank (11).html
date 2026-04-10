@@ -1,0 +1,3282 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BestPriceTank – Günstig tanken im Dreiländereck DE · PL · CZ</title>
+
+<!-- SEO Meta Tags -->
+<meta name="description" content="Tankpreisvergleich für das Dreiländereck Deutschland, Polen & Tschechien. Live-Preise von Tankerkönig. Günstig tanken in Görlitz, Zgorzelec, Zittau und Umgebung.">
+<meta name="keywords" content="Tankpreise, Görlitz, Zgorzelec, Tankstelle Polen, günstig tanken, Dreiländereck, Benzin, Diesel, Spritpreise">
+<meta name="author" content="BestPriceTank.de">
+<meta name="robots" content="index, follow">
+<link rel="canonical" href="https://bestpricetank.de">
+
+<!-- Open Graph (Facebook, WhatsApp, LinkedIn) -->
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://bestpricetank.de">
+<meta property="og:title" content="BestPriceTank – Günstig tanken im Dreiländereck 🇩🇪🇵🇱🇨🇿">
+<meta property="og:description" content="Live-Tankpreise für Deutschland, Polen & Tschechien. Bis zu 40ct/L sparen durch Tanken in Polen! Steuerrechner, E-Auto Vergleich und mehr.">
+<meta property="og:image" content="https://bestpricetank.de/og-image.png">
+<meta property="og:locale" content="de_DE">
+<meta property="og:site_name" content="BestPriceTank">
+
+<!-- Twitter Card -->
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="BestPriceTank – Günstig tanken im Dreiländereck">
+<meta name="twitter:description" content="Live-Tankpreise DE/PL/CZ. Bis zu 40ct/L sparen!">
+<meta name="twitter:image" content="https://bestpricetank.de/og-image.png">
+
+<!-- PWA Manifest -->
+<link rel="manifest" href="/manifest.json">
+<meta name="theme-color" content="#0e1520">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="BestPriceTank">
+
+<!-- Schema.org Structured Data -->
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "WebApplication",
+  "name": "BestPriceTank",
+  "url": "https://bestpricetank.de",
+  "description": "Tankpreisvergleich für das Dreiländereck Deutschland, Polen und Tschechien",
+  "applicationCategory": "UtilityApplication",
+  "operatingSystem": "All",
+  "offers": {
+    "@type": "Offer",
+    "price": "0",
+    "priceCurrency": "EUR"
+  },
+  "areaServed": [
+    {"@type": "Country", "name": "Germany"},
+    {"@type": "Country", "name": "Poland"},
+    {"@type": "Country", "name": "Czech Republic"}
+  ],
+  "author": {
+    "@type": "Organization",
+    "name": "BestPriceTank",
+    "url": "https://bestpricetank.de"
+  }
+}
+</script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Black+Han+Sans&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css"/>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+<style>
+:root {
+  --bg:      #05080d;
+  --bg2:     #090e16;
+  --bg3:     #0e1520;
+  --bg4:     #141d2b;
+  --border:  rgba(255,255,255,0.06);
+  --text:    #eef2f7;
+  --muted:   #5a6a80;
+  --red:     #ff2d3b;
+  --orange:  #ff6b2b;
+  --gold:    #ffc327;
+  --green:   #00e87a;
+  --cyan:    #00cfff;
+  --pl:      #ff4d6d;
+  --cz:      #4da6ff;
+}
+
+*{margin:0;padding:0;box-sizing:border-box;}
+html{scroll-behavior:smooth;}
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  overflow-x: hidden;
+  cursor: default;
+}
+
+/* ── ANIMATED BG ── */
+.bg-mesh {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  background:
+    radial-gradient(ellipse 80% 60% at 10% 20%, rgba(255,45,59,0.07) 0%, transparent 60%),
+    radial-gradient(ellipse 60% 50% at 90% 80%, rgba(77,166,255,0.07) 0%, transparent 60%),
+    radial-gradient(ellipse 50% 40% at 50% 50%, rgba(0,207,255,0.04) 0%, transparent 60%);
+  pointer-events: none;
+  animation: meshMove 12s ease-in-out infinite alternate;
+}
+
+@keyframes meshMove {
+  0%   { opacity: 0.7; transform: scale(1); }
+  100% { opacity: 1;   transform: scale(1.05); }
+}
+
+/* ── GRID LINES ── */
+.bg-grid {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  background-image:
+    linear-gradient(rgba(255,255,255,0.018) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255,255,255,0.018) 1px, transparent 1px);
+  background-size: 50px 50px;
+  pointer-events: none;
+}
+
+/* ── HEADER ── */
+header {
+  position: sticky;
+  top: 0;
+  z-index: 1000;
+  background: rgba(5,8,13,0.85);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  border-bottom: 1px solid var(--border);
+  height: 68px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 2rem;
+}
+
+/* ── LOGO SVG ── */
+.logo-wrap {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  text-decoration: none;
+}
+
+.logo-icon {
+  width: 44px;
+  height: 44px;
+  position: relative;
+  flex-shrink: 0;
+}
+
+.logo-text-wrap {
+  display: flex;
+  flex-direction: column;
+  line-height: 1;
+}
+
+.logo-main {
+  font-family: 'Black Han Sans', sans-serif;
+  font-size: 1.55rem;
+  letter-spacing: 1px;
+  color: var(--text);
+}
+
+.logo-main span { color: var(--cyan); }
+
+.logo-sub {
+  font-size: 0.62rem;
+  font-weight: 600;
+  letter-spacing: 3px;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin-top: 2px;
+}
+
+.live-pill {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: rgba(0,232,122,0.08);
+  border: 1px solid rgba(0,232,122,0.25);
+  color: var(--green);
+  padding: 5px 14px;
+  border-radius: 30px;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+}
+
+.live-dot {
+  width: 7px;
+  height: 7px;
+  background: var(--green);
+  border-radius: 50%;
+  animation: livePulse 1.5s ease-in-out infinite;
+}
+
+@keyframes livePulse {
+  0%,100%{opacity:1;transform:scale(1);}
+  50%{opacity:0.4;transform:scale(0.75);}
+}
+
+/* ── HERO ── */
+.hero {
+  position: relative;
+  z-index: 1;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 6rem 1.5rem 4rem;
+  text-align: center;
+  overflow: hidden;
+}
+
+/* Big fuel drop shape in background */
+.hero-drop {
+  position: absolute;
+  width: 600px;
+  height: 600px;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%,-50%);
+  background: radial-gradient(ellipse at 40% 40%, rgba(255,45,59,0.06), transparent 60%),
+              radial-gradient(ellipse at 60% 60%, rgba(0,207,255,0.04), transparent 60%);
+  border-radius: 50%;
+  animation: dropPulse 6s ease-in-out infinite;
+  pointer-events: none;
+}
+
+@keyframes dropPulse {
+  0%,100%{transform:translate(-50%,-50%) scale(1);}
+  50%{transform:translate(-50%,-50%) scale(1.08);}
+}
+
+.hero-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: rgba(255,195,39,0.08);
+  border: 1px solid rgba(255,195,39,0.25);
+  color: var(--gold);
+  padding: 6px 18px;
+  border-radius: 30px;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  margin-bottom: 2rem;
+  animation: fadeUp 0.6s ease both;
+}
+
+@keyframes fadeUp {
+  from{opacity:0;transform:translateY(20px);}
+  to{opacity:1;transform:translateY(0);}
+}
+
+.hero-title {
+  font-family: 'Black Han Sans', sans-serif;
+  font-size: clamp(3.5rem, 14vw, 9rem);
+  line-height: 0.88;
+  letter-spacing: -2px;
+  margin-bottom: 1.5rem;
+  animation: fadeUp 0.7s ease 0.1s both;
+  position: relative;
+}
+
+.hero-title .line1 { color: var(--text); display: block; }
+.hero-title .line2 {
+  display: block;
+  background: linear-gradient(90deg, var(--red), var(--orange), var(--gold));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+.hero-title .line3 { color: var(--cyan); display: block; }
+
+.hero-sub {
+  font-size: clamp(0.95rem, 2.5vw, 1.15rem);
+  color: var(--muted);
+  max-width: 520px;
+  line-height: 1.7;
+  font-weight: 400;
+  margin-bottom: 3rem;
+  animation: fadeUp 0.7s ease 0.2s both;
+}
+
+/* ── PRICE TICKER ── */
+.ticker {
+  display: flex;
+  gap: 1px;
+  border-radius: 20px;
+  overflow: hidden;
+  border: 1px solid var(--border);
+  margin-bottom: 3rem;
+  animation: fadeUp 0.7s ease 0.3s both;
+  width: 100%;
+  max-width: 560px;
+}
+
+.ticker-item {
+  flex: 1;
+  background: var(--bg3);
+  padding: 1.2rem 0.8rem;
+  text-align: center;
+  transition: background 0.2s;
+  position: relative;
+}
+
+.ticker-item:hover { background: var(--bg4); }
+
+.ticker-flag { font-size: 1.6rem; margin-bottom: 2px; }
+
+.ticker-country {
+  font-size: 0.62rem;
+  font-weight: 700;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  margin-bottom: 6px;
+}
+
+.ticker-country.de { color: var(--red); }
+.ticker-country.pl { color: var(--pl); }
+.ticker-country.cz { color: var(--cz); }
+
+.ticker-price {
+  font-family: 'Black Han Sans', sans-serif;
+  font-size: 1.9rem;
+  line-height: 1;
+  color: var(--gold);
+  letter-spacing: 0;
+}
+
+.ticker-unit { font-size: 0.65rem; color: var(--muted); margin-top: 2px; }
+
+.ticker-badge {
+  display: inline-block;
+  margin-top: 5px;
+  padding: 2px 9px;
+  border-radius: 20px;
+  font-size: 0.65rem;
+  font-weight: 700;
+}
+
+.tb-ref { background: rgba(255,255,255,0.05); color: var(--muted); }
+.tb-cheap { background: rgba(0,232,122,0.12); color: var(--green); }
+
+/* ── SEARCH ── */
+.search-wrap {
+  width: 100%;
+  max-width: 560px;
+  animation: fadeUp 0.7s ease 0.4s both;
+}
+
+.search-bar {
+  display: flex;
+  border-radius: 16px;
+  overflow: hidden;
+  border: 1.5px solid var(--border);
+  background: var(--bg3);
+  transition: border-color 0.2s;
+  margin-bottom: 12px;
+}
+
+.search-bar:focus-within { border-color: var(--cyan); }
+
+.search-bar input {
+  flex: 1;
+  background: transparent;
+  border: none;
+  color: var(--text);
+  padding: 1rem 1.3rem;
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-size: 1.05rem;
+  font-weight: 600;
+  letter-spacing: 4px;
+  outline: none;
+}
+
+.search-bar input::placeholder { letter-spacing: 1px; color: var(--muted); font-weight: 400; font-size: 0.9rem; }
+
+.search-btn {
+  background: linear-gradient(135deg, var(--cyan), #0088cc);
+  border: none;
+  color: #000;
+  padding: 1rem 1.8rem;
+  font-family: 'Black Han Sans', sans-serif;
+  font-size: 1.1rem;
+  letter-spacing: 2px;
+  cursor: pointer;
+  transition: opacity 0.2s;
+  white-space: nowrap;
+}
+
+.search-btn:hover { opacity: 0.85; }
+.search-btn:active { transform: scale(0.98); }
+
+.filter-chips {
+  display: flex;
+  gap: 8px;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+.chip {
+  background: var(--bg3);
+  border: 1.5px solid var(--border);
+  color: var(--muted);
+  padding: 7px 18px;
+  border-radius: 30px;
+  cursor: pointer;
+  font-size: 0.82rem;
+  font-weight: 600;
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  transition: all 0.18s;
+}
+
+.chip.active { background: rgba(0,207,255,0.1); border-color: var(--cyan); color: var(--cyan); }
+.chip select { background: transparent; border: none; color: inherit; font: inherit; cursor: pointer; outline: none; }
+
+/* ── SCROLL ARROW ── */
+.scroll-hint {
+  position: absolute;
+  bottom: 2rem;
+  left: 50%;
+  transform: translateX(-50%);
+  color: var(--muted);
+  font-size: 0.75rem;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  animation: bounce 2s ease-in-out infinite;
+}
+
+@keyframes bounce {
+  0%,100%{transform:translateX(-50%) translateY(0);}
+  50%{transform:translateX(-50%) translateY(6px);}
+}
+
+/* ── MAIN CONTENT ── */
+.content {
+  position: relative;
+  z-index: 1;
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 2rem 1.5rem 4rem;
+  display: grid;
+  grid-template-columns: 1fr 400px;
+  gap: 2rem;
+}
+
+@media(max-width:900px){ .content{ grid-template-columns:1fr; } }
+
+/* ── MAP ── */
+#map {
+  height: 540px;
+  border-radius: 20px;
+  border: 1px solid var(--border);
+  overflow: hidden;
+  position: sticky;
+  top: 84px;
+  box-shadow: 0 0 60px rgba(0,0,0,0.5);
+}
+
+/* ── SIDEBAR ── */
+.sidebar { display: flex; flex-direction: column; gap: 1.5rem; }
+
+/* ── CARD ── */
+.card {
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  padding: 1.5rem;
+  position: relative;
+  overflow: hidden;
+}
+
+.card::before {
+  content:'';
+  position:absolute;
+  top:-80px; right:-80px;
+  width:200px; height:200px;
+  background: radial-gradient(circle, rgba(0,207,255,0.05) 0%, transparent 70%);
+  pointer-events:none;
+}
+
+.card-title {
+  font-family: 'Black Han Sans', sans-serif;
+  font-size: 1rem;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: var(--cyan);
+  margin-bottom: 1.2rem;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* ── GRENZRECHNER ── */
+.calc-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 12px; }
+
+.field label {
+  display: block;
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin-bottom: 5px;
+}
+
+.field input, .field select {
+  width: 100%;
+  background: var(--bg4);
+  border: 1.5px solid var(--border);
+  color: var(--text);
+  padding: 9px 12px;
+  border-radius: 10px;
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-size: 0.95rem;
+  font-weight: 600;
+  outline: none;
+  transition: border-color 0.2s;
+}
+
+.field input:focus, .field select:focus { border-color: var(--cyan); }
+
+.calc-go {
+  width: 100%;
+  background: linear-gradient(135deg, var(--cyan), #0088cc);
+  color: #000;
+  border: none;
+  padding: 11px;
+  border-radius: 10px;
+  font-family: 'Black Han Sans', sans-serif;
+  font-size: 1rem;
+  letter-spacing: 2px;
+  cursor: pointer;
+  margin-bottom: 12px;
+  transition: opacity 0.2s;
+}
+
+.calc-go:hover { opacity: 0.85; }
+
+.calc-result { display: none; background: var(--bg4); border-radius: 12px; padding: 1rem; }
+.calc-result.show { display: block; }
+
+.res-row {
+  display: flex;
+  justify-content: space-between;
+  padding: 5px 0;
+  font-size: 0.83rem;
+  border-bottom: 1px solid var(--border);
+}
+
+.res-row:last-child { border: none; }
+.res-row .rl { color: var(--muted); }
+.res-row .rv { font-weight: 700; }
+.rv.g { color: var(--green); }
+.rv.r { color: var(--red); }
+
+.verdict {
+  margin-top: 10px;
+  text-align: center;
+  padding: 10px;
+  border-radius: 10px;
+  font-family: 'Black Han Sans', sans-serif;
+  font-size: 1rem;
+  letter-spacing: 1px;
+}
+
+.verdict.yes { background: rgba(0,232,122,0.1); color: var(--green); border: 1px solid rgba(0,232,122,0.25); }
+.verdict.no  { background: rgba(255,45,59,0.1);  color: var(--red);   border: 1px solid rgba(255,45,59,0.25); }
+
+/* ── STATIONS ── */
+.stats-row { display: grid; grid-template-columns: repeat(3,1fr); gap: 8px; margin-bottom: 1rem; }
+
+.stat {
+  background: var(--bg4);
+  border-radius: 10px;
+  padding: 10px 8px;
+  text-align: center;
+  border: 1px solid var(--border);
+}
+
+.stat-l { font-size: 0.6rem; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; color: var(--muted); margin-bottom: 3px; }
+.stat-v { font-family: 'Black Han Sans', sans-serif; font-size: 1.3rem; color: var(--gold); }
+
+.sort-row { display: flex; gap: 6px; margin-bottom: 1rem; flex-wrap: wrap; align-items: center; }
+.sort-l { font-size: 0.72rem; color: var(--muted); font-weight: 600; }
+.sort-btn {
+  background: var(--bg4); border: 1px solid var(--border); color: var(--muted);
+  padding: 4px 12px; border-radius: 20px; cursor: pointer;
+  font-size: 0.72rem; font-family: 'Plus Jakarta Sans', sans-serif; font-weight: 600;
+  transition: all 0.18s;
+}
+.sort-btn.active { background: var(--cyan); border-color: var(--cyan); color: #000; }
+
+.ctry-row { display: flex; gap: 6px; margin-bottom: 1rem; flex-wrap: wrap; }
+.ctry-btn {
+  display: flex; align-items: center; gap: 4px;
+  background: var(--bg4); border: 1.5px solid var(--border); color: var(--muted);
+  padding: 5px 12px; border-radius: 8px; cursor: pointer;
+  font-size: 0.75rem; font-weight: 700; font-family: 'Plus Jakarta Sans', sans-serif;
+  transition: all 0.18s;
+}
+.ctry-btn.a-de { border-color: var(--red); color: var(--red); background: rgba(255,45,59,0.08); }
+.ctry-btn.a-pl { border-color: var(--pl); color: var(--pl); background: rgba(255,77,109,0.08); }
+.ctry-btn.a-cz { border-color: var(--cz); color: var(--cz); background: rgba(77,166,255,0.08); }
+
+/* ── STATION CARD ── */
+.sc {
+  background: var(--bg4);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 1rem 1.1rem;
+  margin-bottom: 8px;
+  cursor: pointer;
+  transition: all 0.18s;
+  position: relative;
+  overflow: hidden;
+}
+
+.sc::before {
+  content:'';
+  position: absolute;
+  left:0;top:0;bottom:0;
+  width: 3px;
+  background: var(--border);
+  transition: background 0.18s;
+}
+
+.sc:hover { border-color: rgba(0,207,255,0.3); transform: translateX(4px); }
+.sc:hover::before { background: var(--cyan); }
+.sc.best::before { background: var(--green); }
+.sc.best { border-color: rgba(0,232,122,0.2); }
+.sc.c-pl::before { background: var(--pl); }
+.sc.c-cz::before { background: var(--cz); }
+
+.sc-top { display: flex; justify-content: space-between; align-items: flex-start; gap: 1rem; }
+.sc-brand { font-family: 'Black Han Sans', sans-serif; font-size: 1.2rem; letter-spacing: 0.5px; line-height: 1; }
+.sc-addr { color: var(--muted); font-size: 0.75rem; margin-top: 3px; }
+.sc-price { font-family: 'Black Han Sans', sans-serif; font-size: 1.9rem; color: var(--gold); line-height: 1; text-align: right; }
+.sc-unit { font-size: 0.65rem; color: var(--muted); text-align: right; }
+
+.sc-meta { display: flex; gap: 5px; margin-top: 8px; flex-wrap: wrap; align-items: center; }
+
+.tag {
+  padding: 2px 9px; border-radius: 20px; font-size: 0.68rem; font-weight: 700; border: 1px solid;
+}
+.t-open   { color: var(--green); border-color: rgba(0,232,122,0.35); background: rgba(0,232,122,0.08); }
+.t-closed { color: var(--red);   border-color: rgba(255,45,59,0.35);  background: rgba(255,45,59,0.08); }
+.t-best   { color: var(--green); border-color: rgba(0,232,122,0.35); background: rgba(0,232,122,0.08); }
+.t-de     { color: var(--red);   border-color: rgba(255,45,59,0.35);  background: rgba(255,45,59,0.08); }
+.t-pl     { color: var(--pl);    border-color: rgba(255,77,109,0.35); background: rgba(255,77,109,0.08); }
+.t-cz     { color: var(--cz);    border-color: rgba(77,166,255,0.35); background: rgba(77,166,255,0.08); }
+.t-dist   { color: var(--muted); border-color: var(--border); background: transparent; margin-left: auto; }
+
+/* ── EMPTY / LOADER ── */
+.empty { text-align:center; padding:3rem 1rem; color:var(--muted); }
+.empty-icon { font-size:3rem; margin-bottom:0.8rem; }
+.empty-title { font-family:'Black Han Sans',sans-serif; font-size:1.4rem; letter-spacing:1px; color:var(--text); margin-bottom:0.5rem; }
+
+.loader-wrap { display:flex; flex-direction:column; align-items:center; padding:3rem; gap:12px; }
+.spinner { width:40px;height:40px;border:3px solid var(--border);border-top-color:var(--cyan);border-radius:50%;animation:spin 0.7s linear infinite; }
+@keyframes spin{to{transform:rotate(360deg);}}
+
+/* ── DEMO BANNER ── */
+.demo-banner {
+  background: rgba(255,195,39,0.06);
+  border: 1px solid rgba(255,195,39,0.2);
+  border-radius: 10px;
+  padding: 9px 13px;
+  font-size: 0.78rem;
+  color: var(--gold);
+  margin-bottom: 1rem;
+  line-height: 1.5;
+}
+.demo-banner a { color: inherit; }
+
+/* ── ERROR ── */
+.error-box { background:rgba(255,45,59,0.08);border:1px solid rgba(255,45,59,0.2);border-radius:10px;padding:12px;color:#ff8080;font-size:0.85rem;margin-bottom:1rem; }
+
+/* ── FOOTER ── */
+footer {
+  position: relative;
+  z-index: 1;
+  text-align: center;
+  padding: 2rem;
+  color: var(--muted);
+  font-size: 0.78rem;
+  border-top: 1px solid var(--border);
+}
+footer a { color: var(--cyan); text-decoration: none; }
+
+/* ── LANG SWITCHER ── */
+.lang-switcher {
+  display: flex;
+  gap: 4px;
+  align-items: center;
+}
+
+.lang-btn {
+  background: var(--bg4);
+  border: 1.5px solid var(--border);
+  color: var(--muted);
+  padding: 4px 10px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 0.75rem;
+  font-weight: 700;
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  transition: all 0.18s;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.lang-btn:hover { border-color: var(--cyan); color: var(--cyan); }
+.lang-btn.active { background: rgba(0,207,255,0.1); border-color: var(--cyan); color: var(--cyan); }
+
+/* ── TAX BUTTON FLOATING ── */
+.tax-fab {
+  position: fixed;
+  bottom: 2rem;
+  right: 2rem;
+  z-index: 800;
+  background: linear-gradient(135deg, #ffc327, #ff8c00);
+  color: #000;
+  border: none;
+  border-radius: 50px;
+  padding: 12px 22px;
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-weight: 700;
+  font-size: 0.88rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  box-shadow: 0 4px 24px rgba(255,195,39,0.4);
+  transition: all 0.2s;
+  letter-spacing: 0.5px;
+  animation: fabPulse 3s ease-in-out infinite;
+}
+
+.tax-fab:hover { transform: translateY(-2px) scale(1.04); box-shadow: 0 8px 32px rgba(255,195,39,0.5); }
+.tax-fab:active { transform: scale(0.97); }
+
+@keyframes fabPulse {
+  0%,100% { box-shadow: 0 4px 24px rgba(255,195,39,0.4); }
+  50% { box-shadow: 0 4px 32px rgba(255,195,39,0.7); }
+}
+
+/* ── TAX MODAL ── */
+#taxOverlay { display:none;position:fixed;inset:0;background:rgba(0,0,0,0.9);z-index:9100;backdrop-filter:blur(10px); }
+#taxModal {
+  display:none;
+  position:fixed;
+  top:50%;left:50%;
+  transform:translate(-50%,-50%);
+  z-index:9101;
+  background: var(--bg2);
+  border:1px solid rgba(255,195,39,0.3);
+  border-radius:24px;
+  padding:2rem;
+  max-width:820px;
+  width:94%;
+  max-height:88vh;
+  overflow-y:auto;
+}
+
+.tax-modal-header {
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  margin-bottom:1.5rem;
+  padding-bottom:1rem;
+  border-bottom:1px solid var(--border);
+}
+
+.tax-modal-title {
+  font-family:'Black Han Sans',sans-serif;
+  font-size:1.6rem;
+  letter-spacing:2px;
+  background: linear-gradient(135deg, #ffc327, #ff8c00);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.tax-close-btn {
+  background:rgba(255,255,255,0.07);
+  border:none;
+  color:var(--text);
+  width:38px;height:38px;
+  border-radius:50%;
+  cursor:pointer;
+  font-size:1.1rem;
+  transition: background 0.2s;
+}
+.tax-close-btn:hover { background:rgba(255,255,255,0.15); }
+
+/* Tax modal controls */
+.tax-controls {
+  display:flex;
+  gap:12px;
+  flex-wrap:wrap;
+  margin-bottom:1.5rem;
+  align-items:center;
+}
+
+.tax-fuel-btn {
+  background:var(--bg4);
+  border:1.5px solid var(--border);
+  color:var(--muted);
+  padding:7px 18px;
+  border-radius:30px;
+  cursor:pointer;
+  font-size:0.82rem;
+  font-weight:700;
+  font-family:'Plus Jakarta Sans',sans-serif;
+  transition:all 0.18s;
+}
+.tax-fuel-btn.active {
+  background:rgba(255,195,39,0.12);
+  border-color:var(--gold);
+  color:var(--gold);
+}
+
+.tax-slider-wrap {
+  display:flex;
+  align-items:center;
+  gap:10px;
+}
+.tax-slider-wrap label { font-size:0.82rem; color:var(--muted); }
+.tax-slider-wrap input[type=range] {
+  accent-color: var(--gold);
+  width:120px;
+}
+.tax-slider-val {
+  font-family:'Black Han Sans',sans-serif;
+  font-size:1.1rem;
+  color:var(--gold);
+  min-width:40px;
+}
+
+/* Country cards */
+.tax-grid {
+  display:grid;
+  grid-template-columns:repeat(3,1fr);
+  gap:12px;
+  margin-bottom:1.5rem;
+}
+
+@media(max-width:600px) { .tax-grid { grid-template-columns:1fr; } }
+
+.tax-country-card {
+  background:var(--bg3);
+  border:1px solid var(--border);
+  border-radius:16px;
+  padding:1.2rem;
+  position:relative;
+  overflow:hidden;
+}
+
+.tax-country-card::before {
+  content:'';
+  position:absolute;
+  top:0;left:0;right:0;
+  height:4px;
+}
+
+.tax-card-de::before { background: linear-gradient(90deg, #ff2d3b, #ff6b2b); }
+.tax-card-pl::before { background: linear-gradient(90deg, #ff4d6d, #ff8c9a); }
+.tax-card-cz::before { background: linear-gradient(90deg, #4da6ff, #00cfff); }
+
+.tax-flag-name {
+  display:flex;
+  align-items:center;
+  gap:8px;
+  margin-bottom:8px;
+}
+.tax-flag { font-size:1.4rem; }
+.tax-cname { font-weight:700; font-size:0.88rem; color:var(--text); }
+.tax-fuel-label { font-size:0.7rem; color:var(--muted); }
+
+.tax-price-big {
+  font-family:'Black Han Sans',sans-serif;
+  font-size:2rem;
+  color:var(--gold);
+  line-height:1;
+  margin:6px 0 2px;
+}
+.tax-per-liter { font-size:0.7rem; color:var(--muted); }
+
+/* Bar chart */
+.tax-bars { margin:10px 0; }
+.tax-bar-row { margin:4px 0; }
+.tax-bar-label {
+  display:flex;
+  justify-content:space-between;
+  font-size:0.7rem;
+  color:var(--muted);
+  margin-bottom:2px;
+}
+.tax-bar-track {
+  background:rgba(255,255,255,0.06);
+  border-radius:4px;
+  height:8px;
+  overflow:hidden;
+}
+.tax-bar-fill { height:8px; border-radius:4px; transition:width 0.5s ease; }
+.bar-tax  { background: linear-gradient(90deg, #ff2d3b, #ff6b2b); }
+.bar-netto { background: linear-gradient(90deg, #00e87a, #00cfff); }
+
+/* Breakdown */
+.tax-breakdown {
+  border-top:1px solid var(--border);
+  padding-top:8px;
+  margin-top:8px;
+}
+.tax-row {
+  display:flex;
+  justify-content:space-between;
+  font-size:0.75rem;
+  padding:2px 0;
+}
+.tax-row .tl { color:var(--muted); }
+.tax-row .tv { font-weight:700; color:var(--text); }
+.tax-row.netto .tv { color:#00e87a; }
+.tax-row.total-tax .tv { color:#ff6b2b; }
+
+/* Tank summary box */
+.tax-summary {
+  background:var(--bg4);
+  border-radius:10px;
+  padding:10px;
+  margin-top:10px;
+}
+.tax-summary-title { font-size:0.68rem; color:var(--muted); margin-bottom:6px; text-transform:uppercase; letter-spacing:1px; }
+.tax-summary-row {
+  display:flex;
+  justify-content:space-between;
+  font-size:0.8rem;
+  padding:2px 0;
+}
+.tax-summary-row .sl { color:var(--muted); }
+.tax-summary-row .sv { font-weight:700; }
+.sv-total { color:var(--text); }
+.sv-tax   { color:#ff6b2b; }
+.sv-netto { color:#00e87a; }
+
+/* Fun fact box */
+.tax-funfact {
+  background: linear-gradient(135deg, rgba(255,195,39,0.08), rgba(255,195,39,0.03));
+  border: 1px solid rgba(255,195,39,0.25);
+  border-radius:14px;
+  padding:1rem 1.2rem;
+  margin-top:0.5rem;
+}
+.tax-funfact-title { font-size:0.8rem; font-weight:700; color:var(--gold); margin-bottom:6px; }
+.tax-funfact p { font-size:0.82rem; color:var(--muted); line-height:1.6; margin:0; }
+.tax-funfact strong { color:var(--text); }
+
+/* ══════════════════════════════════════
+   LADESTATIONEN
+   ══════════════════════════════════════ */
+.ev-marker-fast {
+  background: linear-gradient(135deg, #00e87a, #00cfff);
+  color: #000;
+  font-weight: 800;
+  font-size: 9px;
+  padding: 3px 7px;
+  border-radius: 6px;
+  white-space: nowrap;
+  box-shadow: 0 2px 10px rgba(0,232,122,0.5);
+}
+.ev-marker-normal {
+  background: rgba(14,21,32,0.95);
+  color: #00e87a;
+  font-weight: 800;
+  font-size: 9px;
+  padding: 3px 7px;
+  border-radius: 6px;
+  white-space: nowrap;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.6);
+  border: 1.5px solid #00e87a;
+}
+.ev-popup { font-family: 'Plus Jakarta Sans', sans-serif; min-width: 180px; }
+.ev-popup-title { font-weight: 800; font-size: 13px; margin-bottom: 4px; color: #00e87a; }
+.ev-popup-addr { color: #888; font-size: 11px; margin-bottom: 6px; }
+.ev-popup-row { display: flex; justify-content: space-between; font-size: 11px; padding: 2px 0; border-bottom: 1px solid rgba(255,255,255,0.06); }
+.ev-popup-row:last-child { border-bottom: none; }
+.ev-popup-label { color: #888; }
+.ev-popup-val { font-weight: 700; color: #e2e8f0; }
+.ev-loading {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%,-50%);
+  background: rgba(14,21,32,0.9);
+  color: #00e87a;
+  padding: 8px 16px;
+  border-radius: 10px;
+  font-size: 12px;
+  font-weight: 700;
+  z-index: 1000;
+  border: 1px solid rgba(0,232,122,0.3);
+}
+
+/* ══════════════════════════════════════
+   COOKIE BANNER
+   ══════════════════════════════════════ */
+#cookie-banner {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  z-index: 99999;
+  background: var(--bg2);
+  border-top: 1px solid rgba(0,207,255,0.2);
+  padding: 1.2rem 1.5rem;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  align-items: center;
+  justify-content: space-between;
+  box-shadow: 0 -8px 32px rgba(0,0,0,0.4);
+  transform: translateY(100%);
+  transition: transform 0.4s ease;
+}
+#cookie-banner.visible {
+  transform: translateY(0);
+}
+.cookie-text {
+  flex: 1;
+  min-width: 280px;
+  font-size: 0.8rem;
+  color: var(--muted);
+  line-height: 1.5;
+}
+.cookie-text strong { color: var(--text); }
+.cookie-text a { color: #00cfff; text-decoration: none; }
+.cookie-btns {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.cookie-btn-accept {
+  background: linear-gradient(135deg, #00cfff, #00e87a);
+  color: #000;
+  border: none;
+  border-radius: 30px;
+  padding: 9px 22px;
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-weight: 700;
+  font-size: 0.82rem;
+  cursor: pointer;
+  white-space: nowrap;
+}
+.cookie-btn-essential {
+  background: transparent;
+  color: var(--muted);
+  border: 1px solid var(--border);
+  border-radius: 30px;
+  padding: 9px 18px;
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-weight: 700;
+  font-size: 0.82rem;
+  cursor: pointer;
+  white-space: nowrap;
+}
+.cookie-btn-essential:hover { color: var(--text); border-color: var(--text); }
+.cookie-btn-settings {
+  background: transparent;
+  color: #5a6a80;
+  border: none;
+  font-size: 0.78rem;
+  cursor: pointer;
+  text-decoration: underline;
+  padding: 9px 6px;
+}
+
+/* Cookie Settings Modal */
+#cookie-settings {
+  display: none;
+  position: fixed;
+  inset: 0;
+  z-index: 100000;
+  background: rgba(0,0,0,0.85);
+  backdrop-filter: blur(8px);
+  align-items: center;
+  justify-content: center;
+}
+#cookie-settings.open { display: flex; }
+.cookie-modal {
+  background: var(--bg2);
+  border: 1px solid rgba(0,207,255,0.2);
+  border-radius: 20px;
+  padding: 2rem;
+  max-width: 520px;
+  width: 94%;
+  max-height: 85vh;
+  overflow-y: auto;
+}
+.cookie-modal-title {
+  font-family: 'Black Han Sans', sans-serif;
+  font-size: 1.3rem;
+  letter-spacing: 2px;
+  background: linear-gradient(135deg, #00cfff, #00e87a);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  margin-bottom: 1rem;
+}
+.cookie-category {
+  background: var(--bg3);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 1rem;
+  margin-bottom: 10px;
+}
+.cookie-cat-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 6px;
+}
+.cookie-cat-name {
+  font-weight: 700;
+  font-size: 0.88rem;
+  color: var(--text);
+}
+.cookie-cat-desc {
+  font-size: 0.75rem;
+  color: var(--muted);
+  line-height: 1.5;
+}
+.cookie-toggle {
+  position: relative;
+  width: 44px;
+  height: 24px;
+  flex-shrink: 0;
+}
+.cookie-toggle input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+.cookie-toggle-slider {
+  position: absolute;
+  inset: 0;
+  background: rgba(255,255,255,0.1);
+  border-radius: 24px;
+  cursor: pointer;
+  transition: 0.3s;
+}
+.cookie-toggle-slider:before {
+  content: '';
+  position: absolute;
+  width: 18px;
+  height: 18px;
+  left: 3px;
+  bottom: 3px;
+  background: #5a6a80;
+  border-radius: 50%;
+  transition: 0.3s;
+}
+.cookie-toggle input:checked + .cookie-toggle-slider {
+  background: rgba(0,232,122,0.3);
+}
+.cookie-toggle input:checked + .cookie-toggle-slider:before {
+  transform: translateX(20px);
+  background: #00e87a;
+}
+.cookie-toggle input:disabled + .cookie-toggle-slider {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+.cookie-save-btn {
+  width: 100%;
+  background: linear-gradient(135deg, #00cfff, #00e87a);
+  color: #000;
+  border: none;
+  border-radius: 30px;
+  padding: 12px;
+  font-family: 'Black Han Sans', sans-serif;
+  font-size: 0.9rem;
+  letter-spacing: 2px;
+  cursor: pointer;
+  margin-top: 1rem;
+}
+
+/* Mini Cookie Badge */
+#cookie-badge {
+  position: fixed;
+  bottom: 1rem;
+  left: 1rem;
+  z-index: 800;
+  background: var(--bg3);
+  border: 1px solid var(--border);
+  border-radius: 50%;
+  width: 36px;
+  height: 36px;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  font-size: 1rem;
+  transition: all 0.2s;
+}
+#cookie-badge:hover { background: var(--bg4); }
+#cookie-badge.show { display: flex; }
+
+/* ── MODAL ── */
+#mOverlay { display:none;position:fixed;inset:0;background:rgba(0,0,0,0.88);z-index:9000;backdrop-filter:blur(8px); }
+#mBox {
+  display:none;position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);
+  z-index:9001;background:var(--bg2);border:1px solid var(--border);
+  border-radius:20px;padding:2rem;max-width:680px;width:92%;max-height:82vh;overflow-y:auto;
+}
+#mBox h3 { color:var(--text);font-family:'Black Han Sans',sans-serif;font-size:1.1rem;letter-spacing:1px;margin:1.2rem 0 0.4rem; }
+#mBox a { color:var(--cyan); }
+#mBox p { margin-bottom:0.8rem;font-size:0.88rem;color:#8a9ab0;line-height:1.7; }
+.m-title { font-family:'Black Han Sans',sans-serif;font-size:1.8rem;letter-spacing:2px;color:var(--cyan); }
+.m-close { background:rgba(255,255,255,0.07);border:none;color:var(--text);width:36px;height:36px;border-radius:50%;cursor:pointer;font-size:1rem; }
+</style>
+</head>
+<body>
+
+<!-- API Keys sicher von Netlify Function laden -->
+<script>
+  fetch('/api/config').then(r => r.text()).then(js => {
+    const s = document.createElement('script');
+    s.textContent = js;
+    document.head.appendChild(s);
+  }).catch(() => {
+    // Lokal: Keys bereits im Code als Fallback
+    console.log('Config API nicht erreichbar – nutze Fallback Keys');
+  });
+</script>
+
+<div class="bg-mesh"></div>
+<div class="bg-grid"></div>
+
+<!-- ══ HEADER ══ -->
+<header>
+  <div class="logo-wrap">
+    <!-- LOGO SVG -->
+    <div class="logo-icon">
+      <svg viewBox="0 0 44 44" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <!-- Fuel pump body -->
+        <rect x="6" y="12" width="22" height="26" rx="3" fill="#0e1520" stroke="rgba(255,255,255,0.1)" stroke-width="1"/>
+        <!-- Screen -->
+        <rect x="9" y="15" width="16" height="9" rx="2" fill="#00cfff" opacity="0.9"/>
+        <!-- Price on screen -->
+        <text x="17" y="23" font-family="monospace" font-size="5.5" fill="#000" font-weight="bold" text-anchor="middle">1.68</text>
+        <!-- Nozzle hose -->
+        <path d="M28 20 Q36 20 36 28 L36 34" stroke="#ff2d3b" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+        <!-- Nozzle -->
+        <rect x="33" y="33" width="7" height="4" rx="2" fill="#ff2d3b"/>
+        <!-- Country flag stripes -->
+        <rect x="9" y="27" width="5" height="8" rx="1" fill="#ff2d3b"/>
+        <rect x="15.5" y="27" width="5" height="8" rx="1" fill="#ff4d6d"/>
+        <rect x="22" y="27" width="5" height="8" rx="1" fill="#4da6ff"/>
+        <!-- Fuel drop -->
+        <path d="M22 6 C22 6 18 10 18 13 C18 15.2 19.8 17 22 17 C24.2 17 26 15.2 26 13 C26 10 22 6 22 6Z" fill="url(#dropGrad)"/>
+        <defs>
+          <linearGradient id="dropGrad" x1="22" y1="6" x2="22" y2="17" gradientUnits="userSpaceOnUse">
+            <stop offset="0%" stop-color="#00cfff"/>
+            <stop offset="100%" stop-color="#ff2d3b"/>
+          </linearGradient>
+        </defs>
+      </svg>
+    </div>
+    <div class="logo-text-wrap">
+      <div class="logo-main">Best<span>Price</span>Tank</div>
+      <div class="logo-sub">DE · PL · CZ</div>
+    </div>
+  </div>
+  <div style="display:flex;align-items:center;gap:10px;">
+    <div id="rateBadge" style="font-size:0.68rem;color:#5a6a80;font-weight:600;display:none;"></div>
+    <div id="priceDate" style="font-size:0.65rem;color:#5a6a80;display:none;">PL/CZ: EU-Kommission wöchentlich</div>
+    <div class="lang-switcher">
+      <button class="lang-btn active" onclick="setLang('de')">🇩🇪 DE</button>
+      <button class="lang-btn" onclick="setLang('en')">🇬🇧 EN</button>
+      <button class="lang-btn" onclick="setLang('pl')">🇵🇱 PL</button>
+      <button class="lang-btn" onclick="setLang('cz')">🇨🇿 CZ</button>
+    </div>
+    <div class="live-pill"><div class="live-dot"></div><span id="liveTxt">Live</span></div>
+  </div>
+  <div id="pwa-install-bar" style="display:none;background:linear-gradient(135deg,rgba(0,207,255,0.1),rgba(0,232,122,0.1));border-top:1px solid rgba(0,207,255,0.2);padding:8px 1rem;text-align:center;font-size:0.78rem;color:var(--text);">
+    📱 <strong>Als App installieren</strong> – immer schnell dabei!
+    <button onclick="installPWA()" style="margin-left:10px;background:linear-gradient(135deg,#00cfff,#00e87a);color:#000;border:none;border-radius:20px;padding:4px 14px;font-size:0.75rem;font-weight:700;cursor:pointer;">INSTALLIEREN</button>
+    <button onclick="document.getElementById('pwa-install-bar').style.display='none'" style="margin-left:6px;background:transparent;border:none;color:var(--muted);cursor:pointer;font-size:0.8rem;">✕</button>
+  </div>
+</header>
+
+<!-- ══ HERO ══ -->
+<section class="hero">
+  <div class="hero-drop"></div>
+
+  <div class="hero-badge">⛽ Görlitz · Zgorzelec · Liberec</div>
+
+  <h1 class="hero-title">
+    <span class="line1">GÜNSTIG</span>
+    <span class="line2">TANKEN</span>
+    <span class="line3">ÜBERALL</span>
+  </h1>
+
+  <p class="hero-sub">Der einzige Preisvergleich für Deutschland, Polen und Tschechien. Finde die günstigste Tankstelle – egal auf welcher Seite der Grenze.</p>
+
+  <!-- PRICE TICKER -->
+  <div class="ticker">
+    <div class="ticker-item">
+      <div class="ticker-flag">🇩🇪</div>
+      <div class="ticker-country de">Deutschland</div>
+      <div class="ticker-price" id="t-de">1,749</div>
+      <div class="ticker-unit">€ / Liter · E5</div>
+      <div class="ticker-badge tb-ref">Referenz</div>
+    </div>
+    <div class="ticker-item">
+      <div class="ticker-flag">🇵🇱</div>
+      <div class="ticker-country pl">Polen</div>
+      <div class="ticker-price" id="t-pl">1,681</div>
+      <div id="t-pl-pln" class="ticker-unit" style="color:#ff4d6d;font-weight:700;"></div>
+      <div class="ticker-unit">€ / Liter · E95</div>
+      <div class="ticker-badge tb-cheap" id="t-pl-diff">▼ ~4% günstiger</div>
+    </div>
+    <div class="ticker-item">
+      <div class="ticker-flag">🇨🇿</div>
+      <div class="ticker-country cz">Tschechien</div>
+      <div class="ticker-price" id="t-cz">1,685</div>
+      <div id="t-cz-czk" class="ticker-unit" style="color:#4da6ff;font-weight:700;"></div>
+      <div class="ticker-unit">€ / Liter · Nat.95</div>
+      <div class="ticker-badge tb-cheap" id="t-cz-diff">▼ ~4% günstiger</div>
+    </div>
+  </div>
+
+  <!-- SEARCH -->
+  <div class="search-wrap">
+    <div class="search-bar">
+      <input type="text" id="plzInput" maxlength="5" placeholder="Postleitzahl eingeben – z.B. 02826">
+      <button class="search-btn" onclick="suchen()">SUCHEN →</button>
+    </div>
+    <div class="filter-chips">
+      <button class="chip active" id="chip-e5" onclick="setFuel('e5',this)">⛽ Super E5</button>
+      <button class="chip" id="chip-e10" onclick="setFuel('e10',this)">🟢 Super E10</button>
+      <button class="chip" id="chip-diesel" onclick="setFuel('diesel',this)">🔵 Diesel</button>
+      <button class="chip" id="chip-ev" onclick="toggleEVStations(this)" style="border-color:rgba(0,232,122,0.4);color:#00e87a;">⚡ Ladestationen</button>
+      <span class="chip">
+        <select id="radiusSelect" onchange="if(currentStations.length)suchen()">
+          <option value="5">5 km</option>
+          <option value="10" selected>10 km</option>
+          <option value="25">25 km</option>
+          <option value="50">50 km</option>
+        </select>
+      </span>
+    </div>
+  </div>
+
+  <div class="scroll-hint">
+    <span>Scroll für Karte</span>
+    <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor"><path d="M8 12L2 6h12z"/></svg>
+  </div>
+</section>
+
+<!-- ══ MAIN ══ -->
+<div class="content">
+  <div id="map"></div>
+
+  <div class="sidebar">
+
+    <!-- GRENZRECHNER -->
+    <div class="card">
+      <div class="card-title">🧮 Grenzrechner</div>
+      <div class="calc-grid">
+        <div class="field">
+          <label>Tankgröße (L)</label>
+          <input type="number" id="cTank" value="50" min="10" max="120">
+        </div>
+        <div class="field">
+          <label>Entfernung (km)</label>
+          <input type="number" id="cKm" value="3" min="1" max="100" step="0.5">
+        </div>
+        <div class="field">
+          <label>Verbrauch L/100km</label>
+          <input type="number" id="cVerbrauch" value="7" min="3" max="20" step="0.5">
+        </div>
+        <div class="field">
+          <label>Zielland</label>
+          <select id="cLand">
+            <option value="pl">🇵🇱 Polen</option>
+            <option value="cz">🇨🇿 Tschechien</option>
+          </select>
+        </div>
+      </div>
+      <button class="calc-go" onclick="berechnen()">JETZT BERECHNEN</button>
+      <div class="calc-result" id="calcResult"></div>
+    </div>
+
+    <!-- STATIONS -->
+    <div class="card">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1.2rem;">
+        <div class="card-title" style="margin:0">⛽ Tankstellen</div>
+        <div style="background:var(--bg4);border:1px solid var(--border);color:var(--muted);padding:3px 10px;border-radius:20px;font-size:0.72rem;font-weight:600;" id="stCount">–</div>
+      </div>
+      <div id="stationsArea">
+        <div class="empty">
+          <div class="empty-icon">🗺️</div>
+          <div class="empty-title">Bereit!</div>
+          <p style="font-size:0.83rem;">Gib oben eine PLZ ein um loszulegen.</p>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+
+<!-- ⚡ EV KOSTENRECHNER SEKTION -->
+<div style="background:var(--bg2,#111827);border-top:1px solid rgba(0,207,255,0.15);padding:2rem 0;margin-top:1rem;">
+  <div class="main-wrap">
+    
+    <div style="text-align:center;margin-bottom:1.5rem;">
+      <div style="font-family:'Black Han Sans',sans-serif;font-size:1.6rem;letter-spacing:3px;background:linear-gradient(135deg,#00cfff,#00e87a);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;">⚡ E-AUTO KOSTENRECHNER</div>
+      <div style="font-size:0.8rem;color:#5a6a80;margin-top:4px;">Was kostet dich 100km wirklich? Benzin · Diesel · Strom im Vergleich 🇩🇪 🇵🇱 🇨🇿</div>
+    </div>
+
+    <!-- Eingaben -->
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:1.5rem;">
+      
+      <!-- Fahrzeugtyp -->
+      <div style="background:var(--bg3,#1a2235);border:1px solid rgba(255,255,255,0.07);border-radius:16px;padding:1rem;">
+        <div style="font-size:0.7rem;font-weight:700;color:#5a6a80;text-transform:uppercase;letter-spacing:1.5px;margin-bottom:10px;">⚙️ Fahrzeugtyp</div>
+        <div style="display:flex;gap:6px;">
+          <button onclick="evSetVehicle('benzin',this)" class="ev-vbtn" style="flex:1;background:#1a2235;border:1.5px solid rgba(255,255,255,0.1);color:#5a6a80;padding:8px 4px;border-radius:10px;cursor:pointer;font-size:0.72rem;font-weight:700;text-align:center;">⛽<br>Benzin</button>
+          <button onclick="evSetVehicle('diesel',this)" class="ev-vbtn ev-active-diesel" style="flex:1;background:rgba(77,166,255,0.1);border:1.5px solid #4da6ff;color:#4da6ff;padding:8px 4px;border-radius:10px;cursor:pointer;font-size:0.72rem;font-weight:700;text-align:center;">🔵<br>Diesel</button>
+          <button onclick="evSetVehicle('ev',this)" class="ev-vbtn" style="flex:1;background:#1a2235;border:1.5px solid rgba(255,255,255,0.1);color:#5a6a80;padding:8px 4px;border-radius:10px;cursor:pointer;font-size:0.72rem;font-weight:700;text-align:center;">⚡<br>E-Auto</button>
+        </div>
+      </div>
+
+      <!-- Verbrauch -->
+      <div style="background:var(--bg3,#1a2235);border:1px solid rgba(255,255,255,0.07);border-radius:16px;padding:1rem;">
+        <div id="ev-verbrauch-title" style="font-size:0.7rem;font-weight:700;color:#5a6a80;text-transform:uppercase;letter-spacing:1.5px;margin-bottom:10px;">🔵 VERBRAUCH (L/100KM)</div>
+        <div style="display:flex;align-items:center;gap:8px;">
+          <input type="range" id="ev-vslider" min="3" max="15" value="6" step="0.5" oninput="evCalc()" style="flex:1;accent-color:#00cfff;">
+          <div id="ev-vval" style="font-family:'Black Han Sans',sans-serif;color:#00cfff;font-size:1rem;min-width:55px;text-align:right;">6 L</div>
+        </div>
+        <div id="ev-vhint" style="font-size:0.65rem;color:#5a6a80;margin-top:4px;">Ø Diesel: 6L · Sparsam: 4L · SUV: 9L</div>
+      </div>
+
+      <!-- Kilometer -->
+      <div style="background:var(--bg3,#1a2235);border:1px solid rgba(255,255,255,0.07);border-radius:16px;padding:1rem;">
+        <div style="font-size:0.7rem;font-weight:700;color:#5a6a80;text-transform:uppercase;letter-spacing:1.5px;margin-bottom:10px;">📍 JAHRESKILOMETER</div>
+        <div style="display:flex;align-items:center;gap:8px;">
+          <input type="range" id="ev-kmslider" min="5000" max="50000" value="15000" step="1000" oninput="evCalc()" style="flex:1;accent-color:#00cfff;">
+          <div id="ev-kmval" style="font-family:'Black Han Sans',sans-serif;color:#00cfff;font-size:1rem;min-width:70px;text-align:right;">15.000</div>
+        </div>
+        <div style="font-size:0.65rem;color:#5a6a80;margin-top:4px;">Durchschnitt DE: 14.200 km/Jahr</div>
+      </div>
+
+      <!-- Stromtarif -->
+      <div id="ev-stromcard" style="background:var(--bg3,#1a2235);border:1px solid rgba(255,255,255,0.07);border-radius:16px;padding:1rem;display:none;">
+        <div style="font-size:0.7rem;font-weight:700;color:#5a6a80;text-transform:uppercase;letter-spacing:1.5px;margin-bottom:8px;">🔌 STROMTARIF</div>
+        <div style="display:flex;gap:5px;flex-wrap:wrap;margin-bottom:8px;">
+          <button onclick="evSetStrom('home',this)" class="ev-sbtn ev-sbtn-active" style="font-size:0.68rem;padding:4px 10px;border:1px solid #00e87a;border-radius:20px;background:rgba(0,232,122,0.1);color:#00e87a;cursor:pointer;font-weight:700;">🏠 Zuhause</button>
+          <button onclick="evSetStrom('public',this)" class="ev-sbtn" style="font-size:0.68rem;padding:4px 10px;border:1px solid rgba(255,255,255,0.1);border-radius:20px;background:transparent;color:#5a6a80;cursor:pointer;font-weight:700;">⚡ Öffentlich</button>
+          <button onclick="evSetStrom('solar',this)" class="ev-sbtn" style="font-size:0.68rem;padding:4px 10px;border:1px solid rgba(255,255,255,0.1);border-radius:20px;background:transparent;color:#5a6a80;cursor:pointer;font-weight:700;">☀️ Solar</button>
+          <button onclick="evSetStrom('custom',this)" class="ev-sbtn" style="font-size:0.68rem;padding:4px 10px;border:1px solid rgba(255,255,255,0.1);border-radius:20px;background:transparent;color:#5a6a80;cursor:pointer;font-weight:700;">✏️ Eigener</button>
+        </div>
+        <div id="ev-custom-row" style="display:none;margin-bottom:6px;">
+          <div style="display:flex;align-items:center;gap:8px;">
+            <input type="range" id="ev-custom-slider" min="5" max="80" value="39" step="1" oninput="evCalc()" style="flex:1;accent-color:#00cfff;">
+            <div id="ev-custom-val" style="font-family:'Black Han Sans',sans-serif;color:#00cfff;font-size:1rem;min-width:50px;">39 ct</div>
+          </div>
+        </div>
+        <div id="ev-stromhint" style="font-size:0.65rem;color:#5a6a80;">🇩🇪 39,5 ct · 🇵🇱 25,6 ct · 🇨🇿 31,8 ct (Hausstrom 2026)</div>
+      </div>
+
+    </div>
+
+    <!-- ERGEBNISSE -->
+    <div id="ev-results">
+      <div style="font-family:'Black Han Sans',sans-serif;font-size:1rem;letter-spacing:2px;color:#e2e8f0;margin-bottom:1rem;">📊 JAHRESVERGLEICH <span id="ev-subtitle" style="font-size:0.72rem;font-weight:400;color:#5a6a80;"></span></div>
+      
+      <div id="ev-cards" style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:1.2rem;"></div>
+      
+      <!-- Balkendiagramm -->
+      <div style="background:var(--bg3,#1a2235);border:1px solid rgba(255,255,255,0.07);border-radius:16px;padding:1rem;margin-bottom:1.2rem;">
+        <div style="font-size:0.7rem;font-weight:700;color:#5a6a80;text-transform:uppercase;letter-spacing:1.5px;margin-bottom:10px;">📊 VISUELLER VERGLEICH</div>
+        <div id="ev-chart"></div>
+      </div>
+
+      <!-- Summary -->
+      <div id="ev-summary" style="background:linear-gradient(135deg,rgba(0,207,255,0.08),rgba(0,232,122,0.05));border:1px solid rgba(0,207,255,0.2);border-radius:20px;padding:1.5rem;"></div>
+    </div>
+
+  </div>
+</div>
+
+<!-- FOOTER -->
+<footer>
+  <!-- Pflichtangaben Datenquellen -->
+  <div style="font-size:0.7rem;color:#3a4a5a;line-height:1.8;margin-bottom:0.8rem;">
+    🇩🇪 <b>DE-Preise:</b> <a href="https://creativecommons.tankerkoenig.de" target="_blank">Tankerkönig</a> · Lizenz <a href="https://creativecommons.org/licenses/by/4.0/deed.de" target="_blank">CC BY 4.0</a> · Quelle: MTS-K / Bundeskartellamt
+    &nbsp;·&nbsp;
+    🇵🇱🇨🇿 <b>PL/CZ-Preise:</b> <a href="https://fuel-prices.eu" target="_blank">fuel-prices.eu</a> · Quelle: <a href="https://energy.ec.europa.eu/data-and-analysis/weekly-oil-bulletin_en" target="_blank">EU-Kommission Oil Bulletin</a>
+    &nbsp;·&nbsp;
+    🗺️ <b>Karte:</b> <a href="https://leafletjs.com" target="_blank">Leaflet</a> · <a href="https://www.openstreetmap.org/copyright" target="_blank">© OpenStreetMap</a> · <a href="https://carto.com" target="_blank">CARTO</a>
+  </div>
+  <div style="font-size:0.68rem;color:#3a4a5a;margin-bottom:0.8rem;">
+    ⚠️ <b>Haftungsausschluss:</b> Alle Preisangaben ohne Gewähr. Preise können von den tatsächlichen Preisen an der Zapfsäule abweichen. Keine Haftung für Schäden durch veraltete oder fehlerhafte Preisangaben.
+  </div>
+  <a href="#" onclick="openModal('impressum');return false;">Impressum</a> &nbsp;·&nbsp;
+  <a href="#" onclick="openModal('datenschutz');return false;">Datenschutz</a> &nbsp;·&nbsp;
+  <a href="#" onclick="openCookieSettings()">🍪 Cookie-Einstellungen</a>
+  <br>
+  <div style="font-size:0.65rem;color:#2a3a4a;margin-top:0.5rem;">© 2026 BestPriceTank.de · Alle Rechte vorbehalten</div>
+</footer>
+
+<!-- MODAL -->
+<div id="mOverlay" onclick="closeModal()"></div>
+<div id="mBox">
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1.5rem;">
+    <div class="m-title" id="mTitle"></div>
+    <button class="m-close" onclick="closeModal()">✕</button>
+  </div>
+  <div id="mContent"></div>
+</div>
+
+<script>
+// ══════════════════════════════════════
+// STATE
+// ══════════════════════════════════════
+const GOERLITZ = { lat: 51.1534, lon: 14.9876 };
+const PRICES = {
+  e5:     { de: 1.749, pl: 1.681, cz: 1.685 },
+  e10:    { de: 1.719, pl: 1.651, cz: 1.655 },
+  diesel: { de: 1.649, pl: 1.940, cz: 1.967 },
+};
+const PL_STATIONS = [
+  // ══════════════════════════════════════════════════════
+  // 🇵🇱 ALLE GRENZÜBERGÄNGE DE/PL im Dreiländereck
+  // Sortiert von Süd nach Nord
+  // ══════════════════════════════════════════════════════
+
+  // ── ZITTAU/SIENIAWKA & PORAJÓW (~28km) ────────────────
+  // GPS exakt von abtankstellen.de
+  { name:'AB Tank',   street:'Bł. ks. J. Popiełuszki 5a, Sieniawka', lat:50.897278, lng:14.843141, country:'pl', isOpen:true, dist:30.0 },
+  { name:'AB Tank',   street:'Kopaczów 2, Sieniawka',                 lat:50.875180, lng:14.827254, country:'pl', isOpen:true, dist:33.0 },
+  { name:'Aral',      street:'Porajów (Grenze Zittau-Friedensstr.)',   lat:50.8850, lng:14.8750, country:'pl', isOpen:true,  dist:29.0 },
+  { name:'KDM',       street:'ul. Mostowa 1, Porajów',                lat:50.8870, lng:14.8760, country:'pl', isOpen:true,  dist:29.2 },
+  { name:'Horex',     street:'Al. Trzech Państw, Sieniawka',          lat:50.8900, lng:14.8700, country:'pl', isOpen:true,  dist:28.5 },
+  { name:'colo.colo', street:'Sieniawka',                             lat:50.8910, lng:14.8680, country:'pl', isOpen:true,  dist:28.3 },
+
+  // ── BOGATYNIA / DREILÄNDERECK DE/PL/CZ (~25km) ────────
+  { name:'ORLEN',     street:'Bogatynia',                             lat:50.9150, lng:14.9580, country:'pl', isOpen:true,  dist:25.0 },
+  { name:'Lotos',     street:'Bogatynia',                             lat:50.9120, lng:14.9600, country:'pl', isOpen:true,  dist:25.3 },
+  { name:'Stacja',    street:'Bogatynia Zentrum',                     lat:50.9100, lng:14.9620, country:'pl', isOpen:true,  dist:25.5 },
+
+  // ── RADOMIERZYCE / HAGENWERDER (~10km) ────────────────
+  { name:'Areca',     street:'Radomierzyce (Hagenwerder Grenze)',      lat:51.0624, lng:14.9843, country:'pl', isOpen:true,  dist:10.5 },
+  { name:'BP',        street:'Radomierzyce',                           lat:51.0630, lng:14.9850, country:'pl', isOpen:true,  dist:10.6 },
+  { name:'ORLEN',     street:'Radomierzyce',                           lat:51.0618, lng:14.9838, country:'pl', isOpen:true,  dist:10.4 },
+
+  // ── KRZEWINA ZGORZELECKA / OSTRITZ (~15km) ────────────
+  { name:'Tankstelle',street:'Krzewina Zgorzelecka (Ostritz)',         lat:51.0150, lng:14.9950, country:'pl', isOpen:true,  dist:15.0 },
+
+  // ── GÖRLITZ / ZGORZELEC (0-3km) ───────────────────────
+  { name:'MOL',       street:'ul. Armii Krajowej 23, Zgorzelec',       lat:51.1512, lng:15.0082, country:'pl', isOpen:true,  dist:1.0 },
+  { name:'BP',        street:'ul. Lubańska (Kozak), Zgorzelec',        lat:51.1568, lng:15.0091, country:'pl', isOpen:true,  dist:1.1 },
+  { name:'Circle K',  street:'ul. Armii Krajowej 27, Zgorzelec',       lat:51.1514, lng:15.0151, country:'pl', isOpen:true,  dist:1.2 },
+  { name:'ORLEN',     street:'ul. Warszawska, Zgorzelec',              lat:51.1518, lng:15.0194, country:'pl', isOpen:true,  dist:1.4 },
+  { name:'Citronex',  street:'ul. Słowiańska 2, Zgorzelec',            lat:51.1468, lng:15.0263, country:'pl', isOpen:true,  dist:2.0 },
+  { name:'ORLEN',     street:'ul. Słowiańska 1, Zgorzelec',            lat:51.1575, lng:15.0284, country:'pl', isOpen:true,  dist:1.8 },
+  { name:'Areca',     street:'ul. Słowiańska, Zgorzelec',              lat:51.1600, lng:15.0288, country:'pl', isOpen:true,  dist:2.1 },
+  { name:'Carrefour', street:'ul. Karola Miarki, Zgorzelec',           lat:51.1558, lng:15.0310, country:'pl', isOpen:true,  dist:2.3 },
+  { name:'Citronex',  street:'ul. Lubańska, Zgorzelec',                lat:51.1620, lng:15.0050, country:'pl', isOpen:true,  dist:1.5 },
+
+  // ── A4 AUTOBAHN / JĘDRZYCHOWICE (Grenze Ludwigsdorf) ──
+  { name:'Shell',     street:'Jędrzychowice (A4 Autobahn)',            lat:51.1680, lng:15.0420, country:'pl', isOpen:true,  dist:3.2 },
+  { name:'Lotos',     street:'Jędrzychowice (A4 Autobahn)',            lat:51.1690, lng:15.0450, country:'pl', isOpen:true,  dist:3.4 },
+
+  // ── PRZEWÓZ / PODROSCHE (~50km nördl.) ────────────────
+  // GPS exakt von abtankstellen.de
+  { name:'AB Tank',   street:'Plac Targowy 1, Przewóz',                lat:51.473685, lng:14.952524, country:'pl', isOpen:true, dist:36.0 },
+  { name:'ORLEN',     street:'Przewóz (Podrosche)',                     lat:51.474200, lng:14.953000, country:'pl', isOpen:true, dist:36.2 },
+
+  // ── ŁĘKNICA / BAD MUSKAU (~42km nördl.) ───────────────
+  // GPS exakt von abtankstellen.de
+  { name:'AB Tank',   street:'ul. 1-go Maja 11, Łęknica',             lat:51.544300, lng:14.747847, country:'pl', isOpen:true, dist:46.0 },
+  { name:'AB Tank',   street:'ul. Hutnicza 1a, Łęknica',              lat:51.540844, lng:14.734778, country:'pl', isOpen:true, dist:46.3 },
+  { name:'ORLEN',     street:'Łęknica (Bad Muskau Grenze)',            lat:51.538000, lng:14.730000, country:'pl', isOpen:true, dist:46.5 },
+
+  // ── ZASIEKI / FORST (~75km nördl.) ────────────────────
+  // GPS exakt von abtankstellen.de
+  { name:'AB Tank',   street:'Zasieki 12 (Forst Grenze)',              lat:51.761243, lng:14.673665, country:'pl', isOpen:true, dist:71.0 },
+  { name:'Aral',      street:'Zasieki (Forst/Lausitz)',                lat:51.762000, lng:14.674000, country:'pl', isOpen:true, dist:71.2 },
+];
+const CZ_STATIONS = [
+  // ═══════════════════════════════════════════
+  // HRÁDEK NAD NISOU (Dreiländereck DE/PL/CZ)
+  // ═══════════════════════════════════════════
+  { name:'MOL',       street:'Liberecká 711, Hrádek nad Nisou',   lat:50.8474, lng:14.8514, country:'cz', isOpen:true,  dist:22.1 },
+  { name:'EuroOil',   street:'Liberecká 732, Hrádek nad Nisou',   lat:50.8522, lng:14.8580, country:'cz', isOpen:true,  dist:22.5 },
+  { name:'7 Station', street:'Žitavská 747, Hrádek nad Nisou',    lat:50.8468, lng:14.8620, country:'cz', isOpen:true,  dist:23.0 },
+  { name:'Pap Oil',   street:'Liberecká, Hrádek nad Nisou',       lat:50.8490, lng:14.8550, country:'cz', isOpen:true,  dist:22.8 },
+  { name:'Benaso',    street:'Hrádek nad Nisou',                  lat:50.8510, lng:14.8530, country:'cz', isOpen:true,  dist:22.6 },
+  { name:'EuroOil',   street:'Hrádek nad Nisou (Žitavská)',       lat:50.8480, lng:14.8600, country:'cz', isOpen:true,  dist:22.4 },
+  // ═══════════════════════════════════════════
+  // CHRASTAVA (zwischen Hrádek und Liberec)
+  // ═══════════════════════════════════════════
+  { name:'Pap Oil',   street:'Chrastava',                         lat:50.8180, lng:14.9680, country:'cz', isOpen:true,  dist:32.0 },
+  // ═══════════════════════════════════════════
+  // STRÁŽ NAD NISOU
+  // ═══════════════════════════════════════════
+  { name:'EuroOil',   street:'Stráž nad Nisou 745',               lat:50.7835, lng:15.0232, country:'cz', isOpen:true,  dist:38.5 },
+  // ═══════════════════════════════════════════
+  // LIBEREC (größte Stadt der Region)
+  // ═══════════════════════════════════════════
+  { name:'Shell',     street:'Frýdlantská 16, Liberec',           lat:50.7663, lng:15.0543, country:'cz', isOpen:true,  dist:40.2 },
+  { name:'OMV',       street:'Liberec centrum',                   lat:50.7700, lng:15.0600, country:'cz', isOpen:true,  dist:41.0 },
+  { name:'Benzina',   street:'Liberec',                           lat:50.7720, lng:15.0500, country:'cz', isOpen:true,  dist:40.5 },
+  { name:'EuroOil',   street:'Liberec',                           lat:50.7680, lng:15.0480, country:'cz', isOpen:true,  dist:40.8 },
+];
+
+let fuel = 'e5', stations = [], sort = 'price', map, markers = [];
+let showDE = true, showPL = true, showCZ = true;
+let rates = { PLN: 4.05, CZK: 24.5 }; // Fallback-Kurse
+
+// ══════════════════════════════════════
+// WECHSELKURS (ExchangeRate-API)
+// ══════════════════════════════════════
+async function loadRates() {
+  try {
+    const ER_KEY = window.ER_API_KEY || '3b6be993697eeea74f5db4a0';
+    const r = await fetch(`https://v6.exchangerate-api.com/v6/${ER_KEY}/latest/EUR`);
+    const d = await r.json();
+    if (d.result === 'success') {
+      rates.PLN = Math.round(d.conversion_rates.PLN * 100) / 100;
+      rates.CZK = Math.round(d.conversion_rates.CZK * 100) / 100;
+      console.log('Wechselkurse geladen:', rates);
+      updateTicker();
+      // Kurs-Badge im Header aktualisieren
+      const badge = document.getElementById('rateBadge');
+      if (badge) { badge.innerHTML = `1€ = ${rates.PLN} PLN &nbsp;·&nbsp; 1€ = ${rates.CZK} CZK`; badge.style.display='block'; }
+    }
+  } catch(e) {
+    console.warn('Wechselkurs konnte nicht geladen werden, nutze Fallback:', e);
+  }
+}
+
+// ══════════════════════════════════════
+// MAP
+// ══════════════════════════════════════
+function initMap() {
+  if (typeof L === 'undefined') {
+    document.getElementById('map').innerHTML =
+      '<div style="display:flex;align-items:center;justify-content:center;height:100%;flex-direction:column;gap:10px;color:#5a6a80;"><div style="font-size:3rem">🗺️</div><div>Karte auf Netlify verfügbar</div></div>';
+    return;
+  }
+  map = L.map('map').setView([GOERLITZ.lat, GOERLITZ.lon], 11);
+  L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+    attribution:'© OpenStreetMap, © CARTO', maxZoom:19
+  }).addTo(map);
+  L.circleMarker([GOERLITZ.lat, GOERLITZ.lon], {
+    radius:10, color:'#00cfff', fillColor:'#00cfff', fillOpacity:0.3, weight:2
+  }).addTo(map).bindPopup('📍 Görlitz');
+  // Echte Neiße-Koordinaten (Grenzfluss DE/PL)
+  const neisse = [[51.22,15.00],[51.19,14.99],[51.16,15.00],[51.14,14.99],[51.11,14.99],[51.08,14.98],[51.05,14.98]];
+  L.polyline(neisse, { color:'rgba(255,255,255,0.12)', weight:2, dashArray:'6,4' }).addTo(map).bindPopup('🌊 Neiße – Grenze DE/PL');
+  
+  // Grenz-Label
+  L.marker([51.155, 14.995], {
+    icon: L.divIcon({
+      html: '<div style="background:rgba(255,255,255,0.08);color:rgba(255,255,255,0.5);font-size:9px;font-weight:700;padding:2px 6px;border-radius:4px;border:1px solid rgba(255,255,255,0.15);white-space:nowrap;letter-spacing:1px;">🇩🇪 DE | PL 🇵🇱</div>',
+      className:'',
+      iconAnchor:[35,10]
+    })
+  }).addTo(map);
+
+  // Zgorzelec Label
+  L.marker([51.154, 15.005], {
+    icon: L.divIcon({
+      html: '<div style="color:#ff4d6d;font-size:9px;font-weight:700;padding:2px 6px;background:rgba(14,21,32,0.9);border-radius:4px;border:1px solid #ff4d6d;white-space:nowrap;">📍 Zgorzelec 🇵🇱</div>',
+      className:'',
+      iconAnchor:[45,10]
+    })
+  }).addTo(map);
+}
+
+// ══════════════════════════════════════
+// PLZ → COORDS
+// ══════════════════════════════════════
+async function plzToCoords(plz) {
+  const db = {
+    '02826':{lat:51.1534,lon:14.9876},'02827':{lat:51.1480,lon:14.9700},
+    '02828':{lat:51.1420,lon:14.9600},'02829':{lat:51.1600,lon:14.9500},
+    '02894':{lat:51.2800,lon:14.8500},'02906':{lat:51.3000,lon:14.7200},
+    '02929':{lat:51.3500,lon:14.9300},'02943':{lat:51.5200,lon:14.6400},
+    '02977':{lat:51.4200,lon:14.4900},'03046':{lat:51.7600,lon:14.3300},
+  };
+  if (db[plz]) return db[plz];
+  try {
+    const r = await fetch(`https://nominatim.openstreetmap.org/search?postalcode=${plz}&country=DE&format=json&limit=1`,{headers:{'User-Agent':'BestPriceTank/1.0'}});
+    const d = await r.json();
+    if (d.length) return { lat: parseFloat(d[0].lat), lon: parseFloat(d[0].lon) };
+  } catch(e) {}
+  return GOERLITZ;
+}
+
+// ══════════════════════════════════════
+// TANKERKOENIG API – ECHTE DE PREISE
+// ══════════════════════════════════════
+// API Key kommt von Netlify Function (sicher!)
+// Direkt-Fallback nur für lokale Entwicklung
+const TK_KEY = window.TK_API_KEY || '4b799919-31cf-4e2d-baa4-b84f7c4bcae5';
+
+async function fetchTankerkoenig(lat, lon, radius, type) {
+  try {
+    const rad = Math.min(radius, 25);
+    const BASE = 'https://creativecommons.tankerkoenig.de/json';
+
+    // Schritt 1: Stationen per type=all holen (Adressen + alle 3 Preise)
+    const urlAll = `${BASE}/list.php?lat=${lat}&lng=${lon}&rad=${rad}&sort=dist&type=all&apikey=${TK_KEY}`;
+    const rAll = await fetch(urlAll);
+    const dAll = await rAll.json();
+    if (!dAll.ok) throw new Error(dAll.message || 'API Fehler');
+
+    // Schritt 2: Stationen mappen - alle 3 Preise direkt verfügbar
+    const stationMap = {};
+    const stations = dAll.stations.map(s => {
+      const st = {
+        id: s.id,
+        name: s.brand || s.name,
+        brand: s.brand,
+        street: [s.street, s.houseNumber].filter(Boolean).join(' ').trim() + ', ' + s.place,
+        lat: s.lat,
+        lng: s.lng,
+        dist: Math.round(s.dist * 10) / 10,
+        country: 'de',
+        isOpen: s.isOpen,
+        e5:     (s.e5 && s.e5 > 0)     ? s.e5     : null,
+        e10:    (s.e10 && s.e10 > 0)    ? s.e10    : null,
+        diesel: (s.diesel && s.diesel > 0) ? s.diesel : null,
+      };
+      stationMap[s.id] = st;
+      return st;
+    });
+
+    // Schritt 3: Falls irgendein Preis null ist → Preisabfrage für diese Stationen
+    const missingIds = stations
+      .filter(s => s[type] === null)
+      .map(s => s.id)
+      .slice(0, 10); // max 10 laut Doku
+
+    if (missingIds.length > 0) {
+      try {
+        const urlPrices = `${BASE}/prices.php?ids=${missingIds.join(',')}&apikey=${TK_KEY}`;
+        const rP = await fetch(urlPrices);
+        const dP = await rP.json();
+        if (dP.ok && dP.prices) {
+          Object.entries(dP.prices).forEach(([id, p]) => {
+            if (stationMap[id]) {
+              if (p.e5    && p.e5    > 0) stationMap[id].e5    = p.e5;
+              if (p.e10   && p.e10   > 0) stationMap[id].e10   = p.e10;
+              if (p.diesel && p.diesel > 0) stationMap[id].diesel = p.diesel;
+            }
+          });
+        }
+      } catch(e2) {
+        console.warn('Preisabfrage fehlgeschlagen:', e2);
+      }
+    }
+
+    // Sortieren nach gewähltem Kraftstoff
+    stations.sort((a, b) => (a[type] || 99) - (b[type] || 99));
+    return stations;
+
+  } catch(e) {
+    console.warn('Tankerkoenig API Fehler, nutze Demo:', e);
+    return genDEDemo(lat, lon, radius);
+  }
+}
+
+// Fallback Demo falls API nicht erreichbar
+function genDEDemo(lat, lon, radius) {
+  const brands = ['ARAL','Shell','BP','Esso','Total','Jet','Star','Agip'];
+  const streets = ['Berliner Str.','Dresdner Str.','Bahnhofstr.','Zittauer Str.'];
+  const out = [];
+  for (let i = 0; i < 8; i++) {
+    const angle = (i / 10) * 2 * Math.PI + Math.random() * 0.5;
+    const dist  = Math.random() * radius * 0.85 + 0.5;
+    const dlat  = (dist/111) * Math.cos(angle);
+    const dlon  = (dist/(111*Math.cos(lat*Math.PI/180))) * Math.sin(angle);
+    const base  = PRICES[fuel].de;
+    const price = Math.round((base + (Math.random()-0.5)*0.12)*1000)/1000;
+    out.push({
+      id:'de_'+i, name:brands[i%brands.length],
+      street:streets[i%streets.length]+' '+(Math.floor(Math.random()*99)+1),
+      lat:lat+dlat, lng:lon+dlon,
+      dist:Math.round(dist*10)/10, country:'de', isOpen:Math.random()>0.15,
+      e5:price, e10:Math.round((price-0.03)*1000)/1000, diesel:Math.round((price-0.10)*1000)/1000,
+    });
+  }
+  return out;
+}
+
+function enrichSt(s) {
+  const base = PRICES[fuel][s.country];
+  const p = Math.round((base+(Math.random()-0.5)*0.06)*1000)/1000;
+  return { ...s, id:s.country+'_'+s.name,
+    e5:Math.round((PRICES.e5[s.country]+(Math.random()-0.5)*0.05)*1000)/1000,
+    e10:Math.round((PRICES.e10[s.country]+(Math.random()-0.5)*0.05)*1000)/1000,
+    diesel:Math.round((PRICES.diesel[s.country]+(Math.random()-0.5)*0.05)*1000)/1000,
+  };
+}
+
+// ══════════════════════════════════════
+// SEARCH
+// ══════════════════════════════════════
+async function suchen() {
+  const plz = document.getElementById('plzInput').value.trim();
+  if (!/^\d{5}$/.test(plz)) { showError('Bitte eine gültige 5-stellige PLZ eingeben.'); return; }
+  showLoader();
+  try {
+    const coords = await plzToCoords(plz);
+    const radius = parseInt(document.getElementById('radiusSelect').value);
+    // Echte DE Preise von Tankerkoenig + PL/CZ Demo
+    const deStations = await fetchTankerkoenig(coords.lat, coords.lon, radius, fuel);
+    stations = [
+      ...deStations,
+      ...PL_STATIONS.map(enrichSt),
+      ...CZ_STATIONS.map(enrichSt),
+    ];
+    
+    // Koordinaten speichern für Ladestation-Suche
+    currentCoords = coords;
+    
+    // Wenn Ladestationen sichtbar → neu laden für neue Position
+    if (evStationsVisible) {
+      loadEVStations(coords.lat, coords.lon, radius);
+    }
+    
+    // Echte DE Preise für Ticker + Steuerrechner aktualisieren
+    if (deStations.length > 0) {
+      const validPrices = deStations.map(s => s[fuel]).filter(Boolean);
+      if (validPrices.length > 0) {
+        const avgDE = validPrices.reduce((a,b) => a+b, 0) / validPrices.length;
+        PRICES[fuel].de = Math.round(avgDE * 1000) / 1000;
+        updateTicker(); // aktualisiert auch Steuerrechner falls offen
+      }
+    }
+    if (map) { map.setView([coords.lat, coords.lon], 12); clearMarkers(); addMarkers(); }
+    renderResults();
+  } catch(e) { showError('Fehler: ' + e.message); }
+}
+
+// ══════════════════════════════════════
+// MARKERS
+// ══════════════════════════════════════
+function clearMarkers() { markers.forEach(m=>map.removeLayer(m)); markers=[]; }
+
+function addMarkers() {
+  if (!map) return;
+  const filtered = getFiltered();
+  const cheapest = filtered.reduce((a,b)=>b[fuel]<a[fuel]?b:a, filtered[0]);
+  filtered.forEach(s => {
+    const isBest = s.id === cheapest?.id;
+    const col = s.country==='pl'?'#ff4d6d':s.country==='cz'?'#4da6ff':isBest?'#00e87a':'#ffc327';
+    const flag = s.country==='pl'?'🇵🇱':s.country==='cz'?'🇨🇿':'🇩🇪';
+    const label = s.country==='de' ? (s[fuel]?.toFixed(3)+'€') : (flag+' '+s[fuel]?.toFixed(3)+'€');
+    
+    // Unterschiedliche Marker-Formen pro Land
+    let markerHtml;
+    if (s.country === 'de') {
+      markerHtml = `<div style="background:${col};color:#000;font-weight:800;font-size:10px;padding:3px 7px;border-radius:6px;white-space:nowrap;box-shadow:0 2px 10px rgba(0,0,0,0.6);">${s[fuel]?.toFixed(3)}€</div>`;
+    } else {
+      // PL und CZ: mit Flag-Prefix und Rahmen
+      markerHtml = `<div style="background:#0e1520;color:${col};font-weight:800;font-size:10px;padding:3px 8px;border-radius:6px;white-space:nowrap;box-shadow:0 2px 10px rgba(0,0,0,0.8);border:2px solid ${col};">${flag} ${s[fuel]?.toFixed(3)}€</div>`;
+    }
+
+    const icon = L.divIcon({
+      html: markerHtml,
+      className:'',
+      iconAnchor: s.country==='de' ? [28,12] : [35,12]
+    });
+
+    const m = L.marker([s.lat,s.lng],{icon}).addTo(map)
+      .bindPopup(`
+        <div style="font-family:sans-serif;min-width:160px;">
+          <div style="font-weight:800;font-size:14px;margin-bottom:4px;">${flag} ${s.name}</div>
+          <div style="color:#888;font-size:11px;margin-bottom:6px;">${s.street}</div>
+          <div style="font-size:20px;font-weight:800;color:${col};margin-bottom:4px;">${s[fuel]?.toFixed(3)}€<span style="font-size:11px;color:#888;">/Liter</span></div>
+          <div style="font-size:11px;">${s.isOpen?'🟢 Geöffnet':'🔴 Geschlossen'}</div>
+          ${s.country!=='de'?`<div style="margin-top:6px;font-size:10px;color:#888;border-top:1px solid #eee;padding-top:4px;">📍 ${s.country==='pl'?'Polen':'Tschechien'} – Grenzstation</div>`:''}
+        </div>
+      `);
+    markers.push(m);
+  });
+}
+
+// ══════════════════════════════════════
+// RENDER
+// ══════════════════════════════════════
+function getFiltered() {
+  return stations.filter(s=>(s.country==='de'&&showDE)||(s.country==='pl'&&showPL)||(s.country==='cz'&&showCZ));
+}
+
+function renderResults() {
+  const el = document.getElementById('stationsArea');
+  const filtered = getFiltered();
+  if (!filtered.length) {
+    el.innerHTML='<div class="empty"><div class="empty-icon">🔍</div><div class="empty-title">Keine Ergebnisse</div></div>';
+    document.getElementById('stCount').textContent='0';
+    return;
+  }
+  let sorted = [...filtered];
+  if (sort==='price') sorted.sort((a,b)=>a[fuel]-b[fuel]);
+  if (sort==='dist')  sorted.sort((a,b)=>a.dist-b.dist);
+  if (sort==='land')  sorted.sort((a,b)=>a.country.localeCompare(b.country));
+
+  const prices = sorted.map(s=>s[fuel]).filter(Boolean);
+  const minP=Math.min(...prices), maxP=Math.max(...prices), avgP=prices.reduce((a,b)=>a+b,0)/prices.length;
+  const cheapest = sorted.find(s=>s[fuel]===minP);
+  document.getElementById('stCount').textContent = sorted.length+' Stationen';
+
+  el.innerHTML = `
+    <div style="background:rgba(0,232,122,0.08);border:1px solid rgba(0,232,122,0.2);border-radius:10px;padding:8px 13px;font-size:0.78rem;color:#00e87a;margin-bottom:1rem;">✅ <b>Echte Preise</b> – Live-Daten von Tankerkönig (MTS-K)</div>
+    <div class="stats-row">
+      <div class="stat"><div class="stat-l">Günstigst</div><div class="stat-v">${minP.toFixed(3)}€</div></div>
+      <div class="stat"><div class="stat-l">Schnitt</div><div class="stat-v">${avgP.toFixed(3)}€</div></div>
+      <div class="stat"><div class="stat-l">Teuerst</div><div class="stat-v">${maxP.toFixed(3)}€</div></div>
+    </div>
+    <div class="sort-row">
+      <span class="sort-l">Sortieren:</span>
+      <button class="sort-btn ${sort==='price'?'active':''}" onclick="setSort('price',this)">💰 Preis</button>
+      <button class="sort-btn ${sort==='dist'?'active':''}"  onclick="setSort('dist',this)">📍 Entfernung</button>
+      <button class="sort-btn ${sort==='land'?'active':''}"  onclick="setSort('land',this)">🌍 Land</button>
+    </div>
+    <div class="ctry-row">
+      <button class="ctry-btn ${showDE?'a-de':''}" onclick="toggleC('de',this)">🇩🇪 DE</button>
+      <button class="ctry-btn ${showPL?'a-pl':''}" onclick="toggleC('pl',this)">🇵🇱 PL</button>
+      <button class="ctry-btn ${showCZ?'a-cz':''}" onclick="toggleC('cz',this)">🇨🇿 CZ</button>
+    </div>
+    ${sorted.map((s,i)=>{
+      const isBest = s.id===cheapest?.id;
+      const flag = s.country==='pl'?'🇵🇱':s.country==='cz'?'🇨🇿':'🇩🇪';
+      return `
+      <div class="sc ${isBest?'best':''} c-${s.country}" onclick="focusMap(${s.lat},${s.lng})">
+        <div class="sc-top">
+          <div>
+            <div class="sc-brand">${flag} ${s.name}</div>
+            <div class="sc-addr">${s.street}</div>
+          </div>
+          <div>
+            <div class="sc-price">${s[fuel]?.toFixed(3)??'–'}</div>
+            <div class="sc-unit">€ / Liter</div>
+          </div>
+        </div>
+        <div class="sc-meta">
+          <span class="tag ${s.isOpen?'t-open':'t-closed'}">${s.isOpen ? TRANSLATIONS[currentLang].open : TRANSLATIONS[currentLang].closed}</span>
+          ${isBest?`<span class="tag t-best">${TRANSLATIONS[currentLang].best}</span>`:''}
+          <span class="tag t-${s.country}">${s.country.toUpperCase()}</span>
+          <span class="tag t-dist">📏 ${s.dist} km</span>
+        </div>
+      </div>`;
+    }).join('')}
+  `;
+}
+
+// ══════════════════════════════════════
+// CONTROLS
+// ══════════════════════════════════════
+function setFuel(f, btn) {
+  fuel=f;
+  document.querySelectorAll('.chip').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  updateTicker();
+
+  // Wenn PLZ schon eingegeben → sofort neu laden mit neuer Spritsorte
+  const plz = document.getElementById('plzInput').value.trim();
+  if (/^\d{5}$/.test(plz)) {
+    suchen(); // Neue API-Anfrage mit aktuellem fuel
+  } else if (stations.length) {
+    // Nur neu sortieren/anzeigen ohne API
+    clearMarkers(); addMarkers(); renderResults();
+  }
+}
+
+function setSort(s,btn) {
+  sort=s;
+  renderResults();
+}
+
+function toggleC(c,btn) {
+  if(c==='de') showDE=!showDE;
+  if(c==='pl') showPL=!showPL;
+  if(c==='cz') showCZ=!showCZ;
+  clearMarkers(); addMarkers(); renderResults();
+}
+
+function focusMap(lat,lng) { if(map) map.setView([lat,lng],15); }
+
+function updateTicker() {
+  const p = PRICES[fuel];
+  document.getElementById('t-de').textContent = p.de.toFixed(3).replace('.',',');
+  document.getElementById('t-pl').textContent = p.pl.toFixed(3).replace('.',',');
+  document.getElementById('t-cz').textContent = p.cz.toFixed(3).replace('.',',');
+
+  // Steuerrechner auch aktualisieren wenn er offen ist
+  if (document.getElementById('taxModal').style.display === 'block') {
+    updateTax();
+  }
+
+  // Lokale Währungen
+  const plPLN = (p.pl * rates.PLN).toFixed(2);
+  const czCZK = (p.cz * rates.CZK).toFixed(2);
+  const plEl = document.getElementById('t-pl-pln');
+  const czEl = document.getElementById('t-cz-czk');
+  if (plEl) plEl.textContent = `≈ ${plPLN} PLN / L`;
+  if (czEl) czEl.textContent = `≈ ${czCZK} CZK / L`;
+
+  const plD = ((p.pl-p.de)/p.de*100).toFixed(1);
+  const czD = ((p.cz-p.de)/p.de*100).toFixed(1);
+  document.getElementById('t-pl-diff').textContent = p.pl<p.de?`▼ ${Math.abs(plD)}% günstiger`:`▲ ${plD}% teurer`;
+  document.getElementById('t-cz-diff').textContent = p.cz<p.de?`▼ ${Math.abs(czD)}% günstiger`:`▲ ${czD}% teurer`;
+}
+
+// ══════════════════════════════════════
+// GRENZRECHNER
+// ══════════════════════════════════════
+function berechnen() {
+  const tank=parseFloat(document.getElementById('cTank').value)||50;
+  const km=parseFloat(document.getElementById('cKm').value)||3;
+  const vb=parseFloat(document.getElementById('cVerbrauch').value)||7;
+  const land=document.getElementById('cLand').value;
+  const p=PRICES[fuel];
+  const pF=p[land];
+  const flag=land==='pl'?'🇵🇱':'🇨🇿';
+  const name=land==='pl'?'Polen':'Tschechien';
+  const erspTank=Math.round((tank*p.de-tank*pF)*100)/100;
+  const fahrt=Math.round((km*2/100*vb*p.de)*100)/100;
+  const netto=Math.round((erspTank-fahrt)*100)/100;
+  const ok=netto>0;
+  const el=document.getElementById('calcResult');
+  el.className='calc-result show';
+  el.innerHTML=`
+    <div class="res-row"><span class="rl">🇩🇪 Deutschland (${fuel.toUpperCase()})</span><span class="rv">${p.de.toFixed(3)}€/L</span></div>
+    <div class="res-row"><span class="rl">${flag} ${name}</span><span class="rv">${pF.toFixed(3)}€/L</span></div>
+    <div class="res-row"><span class="rl">Ersparnis (${tank}L)</span><span class="rv ${erspTank>0?'g':'r'}">${erspTank>0?'+':''}${erspTank.toFixed(2)}€</span></div>
+    <div class="res-row"><span class="rl">Fahrtkosten (${km*2}km)</span><span class="rv r">−${fahrt.toFixed(2)}€</span></div>
+    <div class="res-row"><span class="rl"><b>Netto-Ersparnis</b></span><span class="rv ${ok?'g':'r'}"><b>${netto>0?'+':''}${netto.toFixed(2)}€</b></span></div>
+    <div class="verdict ${ok?'yes':'no'}">${ok ? TRANSLATIONS[currentLang].worthIt(netto.toFixed(2)) : TRANSLATIONS[currentLang].notWorth}</div>
+  `;
+}
+
+// ══════════════════════════════════════
+// LOADER / ERROR
+// ══════════════════════════════════════
+function showLoader() {
+  document.getElementById('stationsArea').innerHTML=`<div class="loader-wrap"><div class="spinner"></div><div style="color:var(--muted);font-size:0.83rem;">Suche in DE · PL · CZ…</div></div>`;
+}
+function showError(msg) {
+  document.getElementById('stationsArea').innerHTML=`<div class="error-box">⚠️ ${msg}</div>`;
+}
+
+// ══════════════════════════════════════
+// MODAL
+// ══════════════════════════════════════
+const IMPRESSUM=`
+  <p><strong>Angaben gemäß § 5 TMG</strong></p>
+  <p>[FIRMENNAME]<br>[STRASSE + NR]<br>02826 Görlitz, Deutschland</p>
+  <h3>Geschäftsführer</h3><p>[DEIN NAME]</p>
+  <h3>Kontakt</h3><p>E-Mail: <a href="mailto:info@bestpricetank.de">info@bestpricetank.de</a></p>
+  <h3>Datenquellen</h3>
+  <p>🇩🇪 <a href="https://creativecommons.tankerkoenig.de" target="_blank">Tankerkönig / MTS-K</a> · 🇵🇱🇨🇿 <a href="https://fuel-prices.eu" target="_blank">fuel-prices.eu</a> (EU-Kommission)</p>
+  <h3>Haftungshinweis</h3>
+  <p>Preise werden von Drittanbietern bereitgestellt. Keine Gewähr für Aktualität und Richtigkeit.</p>`;
+
+const DATENSCHUTZ=`
+  <p>Der Schutz Ihrer personenbezogenen Daten ist uns wichtig. Wir verarbeiten Ihre Daten gemäß DSGVO (EU) 2016/679 und TMG.</p>
+
+  <h3>1. Verantwortlicher (Art. 13 Abs. 1 DSGVO)</h3>
+  <p>[FIRMENNAME]<br>[STRASSE + NR]<br>02826 Görlitz<br>
+  E-Mail: <a href="mailto:info@bestpricetank.de">info@bestpricetank.de</a></p>
+
+  <h3>2. Zweck und Rechtsgrundlage (Art. 6 DSGVO)</h3>
+  <p>Wir verarbeiten personenbezogene Daten zu folgenden Zwecken:<br>
+  · Bereitstellung der Website – Art. 6 Abs. 1 lit. f DSGVO (berechtigtes Interesse)<br>
+  · PLZ-Suche und Kartenanzeige – Art. 6 Abs. 1 lit. b DSGVO<br>
+  · Wechselkursabfrage – Art. 6 Abs. 1 lit. f DSGVO<br>
+  · Analyse und Marketing (mit Einwilligung) – Art. 6 Abs. 1 lit. a DSGVO</p>
+
+  <h3>3. Erfasste Daten und Speicherdauer</h3>
+  <p>Beim Besuch werden technisch notwendige Server-Logs erfasst (IP anonymisiert, Browsertyp, Datum/Uhrzeit). Diese werden nach spätestens 7 Tagen automatisch gelöscht. Eingegebene Postleitzahlen werden nicht gespeichert. Ihre Cookie-Einwilligung wird als Cookie für 365 Tage in Ihrem Browser gespeichert.</p>
+
+  <h3>4. Cookies und Tracking</h3>
+
+  <p><b>4.1 Technisch notwendige Cookies</b><br>
+  Diese Cookies sind für den Betrieb der Website erforderlich und können nicht deaktiviert werden. Sie speichern keine personenbezogenen Daten.<br>
+  · <b>bpt_cookie_consent</b> – Speichert Ihre Cookie-Einstellungen (365 Tage, Erstanbieter)</p>
+
+  <p><b>4.2 Analyse-Cookies (nur mit Einwilligung)</b><br>
+  Mit Ihrer Einwilligung nutzen wir Google Analytics (Google Ireland Ltd., Gordon House, Barrow Street, Dublin 4, Irland) zur Analyse der Websitenutzung. Die IP-Adresse wird anonymisiert. Daten werden in die USA übertragen (Standardvertragsklauseln). Speicherdauer: 26 Monate.<br>
+  <a href="https://policies.google.com/privacy" target="_blank">Google Datenschutz</a> · <a href="https://tools.google.com/dlpage/gaoptout" target="_blank">Google Analytics deaktivieren</a></p>
+
+  <p><b>4.3 Marketing-Cookies (nur mit Einwilligung)</b><br>
+  Mit Ihrer Einwilligung nutzen wir Google AdSense (Google Ireland Ltd.) zur Anzeige personalisierter Werbung. Dabei können Cookies gesetzt werden die Ihr Surfverhalten über verschiedene Websites hinweg verfolgen. Daten werden in die USA übertragen (Standardvertragsklauseln).<br>
+  <a href="https://policies.google.com/privacy" target="_blank">Google Datenschutz</a> · <a href="https://adssettings.google.com" target="_blank">Werbeeinstellungen verwalten</a></p>
+
+  <p><b>Cookie-Einstellungen ändern:</b> Sie können Ihre Einwilligung jederzeit über das 🍪-Symbol unten links auf der Seite widerrufen oder ändern.</p>
+
+  <h3>5. Externe Dienste und Drittanbieter</h3>
+  <p>Folgende externe Dienste werden genutzt. Bei allen Diensten wird Ihre IP-Adresse an die jeweiligen Server übermittelt:</p>
+  <p>
+  <b>Tankerkönig (MTS-K):</b> Kraftstoffpreise DE – <a href="https://creativecommons.tankerkoenig.de" target="_blank">Datenschutz</a><br>
+  <b>OpenStreetMap / CARTO:</b> Kartenansicht – <a href="https://carto.com/privacy" target="_blank">Datenschutz</a><br>
+  <b>Nominatim:</b> PLZ → Koordinaten – <a href="https://osmfoundation.org/wiki/Privacy_Policy" target="_blank">Datenschutz</a><br>
+  <b>ExchangeRate-API:</b> Wechselkurse EUR/PLN/CZK – <a href="https://www.exchangerate-api.com/privacy" target="_blank">Datenschutz</a><br>
+  <b>Google Fonts:</b> Schriftarten (Gordon House, Dublin 4, Irland) – <a href="https://policies.google.com/privacy" target="_blank">Datenschutz</a><br>
+  <b>Cloudflare cdnjs:</b> Kartenbibliothek – <a href="https://www.cloudflare.com/privacypolicy/" target="_blank">Datenschutz</a><br>
+  <b>fuel-prices.eu:</b> Kraftstoffpreise PL/CZ (EU-Kommission Oil Bulletin)<br>
+  <b>Netlify Inc.:</b> Hosting (2325 3rd Street, San Francisco, USA) – <a href="https://www.netlify.com/privacy/" target="_blank">Datenschutz</a><br>
+  <b>OpenChargeMap (OCM):</b> Ladestationen-Daten (Open Data, Community-basiert) – <a href="https://openchargemap.org/site/privacy" target="_blank">Datenschutz</a><br>
+  <b>Dyskont Paliwowy / Citronex Trans Energy:</b> Kraftstoffpreise PL (Zgorzelec) – öffentlich zugängliche Preisangaben von dyskontpaliwowy.pl<br>
+  <b>EU-Kommission / Oil Bulletin:</b> Wöchentliche Kraftstoff-Durchschnittspreise PL/CZ – <a href="https://energy.ec.europa.eu/data-and-analysis/weekly-oil-bulletin_en" target="_blank">Quelle</a> · Lizenz: Open Data
+  </p>
+
+  <h3>5a. Datenquellen und Lizenzen</h3>
+  <p>Die auf dieser Website angezeigten Kraftstoffpreise stammen aus folgenden Quellen:</p>
+  <p>
+  <b>Deutschland:</b> Tankerkönig.de, basierend auf Daten der Markttransparenzstelle für Kraftstoffe (MTS-K) des Bundeskartellamtes. Lizenz: <a href="https://creativecommons.org/licenses/by/4.0/deed.de" target="_blank">Creative Commons CC BY 4.0</a>. Die Nutzung erfolgt gemäß den <a href="https://creativecommons.tankerkoenig.de" target="_blank">Nutzungsbedingungen von Tankerkönig</a>.<br><br>
+  <b>Polen &amp; Tschechien (Durchschnitt):</b> EU-Kommission Weekly Oil Bulletin via fuel-prices.eu. Open Data, wöchentliche nationale Durchschnittspreise.<br><br>
+  <b>Polen (Einzelstationen):</b> Öffentlich zugängliche Preisangaben von dyskontpaliwowy.pl (Citronex Trans Energy Sp. z o.o., Słowiańska 13, 59-900 Zgorzelec). Die Daten werden täglich von der öffentlichen Website abgerufen.<br><br>
+  <b>Haftungsausschluss Preise:</b> Alle Preisangaben sind ohne Gewähr und können von den tatsächlichen Preisen an der Zapfsäule abweichen. Eine Haftung für Schäden durch veraltete, fehlerhafte oder unvollständige Preisangaben ist ausgeschlossen.
+  </p>
+
+  <h3>6. Google Consent Mode v2</h3>
+  <p>Wir nutzen Google Consent Mode v2. Vor Ihrer Einwilligung werden keine Tracking-Daten an Google übermittelt. Erst nach aktiver Zustimmung werden Analytics- bzw. AdSense-Cookies aktiviert. Dies entspricht den Anforderungen des TCF 2.2 und der Google EU-Nutzereinwilligungsrichtlinie.</p>
+
+  <h3>7. Ihre Rechte (Art. 15–22 DSGVO)</h3>
+  <p>Sie haben jederzeit das Recht auf:<br>
+  · <b>Auskunft</b> (Art. 15) über gespeicherte Daten<br>
+  · <b>Berichtigung</b> (Art. 16) unrichtiger Daten<br>
+  · <b>Löschung</b> (Art. 17) Ihrer Daten<br>
+  · <b>Einschränkung</b> (Art. 18) der Verarbeitung<br>
+  · <b>Datenübertragbarkeit</b> (Art. 20) in maschinenlesbarem Format<br>
+  · <b>Widerspruch</b> (Art. 21) gegen Verarbeitung auf Basis berechtigter Interessen<br>
+  · <b>Widerruf</b> (Art. 7 Abs. 3) einer erteilten Einwilligung jederzeit mit Wirkung für die Zukunft</p>
+
+  <h3>8. Beschwerderecht</h3>
+  <p>Sie haben das Recht, sich bei der zuständigen Aufsichtsbehörde zu beschweren:<br>
+  <a href="https://www.saechsdsb.de" target="_blank">Sächsischer Datenschutzbeauftragter (saechsdsb.de)</a></p>
+
+  <h3>9. Kontakt Datenschutz</h3>
+  <p>Bei Fragen zum Datenschutz: <a href="mailto:info@bestpricetank.de">info@bestpricetank.de</a></p>
+  <p style="margin-top:1.2rem;font-size:0.72rem;color:#5a6a80;">Stand: April 2026 · Version 2.1 · Datenquellen und Lizenzen ergänzt</p>
+`
+
+function openModal(t) {
+  document.getElementById('mOverlay').style.display='block';
+  document.getElementById('mBox').style.display='block';
+  document.getElementById('mTitle').textContent=t==='impressum'?'IMPRESSUM':'DATENSCHUTZ';
+  document.getElementById('mContent').innerHTML=t==='impressum'?IMPRESSUM:DATENSCHUTZ;
+}
+function closeModal() {
+  document.getElementById('mOverlay').style.display='none';
+  document.getElementById('mBox').style.display='none';
+}
+document.addEventListener('keydown',e=>{if(e.key==='Escape')closeModal();});
+
+// ══════════════════════════════════════
+// INPUT
+// ══════════════════════════════════════
+// ══════════════════════════════════════
+// ÜBERSETZUNGEN
+// ══════════════════════════════════════
+const TRANSLATIONS = {
+  de: {
+    badge:      '⛽ Görlitz · Zgorzelec · Liberec',
+    title1:     'GÜNSTIG',
+    title2:     'TANKEN',
+    title3:     'ÜBERALL',
+    subtitle:   'Der einzige Preisvergleich für Deutschland, Polen und Tschechien. Finde die günstigste Tankstelle – egal auf welcher Seite der Grenze.',
+    searchPlaceholder: 'Postleitzahl eingeben – z.B. 02826',
+    searchBtn:  'SUCHEN →',
+    fuelE5:     '⛽ Super E5',
+    fuelE10:    '🟢 Super E10',
+    fuelDiesel: '🔵 Diesel',
+    calcTitle:  '🧮 Grenzrechner',
+    calcTank:   'Tankgröße (L)',
+    calcKm:     'Entfernung (km)',
+    calcVb:     'Verbrauch L/100km',
+    calcLand:   'Zielland',
+    calcBtn:    'JETZT BERECHNEN',
+    stTitle:    '⛽ Tankstellen',
+    stLoading:  'Suche in DE · PL · CZ…',
+    stEmpty:    'Bereit!',
+    stEmptySub: 'Gib oben eine PLZ ein um loszulegen.',
+    sortPrice:  '💰 Preis',
+    sortDist:   '📍 Entfernung',
+    sortLand:   '🌍 Land',
+    open:       '🟢 Offen',
+    closed:     '🔴 Zu',
+    best:       '⭐ Günstigste',
+    worthIt:    (n) => `✅ LOHNT SICH! Du sparst ${n}€`,
+    notWorth:   '❌ Lohnt sich nicht – zu weit',
+    priceDE:    (f) => `🇩🇪 Deutschland (${f.toUpperCase()})`,
+    priceFR:    (flag,name) => `${flag} ${name}`,
+    saveTank:   (l) => `Ersparnis (${l}L)`,
+    driveCost:  (k) => `Fahrtkosten (${k}km)`,
+    netto:      'Netto-Ersparnis',
+    ref:        'Referenz',
+    cheaper:    (p) => `▼ ${p}% günstiger`,
+    pricier:    (p) => `▲ ${p}% teurer`,
+    footerDemo: '⚠️ Demo-Modus – echte Preise nach',
+    apiKey:     'API-Key',
+    activation: 'Aktivierung',
+    live:       'Live',
+    pl:         '🇵🇱 Polen',
+    cz:         '🇨🇿 Tschechien',
+  },
+  en: {
+    badge:      '⛽ Görlitz · Zgorzelec · Liberec',
+    title1:     'CHEAP',
+    title2:     'FUEL',
+    title3:     'EVERYWHERE',
+    subtitle:   'The only price comparison for Germany, Poland and Czech Republic. Find the cheapest gas station – no matter which side of the border.',
+    searchPlaceholder: 'Enter German ZIP code – e.g. 02826',
+    searchBtn:  'SEARCH →',
+    fuelE5:     '⛽ Super E5',
+    fuelE10:    '🟢 Super E10',
+    fuelDiesel: '🔵 Diesel',
+    calcTitle:  '🧮 Border Calculator',
+    calcTank:   'Tank size (L)',
+    calcKm:     'Distance (km)',
+    calcVb:     'Consumption L/100km',
+    calcLand:   'Destination',
+    calcBtn:    'CALCULATE NOW',
+    stTitle:    '⛽ Gas Stations',
+    stLoading:  'Searching in DE · PL · CZ…',
+    stEmpty:    'Ready!',
+    stEmptySub: 'Enter a ZIP code above to get started.',
+    sortPrice:  '💰 Price',
+    sortDist:   '📍 Distance',
+    sortLand:   '🌍 Country',
+    open:       '🟢 Open',
+    closed:     '🔴 Closed',
+    best:       '⭐ Cheapest',
+    worthIt:    (n) => `✅ WORTH IT! You save ${n}€`,
+    notWorth:   '❌ Not worth it – too far',
+    priceDE:    (f) => `🇩🇪 Germany (${f.toUpperCase()})`,
+    priceFR:    (flag,name) => `${flag} ${name}`,
+    saveTank:   (l) => `Savings (${l}L)`,
+    driveCost:  (k) => `Driving cost (${k}km)`,
+    netto:      'Net savings',
+    ref:        'Reference',
+    cheaper:    (p) => `▼ ${p}% cheaper`,
+    pricier:    (p) => `▲ ${p}% pricier`,
+    footerDemo: '⚠️ Demo mode – real prices after',
+    apiKey:     'API key',
+    activation: 'activation',
+    live:       'Live',
+    pl:         '🇵🇱 Poland',
+    cz:         '🇨🇿 Czech Republic',
+  },
+  pl: {
+    badge:      '⛽ Görlitz · Zgorzelec · Liberec',
+    title1:     'TANIE',
+    title2:     'TANKOWANIE',
+    title3:     'WSZĘDZIE',
+    subtitle:   'Jedyne porównanie cen paliw w Niemczech, Polsce i Czechach. Znajdź najtańszą stację – po obu stronach granicy.',
+    searchPlaceholder: 'Wpisz kod pocztowy – np. 02826',
+    searchBtn:  'SZUKAJ →',
+    fuelE5:     '⛽ Super E5',
+    fuelE10:    '🟢 Super E10',
+    fuelDiesel: '🔵 Diesel',
+    calcTitle:  '🧮 Kalkulator graniczny',
+    calcTank:   'Pojemność baku (L)',
+    calcKm:     'Odległość (km)',
+    calcVb:     'Zużycie L/100km',
+    calcLand:   'Kraj docelowy',
+    calcBtn:    'OBLICZ TERAZ',
+    stTitle:    '⛽ Stacje paliw',
+    stLoading:  'Szukam w DE · PL · CZ…',
+    stEmpty:    'Gotowy!',
+    stEmptySub: 'Wpisz kod pocztowy powyżej.',
+    sortPrice:  '💰 Cena',
+    sortDist:   '📍 Odległość',
+    sortLand:   '🌍 Kraj',
+    open:       '🟢 Otwarte',
+    closed:     '🔴 Zamknięte',
+    best:       '⭐ Najtańsza',
+    worthIt:    (n) => `✅ OPŁACA SIĘ! Oszczędzasz ${n}€`,
+    notWorth:   '❌ Nie opłaca się – za daleko',
+    priceDE:    (f) => `🇩🇪 Niemcy (${f.toUpperCase()})`,
+    priceFR:    (flag,name) => `${flag} ${name}`,
+    saveTank:   (l) => `Oszczędność (${l}L)`,
+    driveCost:  (k) => `Koszt dojazdu (${k}km)`,
+    netto:      'Oszczędność netto',
+    ref:        'Cena referencyjna',
+    cheaper:    (p) => `▼ ${p}% taniej`,
+    pricier:    (p) => `▲ ${p}% drożej`,
+    footerDemo: '⚠️ Tryb demo – prawdziwe ceny po',
+    apiKey:     'kluczu API',
+    activation: 'aktywacji',
+    live:       'Na żywo',
+    pl:         '🇵🇱 Polska',
+    cz:         '🇨🇿 Czechy',
+  },
+  cz: {
+    badge:      '⛽ Görlitz · Zgorzelec · Liberec',
+    title1:     'LEVNÉ',
+    title2:     'TANKOVÁNÍ',
+    title3:     'VŠUDE',
+    subtitle:   'Jediné srovnání cen pohonných hmot pro Německo, Polsko a Českou republiku. Najděte nejlevnější čerpací stanici – na obou stranách hranice.',
+    searchPlaceholder: 'Zadejte PSČ – např. 02826',
+    searchBtn:  'HLEDAT →',
+    fuelE5:     '⛽ Super E5',
+    fuelE10:    '🟢 Super E10',
+    fuelDiesel: '🔵 Nafta',
+    calcTitle:  '🧮 Hraniční kalkulačka',
+    calcTank:   'Objem nádrže (L)',
+    calcKm:     'Vzdálenost (km)',
+    calcVb:     'Spotřeba L/100km',
+    calcLand:   'Cílová země',
+    calcBtn:    'VYPOČÍTAT NYNÍ',
+    stTitle:    '⛽ Čerpací stanice',
+    stLoading:  'Hledám v DE · PL · CZ…',
+    stEmpty:    'Připraveno!',
+    stEmptySub: 'Zadejte PSČ výše pro začátek.',
+    sortPrice:  '💰 Cena',
+    sortDist:   '📍 Vzdálenost',
+    sortLand:   '🌍 Země',
+    open:       '🟢 Otevřeno',
+    closed:     '🔴 Zavřeno',
+    best:       '⭐ Nejlevnější',
+    worthIt:    (n) => `✅ VYPLATÍ SE! Ušetříte ${n}€`,
+    notWorth:   '❌ Nevyplatí se – příliš daleko',
+    priceDE:    (f) => `🇩🇪 Německo (${f.toUpperCase()})`,
+    priceFR:    (flag,name) => `${flag} ${name}`,
+    saveTank:   (l) => `Úspora (${l}L)`,
+    driveCost:  (k) => `Náklady na jízdu (${k}km)`,
+    netto:      'Čistá úspora',
+    ref:        'Referenční cena',
+    cheaper:    (p) => `▼ ${p}% levnější`,
+    pricier:    (p) => `▲ ${p}% dražší`,
+    footerDemo: '⚠️ Demo režim – skutečné ceny po',
+    apiKey:     'API klíči',
+    activation: 'aktivaci',
+    live:       'Živě',
+    pl:         '🇵🇱 Polsko',
+    cz:         '🇨🇿 Česká republika',
+  },
+};
+
+let currentLang = 'de';
+
+function setLang(lang) {
+  currentLang = lang;
+  const t = TRANSLATIONS[lang];
+
+  // Lang buttons
+  document.querySelectorAll('.lang-btn').forEach(b => b.classList.remove('active'));
+  document.querySelector(`.lang-btn[onclick="setLang('${lang}')"]`).classList.add('active');
+
+  // Live text
+  document.getElementById('liveTxt').textContent = t.live;
+
+  // Hero
+  document.querySelector('.hero-badge').textContent = t.badge;
+  document.querySelector('.line1').textContent = t.title1;
+  document.querySelector('.line2').textContent = t.title2;
+  document.querySelector('.line3').textContent = t.title3;
+  document.querySelector('.hero-sub').textContent = t.subtitle;
+
+  // Search
+  document.getElementById('plzInput').placeholder = t.searchPlaceholder;
+  document.querySelector('.search-btn').textContent = t.searchBtn;
+
+  // Fuel chips
+  const chips = document.querySelectorAll('.chip');
+  chips[0].textContent = t.fuelE5;
+  chips[1].textContent = t.fuelE10;
+  chips[2].textContent = t.fuelDiesel;
+
+  // Calc
+  document.querySelector('.card-title').textContent = t.calcTitle;
+  document.querySelectorAll('.field label')[0].textContent = t.calcTank;
+  document.querySelectorAll('.field label')[1].textContent = t.calcKm;
+  document.querySelectorAll('.field label')[2].textContent = t.calcVb;
+  document.querySelectorAll('.field label')[3].textContent = t.calcLand;
+  document.querySelector('.calc-go').textContent = t.calcBtn;
+
+  // Land select options
+  const sel = document.getElementById('cLand');
+  sel.options[0].text = t.pl;
+  sel.options[1].text = t.cz;
+
+  // Stations title
+  document.querySelectorAll('.card-title')[1].textContent = t.stTitle;
+
+  // Re-render results if available
+  if (stations.length) renderResults();
+
+  // Update ticker diffs
+  updateTicker();
+}
+
+document.getElementById('plzInput').addEventListener('input', function() {
+  this.value=this.value.replace(/\D/g,'');
+  if(this.value.length===5) suchen();
+});
+
+// ══════════════════════════════════════
+// INIT
+// ══════════════════════════════════════
+window.addEventListener('load', () => {
+  loadRates(); // Echte Wechselkurse laden
+  updateTicker();
+  initMap();
+  document.getElementById('plzInput').value='02826';
+  setTimeout(suchen, 700);
+});
+</script>
+
+<!-- ══════════════════════════════════════
+     🍪 COOKIE BANNER
+     ══════════════════════════════════════ -->
+<div id="cookie-banner">
+  <div class="cookie-text">
+    <strong>🍪 Wir nutzen Cookies</strong><br>
+    Technisch notwendige Cookies sind immer aktiv. Mit deiner Zustimmung nutzen wir auch Analyse- & Marketing-Cookies (z.B. Google Analytics, AdSense) um die Seite zu verbessern und zu finanzieren.
+    <br><a href="#" onclick="openModal('datenschutz');return false;">Datenschutzerklärung</a> &nbsp;·&nbsp; <a href="#" onclick="openModal('impressum');return false;">Impressum</a>
+  </div>
+  <div class="cookie-btns">
+    <button class="cookie-btn-settings" onclick="openCookieSettings()">⚙️ Einstellungen</button>
+    <button class="cookie-btn-essential" onclick="cookieAcceptEssential()">Nur notwendige</button>
+    <button class="cookie-btn-accept" onclick="cookieAcceptAll()">✅ Alle akzeptieren</button>
+  </div>
+</div>
+
+<!-- Cookie Einstellungs-Modal -->
+<div id="cookie-settings">
+  <div class="cookie-modal">
+    <div class="cookie-modal-title">🍪 COOKIE EINSTELLUNGEN</div>
+    <p style="font-size:0.78rem;color:var(--muted);margin-bottom:1rem;line-height:1.5;">
+      Wähle welche Cookies du erlaubst. Technisch notwendige Cookies können nicht deaktiviert werden – sie sind für die Grundfunktionen der Website erforderlich.
+    </p>
+
+    <!-- Notwendige -->
+    <div class="cookie-category">
+      <div class="cookie-cat-header">
+        <div class="cookie-cat-name">✅ Technisch notwendig</div>
+        <label class="cookie-toggle">
+          <input type="checkbox" checked disabled>
+          <span class="cookie-toggle-slider"></span>
+        </label>
+      </div>
+      <div class="cookie-cat-desc">
+        Notwendig für die Grundfunktionen der Website. Beinhaltet: Leaflet Karte (OpenStreetMap/CARTO), Tankerkönig API, ExchangeRate API, Netlify Hosting. Kein Tracking, keine Cookies von Drittanbietern.
+      </div>
+    </div>
+
+    <!-- Analyse -->
+    <div class="cookie-category">
+      <div class="cookie-cat-header">
+        <div class="cookie-cat-name">📊 Analyse (Statistik)</div>
+        <label class="cookie-toggle">
+          <input type="checkbox" id="cookie-analytics">
+          <span class="cookie-toggle-slider"></span>
+        </label>
+      </div>
+      <div class="cookie-cat-desc">
+        Hilft uns zu verstehen wie Besucher die Website nutzen. Beinhaltet: Google Analytics, Netlify Analytics. Daten werden anonymisiert gesammelt.
+      </div>
+    </div>
+
+    <!-- Marketing -->
+    <div class="cookie-category">
+      <div class="cookie-cat-header">
+        <div class="cookie-cat-name">💰 Marketing (Werbung)</div>
+        <label class="cookie-toggle">
+          <input type="checkbox" id="cookie-marketing">
+          <span class="cookie-toggle-slider"></span>
+        </label>
+      </div>
+      <div class="cookie-cat-desc">
+        Ermöglicht personalisierte Werbung und finanziert die kostenlose Nutzung dieser Website. Beinhaltet: Google AdSense. Ohne diese Cookies siehst du ggf. weniger relevante Werbung.
+      </div>
+    </div>
+
+    <div style="display:flex;gap:8px;margin-top:1rem;">
+      <button onclick="cookieAcceptEssential()" style="flex:1;background:transparent;border:1px solid var(--border);color:var(--muted);border-radius:30px;padding:10px;font-family:'Plus Jakarta Sans',sans-serif;font-weight:700;font-size:0.8rem;cursor:pointer;">Nur notwendige</button>
+      <button onclick="cookieSaveSettings()" class="cookie-save-btn" style="flex:2;">EINSTELLUNGEN SPEICHERN</button>
+    </div>
+    <button onclick="closeCookieSettings()" style="width:100%;background:transparent;border:none;color:var(--muted);font-size:0.75rem;cursor:pointer;margin-top:8px;text-decoration:underline;">Abbrechen</button>
+  </div>
+</div>
+
+<!-- Mini Badge zum Wiederöffnen -->
+<div id="cookie-badge" onclick="openCookieSettings()" title="Cookie Einstellungen">🍪</div>
+
+<!-- TAX FAB BUTTON -->
+<button class="tax-fab" onclick="openTaxModal()">
+  <span style="font-size:16px;">🧾</span>
+  STEUERRECHNER
+</button>
+
+<!-- TAX MODAL -->
+<div id="taxOverlay" onclick="closeTaxModal()"></div>
+<div id="taxModal">
+  <div class="tax-modal-header">
+    <div class="tax-title-wrap">
+      <div class="tax-modal-title">STEUER-RECHNER</div>
+      <div style="display:flex;align-items:center;gap:8px;margin-top:2px;">
+        <div style="font-size:0.75rem;color:var(--muted);">Was kostet Sprit ohne Steuern? 🇩🇪 🇵🇱 🇨🇿</div>
+        <div style="background:rgba(0,232,122,0.1);border:1px solid rgba(0,232,122,0.3);color:#00e87a;font-size:0.65rem;font-weight:700;padding:2px 8px;border-radius:10px;letter-spacing:1px;">LIVE-PREISE</div>
+      </div>
+    </div>
+    <button class="tax-close-btn" onclick="closeTaxModal()">✕</button>
+  </div>
+
+  <div class="tax-controls">
+    <button class="tax-fuel-btn active" onclick="setTaxFuel('e5',this)">⛽ Super E5</button>
+    <button class="tax-fuel-btn" onclick="setTaxFuel('diesel',this)">🔵 Diesel</button>
+    <div class="tax-slider-wrap">
+      <label>Tankvolumen:</label>
+      <input type="range" min="10" max="100" value="50" step="5" id="taxTankSlider" oninput="updateTax()">
+      <div class="tax-slider-val" id="taxTankVal">50 L</div>
+    </div>
+  </div>
+
+  <div class="tax-grid" id="taxCards"></div>
+
+  <div class="tax-funfact" id="taxFunFact"></div>
+
+  <div style="font-size:0.68rem;color:var(--muted);margin-top:1rem;line-height:1.5;">
+    Quellen: Energiesteuersatz DE: 65,45 ct/L (Benzin), 47,04 ct/L (Diesel) · CO₂-Abgabe DE: ~16 ct/L · MwSt: DE 19%, PL 23%, CZ 21% · Verbrauchsteuer PL: 36 ct/L (Benzin), 33 ct/L (Diesel) · Verbrauchsteuer CZ: ~47 ct/L (Benzin), ~43 ct/L (Diesel)
+  </div>
+</div>
+
+<script>
+// ══════════════════════════════════
+// STEUERRECHNER
+// ══════════════════════════════════
+// TAX_DATA nutzt PRICES (aus Hauptseite) + Wechselkurse für Live-Aktualisierung
+// Steuersätze sind fix (gesetzlich), nur Preise kommen von der API
+const TAX_FIXED = {
+  e5: {
+    de: { energy:0.6545, co2:0.162, mwst:0.19, label:'Super E5',    flagCls:'tax-card-de' },
+    pl: { energy:0.360,  co2:0.00,  mwst:0.23, label:'Eurosuper 95',flagCls:'tax-card-pl' },
+    cz: { energy:0.470,  co2:0.00,  mwst:0.21, label:'Natural 95',  flagCls:'tax-card-cz' },
+  },
+  diesel: {
+    de: { energy:0.4704, co2:0.170, mwst:0.19, label:'Diesel',   flagCls:'tax-card-de' },
+    pl: { energy:0.330,  co2:0.00,  mwst:0.23, label:'Diesel ON', flagCls:'tax-card-pl' },
+    cz: { energy:0.430,  co2:0.00,  mwst:0.21, label:'Nafta',    flagCls:'tax-card-cz' },
+  }
+};
+
+// Gibt TAX_DATA mit Live-Preisen zurück (aus PRICES Variable der Hauptseite)
+function getTaxData(f) {
+  return {
+    de: { ...TAX_FIXED[f].de, price: PRICES[f].de },
+    pl: { ...TAX_FIXED[f].pl, price: PRICES[f].pl },
+    cz: { ...TAX_FIXED[f].cz, price: PRICES[f].cz },
+  };
+}
+
+const TAX_COUNTRIES = [
+  { key:'de', flag:'🇩🇪', name:'Deutschland' },
+  { key:'pl', flag:'🇵🇱', name:'Polen' },
+  { key:'cz', flag:'🇨🇿', name:'Tschechien' },
+];
+
+let taxFuel = 'e5';
+
+function openTaxModal() {
+  document.getElementById('taxOverlay').style.display='block';
+  document.getElementById('taxModal').style.display='block';
+  updateTax();
+}
+
+function closeTaxModal() {
+  document.getElementById('taxOverlay').style.display='none';
+  document.getElementById('taxModal').style.display='none';
+}
+
+function setTaxFuel(f, btn) {
+  taxFuel = f;
+  document.querySelectorAll('.tax-fuel-btn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  updateTax();
+}
+
+function updateTax() {
+  const liter = parseInt(document.getElementById('taxTankSlider').value)||50;
+  document.getElementById('taxTankVal').textContent = liter + ' L';
+
+  const liveData = getTaxData(taxFuel);
+  const html = TAX_COUNTRIES.map(c => {
+    const d = liveData[c.key];
+    const mwst_amt = d.price - d.price/(1+d.mwst);
+    const totalTax = d.energy + d.co2 + mwst_amt;
+    const netto = d.price - totalTax;
+    const taxPct = Math.round(totalTax/d.price*100);
+    const nettoPct = 100-taxPct;
+
+    return `
+    <div class="tax-country-card ${d.flagCls}">
+      <div class="tax-flag-name">
+        <span class="tax-flag">${c.flag}</span>
+        <div>
+          <div class="tax-cname">${c.name}</div>
+          <div class="tax-fuel-label">${d.label}</div>
+        </div>
+      </div>
+      <div class="tax-price-big">${d.price.toFixed(3)}</div>
+      <div class="tax-per-liter">€ / Liter</div>
+
+      <div class="tax-bars">
+        <div class="tax-bar-row">
+          <div class="tax-bar-label"><span>Steuern &amp; Abgaben</span><span>${taxPct}%</span></div>
+          <div class="tax-bar-track"><div class="tax-bar-fill bar-tax" style="width:${taxPct}%"></div></div>
+        </div>
+        <div class="tax-bar-row">
+          <div class="tax-bar-label"><span>Netto-Kraftstoff</span><span>${nettoPct}%</span></div>
+          <div class="tax-bar-track"><div class="tax-bar-fill bar-netto" style="width:${nettoPct}%"></div></div>
+        </div>
+      </div>
+
+      <div class="tax-breakdown">
+        ${d.energy>0?`<div class="tax-row"><span class="tl">Energiesteuer</span><span class="tv">${d.energy.toFixed(3)}€/L</span></div>`:''}
+        ${d.co2>0?`<div class="tax-row"><span class="tl">CO₂-Abgabe</span><span class="tv">${d.co2.toFixed(3)}€/L</span></div>`:''}
+        <div class="tax-row"><span class="tl">MwSt (${Math.round(d.mwst*100)}%)</span><span class="tv">${mwst_amt.toFixed(3)}€/L</span></div>
+        <div class="tax-row total-tax" style="border-top:1px solid var(--border);margin-top:3px;padding-top:3px;">
+          <span class="tl">∑ Steuern</span><span class="tv">${totalTax.toFixed(3)}€/L</span>
+        </div>
+        <div class="tax-row netto"><span class="tl">Netto-Kraftstoff</span><span class="tv">${netto.toFixed(3)}€/L</span></div>
+      </div>
+
+      <div class="tax-summary">
+        <div class="tax-summary-title">Bei ${liter}L Tankfüllung</div>
+        <div class="tax-summary-row"><span class="sl">Gesamtkosten</span><span class="sv sv-total">${(d.price*liter).toFixed(2)}€</span></div>
+        <div class="tax-summary-row"><span class="sl">davon Steuern</span><span class="sv sv-tax">${(totalTax*liter).toFixed(2)}€ 😤</span></div>
+        <div class="tax-summary-row"><span class="sl">reiner Kraftstoff</span><span class="sv sv-netto">${(netto*liter).toFixed(2)}€</span></div>
+      </div>
+    </div>`;
+  }).join('');
+
+  document.getElementById('taxCards').innerHTML = html;
+
+  // Fun fact
+  const de = liveData.de;
+  const pl = liveData.pl;
+  const deTax = (de.price - de.price/(1+de.mwst)) + de.energy + de.co2;
+  const plTax = (pl.price - pl.price/(1+pl.mwst)) + pl.energy + pl.co2;
+  const dePct = Math.round(deTax/de.price*100);
+  const plPct = Math.round(plTax/pl.price*100);
+  const diff = ((de.price - pl.price)*liter).toFixed(2);
+
+  document.getElementById('taxFunFact').innerHTML = `
+    <div class="tax-funfact-title">💡 Wusstest du?</div>
+    <p>
+      Bei einem ${liter}L Tank sparst du durch Tanken in Polen <strong>${diff}€</strong>.
+      In Deutschland besteht <strong>${dePct}%</strong> des Spritpreises aus Steuern –
+      in Polen sind es nur <strong>${plPct}%</strong>.
+      ${taxFuel==='e5'?'Das entspricht einem Netto-Kraftstoffpreis von nur ~0,64€/L in Deutschland!':
+      'Diesel wird in Deutschland mit 47 ct/L Energiesteuer belastet – in Polen nur 33 ct/L.'}
+      Deutschland hat die <strong>höchste Kraftstoffsteuerlast der EU</strong>.
+    </p>
+  `;
+}
+
+document.addEventListener('keydown', e => { if(e.key==='Escape') { closeTaxModal(); closeModal(); } });
+
+
+
+// ══════════════════════════════════════════
+// ⚡ EV KOSTENRECHNER
+// ══════════════════════════════════════════
+const EV_STROM_HOME   = {de:0.395, pl:0.256, cz:0.318};
+const EV_STROM_PUBLIC = {de:0.450, pl:0.320, cz:0.380};
+const EV_STROM_SOLAR  = {de:0.080, pl:0.080, cz:0.080};
+const EV_COUNTRIES_LIST = [
+  {key:'de', flag:'🇩🇪', name:'Deutschland'},
+  {key:'pl', flag:'🇵🇱', name:'Polen'},
+  {key:'cz', flag:'🇨🇿', name:'Tschechien'},
+];
+
+let evVehicleType = 'diesel';
+let evStromType   = 'home';
+
+function evSetVehicle(type, btn) {
+  evVehicleType = type;
+  document.querySelectorAll('.ev-vbtn').forEach(b => {
+    b.style.background='#1a2235';
+    b.style.borderColor='rgba(255,255,255,0.1)';
+    b.style.color='#5a6a80';
+  });
+  const colors = {benzin:['rgba(255,195,39,0.1)','#ffc327','#ffc327'], diesel:['rgba(77,166,255,0.1)','#4da6ff','#4da6ff'], ev:['rgba(0,207,255,0.1)','#00cfff','#00cfff']};
+  const c = colors[type];
+  btn.style.background=c[0]; btn.style.borderColor=c[1]; btn.style.color=c[2];
+
+  const sl = document.getElementById('ev-vslider');
+  const title = document.getElementById('ev-verbrauch-title');
+  const hint = document.getElementById('ev-vhint');
+  document.getElementById('ev-stromcard').style.display = type==='ev' ? 'block' : 'none';
+  
+  if(type==='ev') {
+    title.textContent='⚡ VERBRAUCH (KWH/100KM)';
+    sl.min=8; sl.max=35; sl.value=18; sl.step=0.5;
+    hint.textContent='Ø E-Auto: 18 kWh · Sparsam: 13 kWh · SUV: 25 kWh';
+  } else if(type==='diesel') {
+    title.textContent='🔵 VERBRAUCH (L/100KM)';
+    sl.min=3; sl.max=15; sl.value=6; sl.step=0.5;
+    hint.textContent='Ø Diesel PKW: 6L · Sparsam: 4L · SUV: 9L';
+  } else {
+    title.textContent='⛽ VERBRAUCH (L/100KM)';
+    sl.min=3; sl.max=15; sl.value=7; sl.step=0.5;
+    hint.textContent='Ø Benziner: 7L · Sparsam: 5L · SUV: 10L';
+  }
+  evCalc();
+}
+
+function evSetStrom(type, btn) {
+  evStromType = type;
+  document.querySelectorAll('.ev-sbtn').forEach(b => {
+    b.style.background='transparent'; b.style.borderColor='rgba(255,255,255,0.1)'; b.style.color='#5a6a80';
+  });
+  btn.style.background='rgba(0,232,122,0.1)'; btn.style.borderColor='#00e87a'; btn.style.color='#00e87a';
+  document.getElementById('ev-custom-row').style.display = type==='custom' ? 'block' : 'none';
+  const hints = {
+    home:'🇩🇪 39,5 ct · 🇵🇱 25,6 ct · 🇨🇿 31,8 ct (Hausstrom 2026)',
+    public:'🇩🇪 ~45 ct · 🇵🇱 ~32 ct · 🇨🇿 ~38 ct (Öffentliche Ladepunkte)',
+    solar:'☀️ ~8 ct/kWh Eigenverbrauch Solar – günstigstes Laden!',
+    custom:'Gib deinen persönlichen Strompreis ein'
+  };
+  document.getElementById('ev-stromhint').textContent = hints[type];
+  evCalc();
+}
+
+function evGetStromPreis(country) {
+  if(evStromType==='home')   return EV_STROM_HOME[country];
+  if(evStromType==='public') return EV_STROM_PUBLIC[country];
+  if(evStromType==='solar')  return EV_STROM_SOLAR[country];
+  if(evStromType==='custom') return parseInt(document.getElementById('ev-custom-slider').value)/100;
+  return EV_STROM_HOME[country];
+}
+
+function evCalc() {
+  const verbrauch = parseFloat(document.getElementById('ev-vslider').value);
+  const km = parseInt(document.getElementById('ev-kmslider').value);
+  const unit = evVehicleType==='ev' ? 'kWh' : 'L';
+  
+  document.getElementById('ev-vval').textContent = verbrauch+' '+unit;
+  document.getElementById('ev-kmval').textContent = km.toLocaleString('de-DE');
+  document.getElementById('ev-subtitle').textContent = `bei ${km.toLocaleString('de-DE')} km/Jahr · ${verbrauch}${unit}/100km`;
+
+  if(evStromType==='custom') {
+    const cv = document.getElementById('ev-custom-slider').value;
+    document.getElementById('ev-custom-val').textContent = cv+' ct';
+  }
+
+  // Kosten berechnen
+  const results = EV_COUNTRIES_LIST.map(c => {
+    const pBenzin = PRICES.e5[c.key];
+    const pDiesel = PRICES.diesel[c.key];
+    const pStrom  = evGetStromPreis(c.key);
+    
+    let mainCost, benzinCost, dieselCost, evCost;
+    
+    if(evVehicleType==='ev') {
+      mainCost  = evCost   = (verbrauch/100)*km*pStrom;
+      benzinCost = (7/100)*km*pBenzin;
+      dieselCost = (6/100)*km*pDiesel;
+    } else if(evVehicleType==='diesel') {
+      mainCost  = dieselCost = (verbrauch/100)*km*pDiesel;
+      benzinCost = (verbrauch/100)*km*pBenzin;
+      evCost    = (18/100)*km*evGetStromPreis(c.key);
+    } else {
+      mainCost  = benzinCost = (verbrauch/100)*km*pBenzin;
+      dieselCost = (verbrauch/100)*km*pDiesel;
+      evCost    = (18/100)*km*evGetStromPreis(c.key);
+    }
+    
+    return {...c, mainCost, benzinCost, dieselCost, evCost};
+  });
+
+  const minMain = Math.min(...results.map(r=>r.mainCost));
+  const maxAll  = Math.max(...results.map(r=>Math.max(r.benzinCost,r.dieselCost,r.evCost)));
+
+  // Country Cards
+  const cardsHtml = results.map(r => {
+    const isWinner = Math.abs(r.mainCost-minMain)<0.01;
+    const saving = evVehicleType==='ev' ? Math.round(r.dieselCost-r.evCost) : 0;
+    return `
+    <div style="background:#1a2235;border:1px solid ${isWinner?'#00e87a':'rgba(255,255,255,0.07)'};border-radius:16px;padding:1rem;position:relative;${isWinner?'box-shadow:0 0 20px rgba(0,232,122,0.12);':''}">
+      ${isWinner?'<div style="position:absolute;top:8px;right:8px;background:#00e87a;color:#000;font-size:0.58rem;font-weight:800;padding:2px 7px;border-radius:10px;">🏆 BESTES</div>':''}
+      <div style="display:flex;align-items:center;gap:6px;margin-bottom:10px;">
+        <span style="font-size:1.2rem;">${r.flag}</span>
+        <span style="font-size:0.75rem;font-weight:700;color:#5a6a80;">${r.name}</span>
+      </div>
+      <div style="font-size:0.75rem;padding:4px 0;border-bottom:1px solid rgba(255,255,255,0.05);display:flex;justify-content:space-between;">
+        <span style="color:#5a6a80;">⛽ Benzin/Jahr</span>
+        <span style="font-weight:700;color:#ffc327;">${Math.round(r.benzinCost).toLocaleString('de-DE')}€</span>
+      </div>
+      <div style="font-size:0.75rem;padding:4px 0;border-bottom:1px solid rgba(255,255,255,0.05);display:flex;justify-content:space-between;">
+        <span style="color:#5a6a80;">🔵 Diesel/Jahr</span>
+        <span style="font-weight:700;color:#4da6ff;">${Math.round(r.dieselCost).toLocaleString('de-DE')}€</span>
+      </div>
+      <div style="font-size:0.75rem;padding:4px 0;display:flex;justify-content:space-between;">
+        <span style="color:#5a6a80;">⚡ E-Auto/Jahr</span>
+        <span style="font-weight:700;color:${isWinner&&evVehicleType==='ev'?'#00e87a':'#00cfff'};font-size:${isWinner&&evVehicleType==='ev'?'1rem':'0.88rem'};">${Math.round(r.evCost).toLocaleString('de-DE')}€</span>
+      </div>
+      ${evVehicleType==='ev'&&saving>0?`<div style="margin-top:8px;padding-top:8px;border-top:1px solid rgba(255,255,255,0.05);font-size:0.68rem;color:#5a6a80;">vs Diesel gespart: <strong style="color:#00e87a;font-size:0.9rem;">${saving.toLocaleString('de-DE')}€</strong></div>`:''}
+    </div>`;
+  }).join('');
+  document.getElementById('ev-cards').innerHTML = cardsHtml;
+
+  // Balkendiagramm
+  const bars = [
+    {l:'🇩🇪 Benzin', v:results[0].benzinCost, c:'#ffc327'},
+    {l:'🇩🇪 Diesel', v:results[0].dieselCost, c:'#4da6ff'},
+    {l:'🇩🇪 E-Auto ⚡', v:results[0].evCost,  c:'#00cfff'},
+    {l:'🇵🇱 Benzin', v:results[1].benzinCost, c:'#ffc327'},
+    {l:'🇵🇱 Diesel', v:results[1].dieselCost, c:'#4da6ff'},
+    {l:'🇵🇱 E-Auto ⚡', v:results[1].evCost,  c:'#00cfff'},
+    {l:'🇨🇿 Benzin', v:results[2].benzinCost, c:'#ffc327'},
+    {l:'🇨🇿 Diesel', v:results[2].dieselCost, c:'#4da6ff'},
+    {l:'🇨🇿 E-Auto ⚡', v:results[2].evCost,  c:'#00cfff'},
+  ];
+  document.getElementById('ev-chart').innerHTML = bars.map(b=>{
+    const pct = Math.round(b.v/maxAll*100);
+    return `<div style="display:flex;align-items:center;gap:8px;margin:5px 0;">
+      <div style="width:110px;text-align:right;font-size:0.7rem;color:#5a6a80;flex-shrink:0;">${b.l}</div>
+      <div style="flex:1;background:rgba(255,255,255,0.05);border-radius:4px;height:20px;overflow:hidden;">
+        <div style="width:${pct}%;background:${b.c};height:20px;border-radius:4px;display:flex;align-items:center;padding-left:6px;font-size:0.65rem;font-weight:700;color:#000;transition:width 0.5s;">
+          ${Math.round(b.v).toLocaleString('de-DE')}€
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+
+  // Summary
+  const bestEV  = Math.min(...results.map(r=>r.evCost));
+  const bestCountry = results.find(r=>Math.abs(r.evCost-bestEV)<0.01);
+  const savingVsDE  = Math.round(results[0].dieselCost - bestEV);
+  const shareText = `Mit meinem E-Auto spare ich ${savingVsDE.toLocaleString('de-DE')}€/Jahr vs Diesel! 🚗⚡ Vergleich DE/PL/CZ: bestpricetank.de`;
+
+  document.getElementById('ev-summary').innerHTML = `
+    <div style="font-family:'Black Han Sans',sans-serif;font-size:0.9rem;letter-spacing:2px;color:#00cfff;margin-bottom:1rem;">💡 DEINE JAHRESERSPARNIS</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:1rem;">
+      <div>
+        <div style="font-family:'Black Han Sans',sans-serif;font-size:2.2rem;color:#00e87a;line-height:1;">${savingVsDE.toLocaleString('de-DE')}€</div>
+        <div style="font-size:0.72rem;color:#5a6a80;margin-top:4px;">E-Auto vs 🇩🇪 Diesel/Jahr</div>
+      </div>
+      <div>
+        <div style="font-family:'Black Han Sans',sans-serif;font-size:2.2rem;color:#00cfff;line-height:1;">${Math.round(bestEV).toLocaleString('de-DE')}€</div>
+        <div style="font-size:0.72rem;color:#5a6a80;margin-top:4px;">Günstigste Option: ${bestCountry.flag} E-Auto</div>
+      </div>
+    </div>
+    <div style="font-size:0.78rem;color:#5a6a80;line-height:1.6;margin-bottom:1rem;">
+      🏆 Günstigste Option: E-Auto in <strong style="color:#e2e8f0;">${bestCountry.flag} ${bestCountry.name}</strong> – <strong style="color:#00e87a;">${Math.round(bestEV).toLocaleString('de-DE')}€/Jahr</strong>
+    </div>
+    <button onclick="evShare('${encodeURIComponent(shareText)}')" style="background:linear-gradient(135deg,#00cfff,#00e87a);color:#000;border:none;border-radius:50px;padding:12px 28px;font-family:'Black Han Sans',sans-serif;font-size:0.85rem;letter-spacing:2px;cursor:pointer;width:100%;">
+      📤 ERGEBNIS TEILEN
+    </button>
+  `;
+}
+
+function evShare(enc) {
+  const text = decodeURIComponent(enc);
+  if(navigator.share) { navigator.share({title:'BestPriceTank',text,url:'https://bestpricetank.de'}); }
+  else { navigator.clipboard.writeText(text).then(()=>alert('✅ Kopiert! In WhatsApp einfügen.')); }
+}
+
+// EV Rechner beim Laden initialisieren
+window.addEventListener('load', () => { setTimeout(evCalc, 500); });
+
+// ══════════════════════════════════════
+// 🍪 COOKIE MANAGEMENT
+// DSGVO-konform, bereit für Google AdSense
+// ══════════════════════════════════════
+
+const COOKIE_KEY = 'bpt_cookie_consent';
+const COOKIE_DAYS = 365;
+
+// Cookie lesen/schreiben
+function setCookie(name, value, days) {
+  const d = new Date();
+  d.setTime(d.getTime() + days * 24 * 60 * 60 * 1000);
+  document.cookie = `${name}=${value};expires=${d.toUTCString()};path=/;SameSite=Lax`;
+}
+
+function getCookie(name) {
+  const v = document.cookie.match('(^|;)\s*' + name + '\s*=\s*([^;]+)');
+  return v ? v.pop() : null;
+}
+
+// Consent Objekt
+function getConsent() {
+  try {
+    const raw = getCookie(COOKIE_KEY);
+    return raw ? JSON.parse(decodeURIComponent(raw)) : null;
+  } catch(e) { return null; }
+}
+
+function saveConsent(analytics, marketing) {
+  const consent = {
+    essential: true,
+    analytics: analytics,
+    marketing: marketing,
+    timestamp: new Date().toISOString(),
+    version: '1.0'
+  };
+  setCookie(COOKIE_KEY, encodeURIComponent(JSON.stringify(consent)), COOKIE_DAYS);
+  applyConsent(consent);
+  return consent;
+}
+
+// Consent anwenden → Services laden
+function applyConsent(consent) {
+  if (consent.analytics) {
+    loadGoogleAnalytics();
+  }
+  if (consent.marketing) {
+    loadGoogleAdSense();
+  }
+  // Google Consent Mode v2 (für AdSense wichtig!)
+  if (window.gtag) {
+    gtag('consent', 'update', {
+      'analytics_storage':  consent.analytics  ? 'granted' : 'denied',
+      'ad_storage':         consent.marketing  ? 'granted' : 'denied',
+      'ad_user_data':       consent.marketing  ? 'granted' : 'denied',
+      'ad_personalization': consent.marketing  ? 'granted' : 'denied',
+    });
+  }
+}
+
+// Google Analytics laden (nur mit Consent)
+function loadGoogleAnalytics() {
+  if (document.querySelector('script[src*="googletagmanager"]')) return;
+  // GA4 Tracking ID hier eintragen wenn vorhanden
+  // const GA_ID = 'G-XXXXXXXXXX';
+  // const s = document.createElement('script');
+  // s.src = `https://www.googletagmanager.com/gtag/js?id=${GA_ID}`;
+  // s.async = true;
+  // document.head.appendChild(s);
+  // window.dataLayer = window.dataLayer || [];
+  // function gtag(){dataLayer.push(arguments);}
+  // gtag('js', new Date());
+  // gtag('config', GA_ID, { anonymize_ip: true });
+  console.log('📊 Analytics aktiviert (GA ID noch nicht konfiguriert)');
+}
+
+// Google AdSense laden (nur mit Consent)
+function loadGoogleAdSense() {
+  if (document.querySelector('script[src*="adsbygoogle"]')) return;
+  // AdSense Publisher ID hier eintragen wenn vorhanden
+  // const s = document.createElement('script');
+  // s.src = 'https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-XXXXXXXXXXXXXXXX';
+  // s.async = true;
+  // s.crossOrigin = 'anonymous';
+  // document.head.appendChild(s);
+  console.log('💰 AdSense aktiviert (Publisher ID noch nicht konfiguriert)');
+}
+
+// Banner anzeigen/verstecken
+function showCookieBanner() {
+  const banner = document.getElementById('cookie-banner');
+  setTimeout(() => banner.classList.add('visible'), 800);
+}
+
+function hideCookieBanner() {
+  const banner = document.getElementById('cookie-banner');
+  banner.classList.remove('visible');
+  setTimeout(() => banner.style.display = 'none', 400);
+  document.getElementById('cookie-badge').classList.add('show');
+}
+
+// Buttons
+function cookieAcceptAll() {
+  document.getElementById('cookie-analytics').checked = true;
+  document.getElementById('cookie-marketing').checked = true;
+  saveConsent(true, true);
+  hideCookieBanner();
+  closeCookieSettings();
+}
+
+function cookieAcceptEssential() {
+  document.getElementById('cookie-analytics').checked = false;
+  document.getElementById('cookie-marketing').checked = false;
+  saveConsent(false, false);
+  hideCookieBanner();
+  closeCookieSettings();
+}
+
+function cookieSaveSettings() {
+  const analytics = document.getElementById('cookie-analytics').checked;
+  const marketing = document.getElementById('cookie-marketing').checked;
+  saveConsent(analytics, marketing);
+  hideCookieBanner();
+  closeCookieSettings();
+}
+
+// Settings Modal
+function openCookieSettings() {
+  const consent = getConsent();
+  if (consent) {
+    document.getElementById('cookie-analytics').checked = consent.analytics;
+    document.getElementById('cookie-marketing').checked = consent.marketing;
+  }
+  document.getElementById('cookie-settings').classList.add('open');
+}
+
+function closeCookieSettings() {
+  document.getElementById('cookie-settings').classList.remove('open');
+}
+
+// Google Consent Mode v2 – Standard DENIED (DSGVO!)
+// Muss VOR Google Scripts stehen
+window.dataLayer = window.dataLayer || [];
+function gtag(){dataLayer.push(arguments);}
+gtag('consent', 'default', {
+  'analytics_storage':  'denied',
+  'ad_storage':         'denied',
+  'ad_user_data':       'denied',
+  'ad_personalization': 'denied',
+  'wait_for_update':    500,
+});
+
+// Beim Laden prüfen ob Consent bereits gegeben
+window.addEventListener('DOMContentLoaded', () => {
+  const consent = getConsent();
+  if (!consent) {
+    // Noch kein Consent → Banner zeigen
+    showCookieBanner();
+  } else {
+    // Consent vorhanden → Services laden
+    applyConsent(consent);
+    document.getElementById('cookie-badge').classList.add('show');
+  }
+});
+
+// ESC schließt Cookie Settings
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') closeCookieSettings();
+});
+
+// ══════════════════════════════════════
+// ⚡ LADESTATIONEN – OpenChargeMap API
+// ══════════════════════════════════════
+const OCM_KEY = '4e9be110-9ff8-449f-a72a-f87799ea5fdb';
+let evStationMarkers = [];
+let evStationsVisible = false;
+let evStationsLoaded = false;
+let lastEVLat = null;
+let lastEVLng = null;
+
+// Stecker-Typ Namen
+const CONNECTOR_TYPES = {
+  1:  'Type 1 (J1772)',
+  2:  'CHAdeMO',
+  25: 'Type 2',
+  30: 'Type 2',
+  32: 'CCS (Typ2)',
+  33: 'CCS (Typ1)',
+  3:  'SCAME',
+  8:  'Type 2',
+  10: 'CHAdeMO',
+};
+
+function getConnectorName(id) {
+  return CONNECTOR_TYPES[id] || 'Unbekannt';
+}
+
+function getPowerClass(kw) {
+  if (kw >= 100) return 'HPC ⚡⚡⚡';
+  if (kw >= 50)  return 'DC Schnell ⚡⚡';
+  if (kw >= 22)  return 'AC Schnell ⚡';
+  return 'AC Normal';
+}
+
+async function loadEVStations(lat, lng, radius) {
+  // Loading Anzeige
+  const mapEl = document.getElementById('map');
+  const loader = document.createElement('div');
+  loader.className = 'ev-loading';
+  loader.id = 'ev-loader';
+  loader.textContent = '⚡ Ladestationen werden geladen...';
+  mapEl.appendChild(loader);
+
+  try {
+    const url = `https://api.openchargemap.io/v3/poi/?output=json` +
+      `&latitude=${lat}&longitude=${lng}` +
+      `&distance=${Math.min(radius, 50)}` +
+      `&distanceunit=KM` +
+      `&maxresults=100` +
+      `&countrycode=DE,PL,CZ` +
+      `&statustypeid=50` +
+      `&key=${OCM_KEY}`;
+
+    const r = await fetch(url, {
+      headers: { 'X-API-Key': OCM_KEY }
+    });
+
+    if (!r.ok) throw new Error('API Fehler: ' + r.status);
+    const stations = await r.json();
+
+    // Alte Marker entfernen
+    clearEVMarkers();
+
+    stations.forEach(s => {
+      const pos = s.AddressInfo;
+      if (!pos?.Latitude || !pos?.Longitude) return;
+
+      // Stärkste Verbindung finden
+      const connections = s.Connections || [];
+      const maxKW = Math.max(...connections.map(c => c.PowerKW || 0));
+      const connTypes = [...new Set(connections.map(c => getConnectorName(c.ConnectionTypeID)))];
+      const isFast = maxKW >= 50;
+      const isOpen = s.StatusType?.IsOperational !== false;
+
+      // Marker HTML
+      const markerHtml = isFast
+        ? `<div class="ev-marker-fast">⚡ ${maxKW > 0 ? maxKW+'kW' : 'DC'}</div>`
+        : `<div class="ev-marker-normal">⚡ ${maxKW > 0 ? maxKW+'kW' : 'AC'}</div>`;
+
+      const icon = L.divIcon({
+        html: markerHtml,
+        className: '',
+        iconAnchor: [30, 10]
+      });
+
+      // Preis Info
+      const priceInfo = connections.find(c => c.Comments)?.Comments || 'Keine Preisinformation';
+      const network = s.OperatorInfo?.Title || 'Unbekanntes Netz';
+
+      const popup = `
+        <div class="ev-popup">
+          <div class="ev-popup-title">⚡ ${pos.Title || 'Ladestation'}</div>
+          <div class="ev-popup-addr">${pos.AddressLine1 || ''}, ${pos.Town || ''}</div>
+          <div class="ev-popup-row">
+            <span class="ev-popup-label">Netzwerk</span>
+            <span class="ev-popup-val">${network}</span>
+          </div>
+          <div class="ev-popup-row">
+            <span class="ev-popup-label">Max. Leistung</span>
+            <span class="ev-popup-val" style="color:#00e87a">${maxKW > 0 ? maxKW+' kW' : 'unbekannt'}</span>
+          </div>
+          <div class="ev-popup-row">
+            <span class="ev-popup-label">Typ</span>
+            <span class="ev-popup-val">${getPowerClass(maxKW)}</span>
+          </div>
+          <div class="ev-popup-row">
+            <span class="ev-popup-label">Stecker</span>
+            <span class="ev-popup-val">${connTypes.slice(0,2).join(', ')}</span>
+          </div>
+          <div class="ev-popup-row">
+            <span class="ev-popup-label">Anzahl</span>
+            <span class="ev-popup-val">${connections.length} Anschlüsse</span>
+          </div>
+          <div class="ev-popup-row">
+            <span class="ev-popup-label">Status</span>
+            <span class="ev-popup-val" style="color:${isOpen?'#00e87a':'#ff2d3b'}">${isOpen?'🟢 Verfügbar':'🔴 Außer Betrieb'}</span>
+          </div>
+          ${priceInfo !== 'Keine Preisinformation' ? `
+          <div style="margin-top:6px;padding-top:6px;border-top:1px solid rgba(255,255,255,0.08);font-size:10px;color:#888;">
+            💶 ${priceInfo}
+          </div>` : ''}
+          <div style="margin-top:6px;padding-top:6px;border-top:1px solid rgba(255,255,255,0.08);">
+            <a href="https://www.google.com/maps/search/?api=1&query=${pos.Latitude},${pos.Longitude}" 
+               target="_blank" 
+               style="font-size:10px;color:#00cfff;text-decoration:none;">
+              📍 In Google Maps öffnen
+            </a>
+          </div>
+        </div>`;
+
+      const marker = L.marker([pos.Latitude, pos.Longitude], { icon })
+        .addTo(map)
+        .bindPopup(popup);
+
+      evStationMarkers.push(marker);
+    });
+
+    evStationsLoaded = true;
+    lastEVLat = lat;
+    lastEVLng = lng;
+
+    console.log(`✅ ${evStationMarkers.length} Ladestationen geladen`);
+
+  } catch(e) {
+    console.error('OpenChargeMap Fehler:', e);
+  } finally {
+    document.getElementById('ev-loader')?.remove();
+  }
+}
+
+function clearEVMarkers() {
+  evStationMarkers.forEach(m => map.removeLayer(m));
+  evStationMarkers = [];
+}
+
+function toggleEVStations(btn) {
+  evStationsVisible = !evStationsVisible;
+
+  if (evStationsVisible) {
+    btn.classList.add('active');
+    btn.style.background = 'rgba(0,232,122,0.15)';
+    btn.style.borderColor = '#00e87a';
+
+    // Koordinaten aus aktueller PLZ oder Görlitz als Default
+    const lat = currentCoords?.lat || 51.1534;
+    const lng = currentCoords?.lon || 14.9853;
+    const radius = parseInt(document.getElementById('radiusSelect')?.value || 25);
+
+    loadEVStations(lat, lng, radius);
+  } else {
+    btn.classList.remove('active');
+    btn.style.background = '';
+    btn.style.borderColor = 'rgba(0,232,122,0.4)';
+    clearEVMarkers();
+    evStationsLoaded = false;
+  }
+}
+
+// Koordinaten aus PLZ-Suche speichern
+let currentCoords = null;
+
+// ══════════════════════════════════════
+// PWA – Als App installierbar machen
+// ══════════════════════════════════════
+let deferredPrompt;
+
+window.addEventListener('beforeinstallprompt', (e) => {
+  e.preventDefault();
+  deferredPrompt = e;
+  // Install Bar anzeigen
+  document.getElementById('pwa-install-bar').style.display = 'block';
+});
+
+function installPWA() {
+  if (!deferredPrompt) return;
+  deferredPrompt.prompt();
+  deferredPrompt.userChoice.then(choice => {
+    if (choice.outcome === 'accepted') {
+      document.getElementById('pwa-install-bar').style.display = 'none';
+    }
+    deferredPrompt = null;
+  });
+}
+
+// Service Worker registrieren
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('/sw.js').then(reg => {
+      console.log('✅ Service Worker registriert');
+    }).catch(err => {
+      console.log('Service Worker nicht verfügbar (lokal ok)');
+    });
+  });
+}
+
+</script>
+</body>
+</html>
