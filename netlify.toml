@@ -1,0 +1,37 @@
+[build]
+  publish = "."
+  functions = "netlify/functions"
+
+# Scheduled Function – täglich 07:00 UTC
+[functions."fetch-pl-prices"]
+  schedule = "0 7 * * *"
+
+# API Endpoints
+[[redirects]]
+  from = "/api/pl-prices"
+  to = "/.netlify/functions/fetch-pl-prices"
+  status = 200
+
+[[redirects]]
+  from = "/api/pl-prices/latest"
+  to = "/.netlify/functions/get-pl-prices"
+  status = 200
+
+[[redirects]]
+  from = "/api/config"
+  to = "/.netlify/functions/config"
+  status = 200
+
+# Security Headers
+[[headers]]
+  for = "/*"
+  [headers.values]
+    X-Frame-Options = "DENY"
+    X-Content-Type-Options = "nosniff"
+    Referrer-Policy = "strict-origin-when-cross-origin"
+
+[[headers]]
+  for = "/api/*"
+  [headers.values]
+    Access-Control-Allow-Origin = "*"
+    Cache-Control = "public, max-age=3600"

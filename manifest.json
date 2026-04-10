@@ -1,0 +1,39 @@
+{
+  "name": "BestPriceTank – Tankpreise DE/PL/CZ",
+  "short_name": "BestPriceTank",
+  "description": "Günstig tanken im Dreiländereck Deutschland, Polen & Tschechien",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#0e1520",
+  "theme_color": "#0e1520",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "categories": ["utilities", "travel"],
+  "lang": "de",
+  "shortcuts": [
+    {
+      "name": "Preise suchen",
+      "short_name": "Suchen",
+      "description": "PLZ eingeben und Preise vergleichen",
+      "url": "/?action=search"
+    },
+    {
+      "name": "Steuerrechner",
+      "short_name": "Steuern",
+      "url": "/?action=tax"
+    }
+  ]
+}
