@@ -272,6 +272,7 @@ h1 em{color:var(--acc);font-style:normal;font-weight:700}
     <button class="ftab" onclick="setFuel('e5',this)">E5 Benzin</button>
     <button class="ftab" onclick="setFuel('e10',this)">E10</button>
     <button class="ftab" onclick="setFuel('lpg',this)">LPG</button>
+    <button class="ftab" onclick="setFuel('sp98',this)">Super Plus 98</button>
     <button class="ftab" onclick="openModal('ev')">⚡ E-Auto</button>
   </div>
 
@@ -399,6 +400,7 @@ h1 em{color:var(--acc);font-style:normal;font-weight:700}
           <option value="e5">E5</option>
           <option value="e10">E10</option>
           <option value="lpg">LPG</option>
+          <option value="sp98">Super Plus 98</option>
         </select>
       </div>
     </div>
@@ -587,16 +589,19 @@ const OCM_KEY = '4e9be110-9ff8-449f-a72a-f87799ea5fdb';
 
 const PRICES = {
   // Stand: 11.04.2026 – Görlitz Live Preise (Tankerkönig überschreibt)
-  diesel: {de:2.359, pl:1.803, cz:1.728},
-  e5:     {de:2.419, pl:1.452, cz:1.691},
-  e10:    {de:2.399, pl:1.432, cz:1.671},
-  lpg:    {de:0.979, pl:0.916, cz:0.812},
+  // Stand: 11.04.2026 – Citronex Zgorzelec aktuell
+  diesel: {de:2.359, pl:1.793, cz:1.728},
+  e5:     {de:2.419, pl:1.445, cz:1.691},
+  e10:    {de:2.399, pl:1.426, cz:1.671},
+  lpg:    {de:0.979, pl:0.927, cz:0.812},
+  sp98:   {de:2.579, pl:1.583, cz:1.884},
 };
 const TAX = {
   diesel: {de:{energy:0.4704,vat:0.19}, pl:{energy:0.32,vat:0.23}, cz:{energy:0.33,vat:0.21}},
   e5:     {de:{energy:0.6545,vat:0.19}, pl:{energy:0.40,vat:0.23}, cz:{energy:0.42,vat:0.21}},
   e10:    {de:{energy:0.6545,vat:0.19}, pl:{energy:0.38,vat:0.23}, cz:{energy:0.40,vat:0.21}},
   lpg:    {de:{energy:0.1804,vat:0.19}, pl:{energy:0.15,vat:0.23}, cz:{energy:0.16,vat:0.21}},
+  sp98:   {de:{energy:0.6545,vat:0.19}, pl:{energy:0.42,vat:0.23}, cz:{energy:0.44,vat:0.21}},
 };
 
 let RATES = {PLN:4.25, CZK:24.37};
@@ -703,7 +708,7 @@ const I18N = {
     hero_sub: 'Echtzeit Preisvergleich · 43 Stationen · Deutschland · Polen · Tschechien',
     search_placeholder: 'PLZ eingeben, z.B. 02828...',
     search_btn: 'Suchen',
-    tab_diesel: 'Diesel', tab_e5: 'E5 Benzin', tab_e10: 'E10', tab_lpg: 'LPG', tab_ev: '⚡ E-Auto',
+    tab_diesel: 'Diesel', tab_e5: 'E5 Benzin', tab_e10: 'E10', tab_lpg: 'LPG', tab_sp98: 'Super Plus 98', tab_ev: '⚡ E-Auto',
     kl_pl: 'Polen', kl_cz: 'Tschechien', kl_de: 'Deutschland',
     kl_de_sub: 'Tankerkönig Live', kl_de_ref: 'Referenzpreis',
     stations_title: 'Günstigste Stationen',
@@ -741,7 +746,7 @@ const I18N = {
     hero_sub: 'Live price comparison · 43 stations · Germany · Poland · Czech Republic',
     search_placeholder: 'Enter ZIP code, e.g. 02828...',
     search_btn: 'Search',
-    tab_diesel: 'Diesel', tab_e5: 'E5 Petrol', tab_e10: 'E10', tab_lpg: 'LPG', tab_ev: '⚡ EV',
+    tab_diesel: 'Diesel', tab_e5: 'E5 Petrol', tab_e10: 'E10', tab_lpg: 'LPG', tab_sp98: 'Super Plus 98', tab_ev: '⚡ EV',
     kl_pl: 'Poland', kl_cz: 'Czech Republic', kl_de: 'Germany',
     kl_de_sub: 'Tankerkönig Live', kl_de_ref: 'Reference price',
     stations_title: 'Cheapest stations',
@@ -779,7 +784,7 @@ const I18N = {
     hero_sub: 'Porównanie cen na żywo · 43 stacje · Niemcy · Polska · Czechy',
     search_placeholder: 'Wpisz kod pocztowy, np. 59-900...',
     search_btn: 'Szukaj',
-    tab_diesel: 'Diesel', tab_e5: 'Benzyna E5', tab_e10: 'Benzyna E10', tab_lpg: 'LPG', tab_ev: '⚡ Elektryk',
+    tab_diesel: 'Diesel', tab_e5: 'Benzyna E5', tab_e10: 'Benzyna E10', tab_lpg: 'LPG', tab_sp98: 'Super Plus 98', tab_ev: '⚡ Elektryk',
     kl_pl: 'Polska', kl_cz: 'Czechy', kl_de: 'Niemcy',
     kl_de_sub: 'Tankerkönig Live', kl_de_ref: 'Cena referencyjna',
     stations_title: 'Najtańsze stacje',
@@ -817,7 +822,7 @@ const I18N = {
     hero_sub: 'Srovnání cen živě · 43 stanic · Německo · Polsko · Česká republika',
     search_placeholder: 'Zadejte PSČ, např. 463 34...',
     search_btn: 'Hledat',
-    tab_diesel: 'Nafta', tab_e5: 'Benzin E5', tab_e10: 'Benzin E10', tab_lpg: 'LPG', tab_ev: '⚡ Elektro',
+    tab_diesel: 'Nafta', tab_e5: 'Benzin E5', tab_e10: 'Benzin E10', tab_lpg: 'LPG', tab_sp98: 'Super Plus 98', tab_ev: '⚡ Elektro',
     kl_pl: 'Polsko', kl_cz: 'Česká republika', kl_de: 'Německo',
     kl_de_sub: 'Tankerkönig Live', kl_de_ref: 'Referenční cena',
     stations_title: 'Nejlevnější stanice',
@@ -870,7 +875,8 @@ function setLang(l) {
   if(tabs[1]) tabs[1].textContent = t.tab_e5;
   if(tabs[2]) tabs[2].textContent = t.tab_e10;
   if(tabs[3]) tabs[3].textContent = t.tab_lpg;
-  if(tabs[4]) tabs[4].textContent = t.tab_ev;
+  if(tabs[4]) tabs[4].textContent = t.tab_sp98;
+  if(tabs[5]) tabs[5].textContent = t.tab_ev;
 
   // KPI labels
   document.querySelectorAll('.klabel')[0].textContent = t.kl_pl;
@@ -1050,9 +1056,27 @@ function renderStations() {
 
   all = all.map(s => {
     let eur;
-    if(s.country==='de') eur = s.prices?.[currentFuel] || p.de;
-    else if(s.country==='pl') eur = p.pl;
-    else eur = p.cz;
+    if(s.country==='de') {
+      eur = s.prices?.[currentFuel] || p.de;
+    } else if(s.country==='pl') {
+      // Aufschlag je nach Tankstelle
+      const base = p.pl;
+      const auf = window.PL_AUFSCHLAEGE;
+      const name = s.name.toLowerCase();
+      let aufschlag = 0;
+      if(auf) {
+        if(name.includes('orlen'))   aufschlag = parseFloat((auf.orlen/4.25).toFixed(3));
+        else if(name.includes('shell'))    aufschlag = parseFloat((auf.shell/4.25).toFixed(3));
+        else if(name.includes('circle'))   aufschlag = parseFloat((auf.circle_k/4.25).toFixed(3));
+        else if(name.includes('bp'))       aufschlag = parseFloat((auf.bp/4.25).toFixed(3));
+        else if(name.includes('lotos'))    aufschlag = parseFloat((auf.lotos/4.25).toFixed(3));
+        else if(name.includes('ab tank')) aufschlag = parseFloat((auf.ab_tank/4.25).toFixed(3));
+        else if(name.includes('areca'))    aufschlag = parseFloat((auf.areca/4.25).toFixed(3));
+      }
+      eur = parseFloat((base + aufschlag).toFixed(3));
+    } else {
+      eur = p.cz;
+    }
     return {...s, eur};
   }).sort((a,b) => a.eur - b.eur);
 
@@ -1189,25 +1213,38 @@ async function loadRates() {
     }
     document.getElementById('r-pln').textContent = RATES.PLN.toFixed(2);
     document.getElementById('r-czk').textContent = RATES.CZK.toFixed(2);
-    document.getElementById('r-upd').textContent = 'Update: '+new Date().toLocaleTimeString('de-DE',{hour:'2-digit',minute:'2-digit'});
+    const plUpd = window.PL_UPDATED ? ' · PL: '+window.PL_UPDATED : '';
+    document.getElementById('r-upd').textContent = 'DE: '+new Date().toLocaleTimeString('de-DE',{hour:'2-digit',minute:'2-digit'})+plUpd;
   } catch(e) {
     document.getElementById('r-pln').textContent = RATES.PLN.toFixed(2);
     document.getElementById('r-czk').textContent = RATES.CZK.toFixed(2);
   }
   try {
-    const pr = await fetch('/api/pl-prices');
+    // PL Preise von pl-prices.json laden (täglich manuell aktualisiert)
+    const pr = await fetch('/data/pl-prices.json?v='+Date.now());
     if(pr.ok) {
       const pd = await pr.json();
-      const p = pd.prices||pd;
-      const src = p.regional_pl||p.zgorzelec_i;
-      if(src?.diesel) PRICES.diesel.pl = parseFloat((src.diesel/RATES.PLN).toFixed(3));
-      if(src?.e5)     PRICES.e5.pl     = parseFloat((src.e5/RATES.PLN).toFixed(3));
-      if(src?.lpg)    PRICES.lpg.pl    = parseFloat((src.lpg/RATES.PLN).toFixed(3));
-      const cz = p.regional_cz||p.hradek;
-      if(cz?.diesel) PRICES.diesel.cz = parseFloat((cz.diesel/RATES.CZK).toFixed(3));
-      if(cz?.e5)     PRICES.e5.cz     = parseFloat((cz.e5/RATES.CZK).toFixed(3));
+      const c = pd.citronex;
+      const auf = pd.aufschlaege;
+
+      // Citronex Preise → EUR
+      if(c?.diesel) PRICES.diesel.pl = parseFloat((c.diesel/RATES.PLN).toFixed(3));
+      if(c?.e5)     PRICES.e5.pl     = parseFloat((c.e5/RATES.PLN).toFixed(3));
+      if(c?.lpg)    PRICES.lpg.pl    = parseFloat((c.lpg/RATES.PLN).toFixed(3));
+
+      // CZ Preise
+      if(pd.cz?.diesel) PRICES.diesel.cz = parseFloat((pd.cz.diesel/RATES.CZK).toFixed(3));
+      if(pd.cz?.e5)     PRICES.e5.cz     = parseFloat((pd.cz.e5/RATES.CZK).toFixed(3));
+      if(pd.cz?.lpg)    PRICES.lpg.cz    = parseFloat((pd.cz.lpg/RATES.CZK).toFixed(3));
+
+      // Aufschläge für andere PL Stationen speichern
+      window.PL_AUFSCHLAEGE = auf;
+      window.PL_BASE = c;
+      window.PL_UPDATED = pd.updated;
+
+      console.log('✅ PL Preise geladen:', pd.updated, 'Citronex Diesel:', c.diesel, 'PLN');
     }
-  } catch(e) {}
+  } catch(e) { console.warn('PL Preise Fehler:', e.message); }
 }
 
 // ── GRENZRECHNER ──
