@@ -1,32 +1,46 @@
-// Netlify Function – liest prices.json aus dem Repo
-const path = require('path');
 const fs = require('fs');
+const path = require('path');
 
 exports.handler = async () => {
   let data;
   
   try {
-    // Verschiedene Pfade probieren
+    // Alle möglichen Pfade testen und loggen
+    const base = process.cwd();
+    console.log('CWD:', base);
+    console.log('__dirname:', __dirname);
+    
+    // Verzeichnis auflisten
+    try {
+      const files = fs.readdirSync(base);
+      console.log('Root Dateien:', files.join(', '));
+    } catch(e) {}
+    
     const paths = [
-      path.join(process.cwd(), 'data', 'prices.json'),
+      path.join(base, 'data', 'prices.json'),
       path.join(__dirname, '..', '..', 'data', 'prices.json'),
       path.join(__dirname, '..', '..', '..', 'data', 'prices.json'),
+      path.join(__dirname, 'data', 'prices.json'),
       '/var/task/data/prices.json',
+      '/opt/build/repo/data/prices.json',
     ];
     
     for (const p of paths) {
-      console.log('Versuche:', p);
-      if (fs.existsSync(p)) {
-        data = JSON.parse(fs.readFileSync(p, 'utf8'));
-        console.log('✅ Gefunden:', p);
-        break;
-      }
+      try {
+        if (fs.existsSync(p)) {
+          data = JSON.parse(fs.readFileSync(p, 'utf8'));
+          console.log('✅ Gefunden:', p);
+          break;
+        } else {
+          console.log('❌ Nicht da:', p);
+        }
+      } catch(e) {}
     }
     
-    if (!data) throw new Error('prices.json nicht gefunden');
+    if (!data) throw new Error('Nicht gefunden');
     
   } catch(e) {
-    console.log('Fehler:', e.message, '→ Fallback');
+    console.log('→ Statische Fallback Preise');
     data = {
       timestamp: new Date().toISOString(),
       source: ['static_11042026'],
