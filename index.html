@@ -418,6 +418,7 @@ h1 em{color:var(--acc);font-style:normal;font-weight:700}
         <tr><td>Preis/Liter</td><td class="de-col" id="s-de-p">–</td><td class="pl-col" id="s-pl-p">–</td><td class="cz-col" id="s-cz-p">–</td></tr>
         <tr style="background:rgba(216,90,48,.04)"><td style="color:var(--acc);font-weight:600">Netto (ohne Steuer)</td><td class="de-col" id="s-de-n" style="font-weight:600">–</td><td class="pl-col" id="s-pl-n" style="font-weight:600">–</td><td class="cz-col" id="s-cz-n" style="font-weight:600">–</td></tr>
         <tr><td>Energiesteuer/L</td><td class="de-col" id="s-de-e">–</td><td class="pl-col" id="s-pl-e">–</td><td class="cz-col" id="s-cz-e">–</td></tr>
+        <tr><td>CO2-Abgabe/L</td><td class="de-col" id="s-de-c">–</td><td class="pl-col" id="s-pl-c">–</td><td class="cz-col" id="s-cz-c">–</td></tr>
         <tr><td>MwSt./L</td><td class="de-col" id="s-de-m">–</td><td class="pl-col" id="s-pl-m">–</td><td class="cz-col" id="s-cz-m">–</td></tr>
         <tr><td>Steuern gesamt/L</td><td class="de-col" id="s-de-t">–</td><td class="pl-col" id="s-pl-t">–</td><td class="cz-col" id="s-cz-t">–</td></tr>
         <tr class="total"><td>Gesamtkosten</td><td id="s-de-g">–</td><td id="s-pl-g">–</td><td id="s-cz-g">–</td></tr>
@@ -704,11 +705,14 @@ const PRICES = {
   sp98:   {de:2.579, pl:1.583, cz:1.884},
 };
 const TAX = {
-  diesel: {de:{energy:0.4704,vat:0.19}, pl:{energy:0.32,vat:0.23}, cz:{energy:0.33,vat:0.21}},
-  e5:     {de:{energy:0.6545,vat:0.19}, pl:{energy:0.40,vat:0.23}, cz:{energy:0.42,vat:0.21}},
-  e10:    {de:{energy:0.6545,vat:0.19}, pl:{energy:0.38,vat:0.23}, cz:{energy:0.40,vat:0.21}},
-  lpg:    {de:{energy:0.1804,vat:0.19}, pl:{energy:0.15,vat:0.23}, cz:{energy:0.16,vat:0.21}},
-  sp98:   {de:{energy:0.6545,vat:0.19}, pl:{energy:0.42,vat:0.23}, cz:{energy:0.44,vat:0.21}},
+  // Energiesteuer + CO2-Steuer (55€/t, 2026) + MwSt
+  // DE CO2: Diesel 0.1458€, Benzin 0.1268€, LPG 0.0788€
+  // PL CO2: ~0.04€/L (ETS Polska), CZ: ~0.05€/L
+  diesel: {de:{energy:0.4704, co2:0.1458, vat:0.19}, pl:{energy:0.0753, co2:0.040, vat:0.23}, cz:{energy:0.0780, co2:0.050, vat:0.21}},
+  e5:     {de:{energy:0.6545, co2:0.1268, vat:0.19}, pl:{energy:0.0941, co2:0.035, vat:0.23}, cz:{energy:0.1000, co2:0.045, vat:0.21}},
+  e10:    {de:{energy:0.6545, co2:0.1143, vat:0.19}, pl:{energy:0.0894, co2:0.032, vat:0.23}, cz:{energy:0.0950, co2:0.040, vat:0.21}},
+  lpg:    {de:{energy:0.1804, co2:0.0788, vat:0.19}, pl:{energy:0.0353, co2:0.025, vat:0.23}, cz:{energy:0.0376, co2:0.030, vat:0.21}},
+  sp98:   {de:{energy:0.6545, co2:0.1268, vat:0.19}, pl:{energy:0.0988, co2:0.035, vat:0.23}, cz:{energy:0.1035, co2:0.045, vat:0.21}},
 };
 
 let RATES = {PLN:4.25, CZK:24.37};
@@ -1159,6 +1163,12 @@ function renderStations() {
   const p = PRICES[currentFuel] || PRICES.diesel;
   let all = [...STATIC_STATIONS, ...DE_STATIONS];
   if(currentFilter !== 'all') all = all.filter(s => s.country === currentFilter);
+
+  // Umkreis Filter für PL/CZ Stationen
+  all = all.filter(s => {
+    if(s.country === 'de') return true; // DE kommt von TK API, bereits gefiltert
+    return s.dist <= currentRadius;
+  });
 
   all = all.map(s => {
     let eur;
