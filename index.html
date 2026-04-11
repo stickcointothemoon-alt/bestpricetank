@@ -458,12 +458,29 @@ h1 em{color:var(--acc);font-style:normal;font-weight:700}
       <div class="modal-close" onclick="closeModal('ev')">×</div>
     </div>
     <div class="ev-grid">
+      <div class="ev-row">
+        <span>Kraftstoff</span>
+        <select class="ev-inp" id="ev-fuel" onchange="calcEV()" style="width:85px;padding:6px 4px;text-align:right">
+          <option value="diesel">Diesel</option>
+          <option value="e5">E5</option>
+          <option value="e10">E10</option>
+          <option value="lpg">LPG</option>
+        </select>
+      </div>
+      <div class="ev-row">
+        <span>Tankland</span>
+        <select class="ev-inp" id="ev-land" onchange="calcEV()" style="width:85px;padding:6px 4px;text-align:right">
+          <option value="pl">🇵🇱 Polen</option>
+          <option value="de">🇩🇪 DE</option>
+          <option value="cz">🇨🇿 CZ</option>
+        </select>
+      </div>
       <div class="ev-row"><span>Strecke</span><span><input class="ev-inp" type="number" id="ev-km" value="100" oninput="calcEV()"> km</span></div>
-      <div class="ev-row"><span>Verbrenner Verbrauch</span><span><input class="ev-inp" type="number" id="ev-l" value="7" step="0.1" oninput="calcEV()"> L/100</span></div>
-      <div class="ev-row"><span>E-Auto Verbrauch</span><span><input class="ev-inp" type="number" id="ev-kwh" value="18" step="0.1" oninput="calcEV()"> kWh/100</span></div>
+      <div class="ev-row"><span>Verbrenner L/100</span><span><input class="ev-inp" type="number" id="ev-l" value="7" step="0.1" oninput="calcEV()"> L</span></div>
+      <div class="ev-row"><span>E-Auto kWh/100</span><span><input class="ev-inp" type="number" id="ev-kwh" value="18" step="0.1" oninput="calcEV()"> kWh</span></div>
       <div class="ev-row"><span>Strompreis</span><span><input class="ev-inp" type="number" id="ev-str" value="0.32" step="0.01" oninput="calcEV()"> €/kWh</span></div>
       <div class="ev-result">
-        <div class="ev-res-row"><span>🇵🇱 Verbrenner (PL Diesel)</span><strong id="ev-vbr">–</strong></div>
+        <div class="ev-res-row"><span id="ev-vbr-label">🇵🇱 Verbrenner (PL Diesel)</span><strong id="ev-vbr">–</strong></div>
         <div class="ev-res-row"><span>⚡ E-Auto (Strom)</span><strong id="ev-elec" style="color:var(--gr)">–</strong></div>
         <div class="ev-res-row"><span>Ersparnis E-Auto</span><strong id="ev-save" style="color:var(--gr)">–</strong></div>
       </div>
@@ -1306,13 +1323,23 @@ function calcS() {
 
 // ── EV RECHNER ──
 function calcEV() {
-  const km  = parseFloat(document.getElementById('ev-km').value)||100;
-  const l   = parseFloat(document.getElementById('ev-l').value)||7;
-  const kwh = parseFloat(document.getElementById('ev-kwh').value)||18;
-  const str = parseFloat(document.getElementById('ev-str').value)||0.32;
-  const vbr = (km/100)*l*PRICES.diesel.pl;
-  const ev  = (km/100)*kwh*str;
+  const km   = parseFloat(document.getElementById('ev-km').value)||100;
+  const l    = parseFloat(document.getElementById('ev-l').value)||7;
+  const kwh  = parseFloat(document.getElementById('ev-kwh').value)||18;
+  const str  = parseFloat(document.getElementById('ev-str').value)||0.32;
+  const fuel = document.getElementById('ev-fuel')?.value || 'diesel';
+  const land = document.getElementById('ev-land')?.value || 'pl';
+
+  const pricePerL = PRICES[fuel]?.[land] || PRICES.diesel.pl;
+  const vbr  = (km/100)*l*pricePerL;
+  const ev   = (km/100)*kwh*str;
   const save = vbr-ev;
+
+  const flags = {pl:'🇵🇱 Polen', de:'🇩🇪 DE', cz:'🇨🇿 CZ'};
+  const fuelNames = {diesel:'Diesel', e5:'E5', e10:'E10', lpg:'LPG'};
+  const labelEl = document.getElementById('ev-vbr-label');
+  if(labelEl) labelEl.textContent = flags[land]+' Verbrenner ('+fuelNames[fuel]+' '+pricePerL.toFixed(3)+'€/L)';
+
   document.getElementById('ev-vbr').textContent  = vbr.toFixed(2)+' €';
   document.getElementById('ev-elec').textContent = ev.toFixed(2)+' €';
   document.getElementById('ev-save').textContent = (save>0?'−':'+')+Math.abs(save).toFixed(2)+' €';
