@@ -761,7 +761,7 @@ const PL_STATIONS = [
   { name:'Citronex II', street:'ul. Słowiańska 7, Zgorzelec',          lat:51.162793, lng:15.028331, country:'pl', isOpen:true, dist:3.1 },
 
   // ── A4 AUTOBAHN / JĘDRZYCHOWICE (Grenze Ludwigsdorf) ──
-  { name:'Shell',     street:'Jędrzychowice (A4 Autobahn)',            lat:51.148636, lng:15.009791, country:'pl', isOpen:true,  dist:3.2 },
+  { name:'Shell',     street:'Jędrzychowice (A4 Autobahn)',            lat:51.180600, lng:15.112300, country:'pl', isOpen:true,  dist:8.5 },
   { name:'Lotos',     street:'Jędrzychowice (A4 Autobahn)',            lat:51.180000, lng:15.026190, country:'pl', isOpen:true,  dist:3.4 },
 
   // ── PRZEWÓZ / PODROSCHE (~50km nördl.) ────────────────
@@ -777,8 +777,7 @@ const PL_STATIONS = [
 
   // ── ZASIEKI / FORST (~75km nördl.) ────────────────────
   // GPS exakt von abtankstellen.de
-  { name:'AB Tank',   street:'Zasieki 12 (Forst Grenze)',              lat:51.761243, lng:14.673665, country:'pl', isOpen:true, dist:71.0 },
-  { name:'Aral',      street:'Zasieki (Forst/Lausitz)',                lat:51.762000, lng:14.674000, country:'pl', isOpen:true, dist:71.2 },
+
 ];
 const CZ_STATIONS = [
   // ═══════════════════════════════════════════
@@ -1239,10 +1238,14 @@ function addPin(s, color) {
 }
 
 function focusMap(s) {
-  if(!map) return;
-  map.setView([s.lat,s.lng],15);
-  allMarkers.find(x=>x.s===s)?.m.openPopup();
-  document.getElementById('map').scrollIntoView({behavior:'smooth',block:'center'});
+  if(map) {
+    map.setView([s.lat,s.lng],15);
+    allMarkers.find(x=>x.s===s)?.m.openPopup();
+    document.getElementById('map').scrollIntoView({behavior:'smooth',block:'center'});
+  }
+  // Google Maps Wegbeschreibung öffnen
+  const url = `https://www.google.com/maps/dir/?api=1&destination=${s.lat},${s.lng}&travelmode=driving`;
+  window.open(url, '_blank');
 }
 
 // ── TANKERKÖNIG ──
