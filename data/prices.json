@@ -1,8 +1,9 @@
 {
-  "timestamp": "2026-04-11T07:49:47.820Z",
+  "timestamp": "2026-04-11T09:34:08.581Z",
   "source": [
-    "fallback"
+    "static"
   ],
+  "updated": "11.4.2026",
   "zgorzelec_i": {
     "e5": 6.17,
     "diesel": 7.66,
