@@ -1,0 +1,8 @@
+{
+  "name": "bestpricetank",
+  "version": "1.0.0",
+  "dependencies": {
+    "@netlify/blobs": "^8.1.0",
+    "node-fetch": "^3.3.2"
+  }
+}

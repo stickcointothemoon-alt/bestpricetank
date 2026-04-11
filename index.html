@@ -1327,7 +1327,7 @@ footer a { color: var(--cyan); text-decoration: none; }
       <div class="ticker-flag">🇩🇪</div>
       <div class="ticker-country de">Deutschland</div>
       <div class="ticker-price" id="t-de">1,749</div>
-      <div class="ticker-unit">€ / Liter · E5</div>
+      <div class="ticker-unit" id="t-de-unit">€ / Liter · E5</div>
       <div class="ticker-badge tb-ref">Referenz</div>
     </div>
     <div class="ticker-item">
@@ -1335,7 +1335,7 @@ footer a { color: var(--cyan); text-decoration: none; }
       <div class="ticker-country pl">Polen</div>
       <div class="ticker-price" id="t-pl">1,681</div>
       <div id="t-pl-pln" class="ticker-unit" style="color:#ff4d6d;font-weight:700;"></div>
-      <div class="ticker-unit">€ / Liter · E95</div>
+      <div class="ticker-unit" id="t-pl-unit">€ / Liter · E95</div>
       <div class="ticker-badge tb-cheap" id="t-pl-diff">▼ ~4% günstiger</div>
     </div>
     <div class="ticker-item">
@@ -1343,7 +1343,7 @@ footer a { color: var(--cyan); text-decoration: none; }
       <div class="ticker-country cz">Tschechien</div>
       <div class="ticker-price" id="t-cz">1,685</div>
       <div id="t-cz-czk" class="ticker-unit" style="color:#4da6ff;font-weight:700;"></div>
-      <div class="ticker-unit">€ / Liter · Nat.95</div>
+      <div class="ticker-unit" id="t-cz-unit">€ / Liter · Nat.95</div>
       <div class="ticker-badge tb-cheap" id="t-cz-diff">▼ ~4% günstiger</div>
     </div>
   </div>
@@ -1546,9 +1546,10 @@ footer a { color: var(--cyan); text-decoration: none; }
 // ══════════════════════════════════════
 const GOERLITZ = { lat: 51.1534, lon: 14.9876 };
 const PRICES = {
-  e5:     { de: 1.749, pl: 1.681, cz: 1.685 },
-  e10:    { de: 1.719, pl: 1.651, cz: 1.655 },
-  diesel: { de: 1.649, pl: 1.940, cz: 1.967 },
+  // Stand: 10.04.2026 – werden täglich von Netlify API aktualisiert
+  e5:     { de: 1.749, pl: 1.452, cz: 1.691 },
+  e10:    { de: 1.719, pl: 1.432, cz: 1.671 },
+  diesel: { de: 1.649, pl: 1.803, cz: 1.728 },
 };
 const PL_STATIONS = [
   // ══════════════════════════════════════════════════════
@@ -1579,19 +1580,19 @@ const PL_STATIONS = [
   { name:'Tankstelle',street:'Krzewina Zgorzelecka (Ostritz)',         lat:51.0150, lng:14.9950, country:'pl', isOpen:true,  dist:15.0 },
 
   // ── GÖRLITZ / ZGORZELEC (0-3km) ───────────────────────
-  { name:'MOL',       street:'ul. Armii Krajowej 23, Zgorzelec',       lat:51.1512, lng:15.0082, country:'pl', isOpen:true,  dist:1.0 },
-  { name:'BP',        street:'ul. Lubańska (Kozak), Zgorzelec',        lat:51.1568, lng:15.0091, country:'pl', isOpen:true,  dist:1.1 },
-  { name:'Circle K',  street:'ul. Armii Krajowej 27, Zgorzelec',       lat:51.1514, lng:15.0151, country:'pl', isOpen:true,  dist:1.2 },
-  { name:'ORLEN',     street:'ul. Warszawska, Zgorzelec',              lat:51.1518, lng:15.0194, country:'pl', isOpen:true,  dist:1.4 },
-  { name:'Citronex',  street:'ul. Słowiańska 2, Zgorzelec',            lat:51.1468, lng:15.0263, country:'pl', isOpen:true,  dist:2.0 },
-  { name:'ORLEN',     street:'ul. Słowiańska 1, Zgorzelec',            lat:51.1575, lng:15.0284, country:'pl', isOpen:true,  dist:1.8 },
-  { name:'Areca',     street:'ul. Słowiańska, Zgorzelec',              lat:51.1600, lng:15.0288, country:'pl', isOpen:true,  dist:2.1 },
-  { name:'Carrefour', street:'ul. Karola Miarki, Zgorzelec',           lat:51.1558, lng:15.0310, country:'pl', isOpen:true,  dist:2.3 },
-  { name:'Citronex',  street:'ul. Lubańska, Zgorzelec',                lat:51.1620, lng:15.0050, country:'pl', isOpen:true,  dist:1.5 },
+  { name:'MOL',       street:'ul. Armii Krajowej 23, Zgorzelec',       lat:51.150800, lng:15.008200, country:'pl', isOpen:true,  dist:1.0 },
+  { name:'BP',        street:'ul. Lubańska (Kozak), Zgorzelec',        lat:51.159161, lng:15.007129, country:'pl', isOpen:true,  dist:1.1 },
+  { name:'Circle K',  street:'ul. Armii Krajowej 27, Zgorzelec',       lat:51.151439, lng:15.015133, country:'pl', isOpen:true,  dist:1.2 },
+  { name:'ORLEN',     street:'ul. Warszawska, Zgorzelec',              lat:51.145100, lng:15.009200, country:'pl', isOpen:true,  dist:1.4 },
+  { name:'Citronex',  street:'ul. Słowiańska 2, Zgorzelec',            lat:51.147491, lng:15.027010, country:'pl', isOpen:true,  dist:2.0 },
+  { name:'ORLEN',     street:'ul. Słowiańska 1, Zgorzelec',            lat:51.157318, lng:15.028431, country:'pl', isOpen:true,  dist:1.8 },
+  { name:'Areca',     street:'ul. Słowiańska, Zgorzelec',              lat:51.160000, lng:15.028800, country:'pl', isOpen:true,  dist:2.1 },
+  { name:'Carrefour', street:'ul. Karola Miarki, Zgorzelec',           lat:51.132870, lng:15.002046, country:'pl', isOpen:true,  dist:2.3 },
+  { name:'Citronex II', street:'ul. Słowiańska 7, Zgorzelec',          lat:51.162793, lng:15.028331, country:'pl', isOpen:true, dist:3.1 },
 
   // ── A4 AUTOBAHN / JĘDRZYCHOWICE (Grenze Ludwigsdorf) ──
-  { name:'Shell',     street:'Jędrzychowice (A4 Autobahn)',            lat:51.1680, lng:15.0420, country:'pl', isOpen:true,  dist:3.2 },
-  { name:'Lotos',     street:'Jędrzychowice (A4 Autobahn)',            lat:51.1690, lng:15.0450, country:'pl', isOpen:true,  dist:3.4 },
+  { name:'Shell',     street:'Jędrzychowice (A4 Autobahn)',            lat:51.148636, lng:15.009791, country:'pl', isOpen:true,  dist:3.2 },
+  { name:'Lotos',     street:'Jędrzychowice (A4 Autobahn)',            lat:51.180000, lng:15.026190, country:'pl', isOpen:true,  dist:3.4 },
 
   // ── PRZEWÓZ / PODROSCHE (~50km nördl.) ────────────────
   // GPS exakt von abtankstellen.de
@@ -1644,6 +1645,7 @@ let rates = { PLN: 4.05, CZK: 24.5 }; // Fallback-Kurse
 // WECHSELKURS (ExchangeRate-API)
 // ══════════════════════════════════════
 async function loadRates() {
+  // ── Wechselkurse laden ──
   try {
     const ER_KEY = window.ER_API_KEY || '3b6be993697eeea74f5db4a0';
     const r = await fetch(`https://v6.exchangerate-api.com/v6/${ER_KEY}/latest/EUR`);
@@ -1652,14 +1654,59 @@ async function loadRates() {
       rates.PLN = Math.round(d.conversion_rates.PLN * 100) / 100;
       rates.CZK = Math.round(d.conversion_rates.CZK * 100) / 100;
       console.log('Wechselkurse geladen:', rates);
-      updateTicker();
-      // Kurs-Badge im Header aktualisieren
       const badge = document.getElementById('rateBadge');
       if (badge) { badge.innerHTML = `1€ = ${rates.PLN} PLN &nbsp;·&nbsp; 1€ = ${rates.CZK} CZK`; badge.style.display='block'; }
     }
   } catch(e) {
-    console.warn('Wechselkurs konnte nicht geladen werden, nutze Fallback:', e);
+    console.warn('Wechselkurs Fallback:', e);
   }
+
+  // ── Citronex Live-Preise laden ──
+  try {
+    const plRes = await fetch('/api/pl-prices/latest');
+    if (plRes.ok) {
+      const plData = await plRes.json();
+      const p = plData.prices;
+      
+      // Beste verfügbare Quelle: Zgorzelec I > Zgorzelec II > regional_avg
+      const src = p.zgorzelec_i?.e5 ? p.zgorzelec_i : 
+                  p.zgorzelec_ii?.e5 ? p.zgorzelec_ii : 
+                  p.regional_avg;
+
+      if (src.e5 && rates.PLN) {
+        // PLN → EUR umrechnen
+        PRICES.e5.pl     = Math.round(src.e5     / rates.PLN * 1000) / 1000;
+        PRICES.e10.pl    = Math.round((src.e5 - 0.08) / rates.PLN * 1000) / 1000;
+        PRICES.diesel.pl = Math.round(src.diesel / rates.PLN * 1000) / 1000;
+        
+        console.log('✅ Citronex Live-Preise:', {
+          e5: PRICES.e5.pl + '€',
+          diesel: PRICES.diesel.pl + '€',
+          quelle: plData.source
+        });
+
+        // Datum Badge
+        const ts = new Date(plData.timestamp);
+        const dateStr = ts.toLocaleDateString('de-DE', {day:'2-digit', month:'2-digit', hour:'2-digit', minute:'2-digit'});
+        const isLive = plData.source?.includes('citronex_live');
+        const badge = document.getElementById('priceDate');
+        if (badge) {
+          // Nur anzeigen wenn Live-Daten vorhanden
+          if (isLive) {
+            badge.textContent = `🟢 PL Live (${dateStr})`;
+            badge.style.display = 'block';
+            badge.style.color = '#00e87a';
+          } else {
+            badge.style.display = 'none';
+          }
+        }
+      }
+    }
+  } catch(e) {
+    console.warn('PL API nicht erreichbar, nutze Fallback:', e);
+  }
+
+  updateTicker();
 }
 
 // ══════════════════════════════════════
@@ -2015,6 +2062,20 @@ function toggleC(c,btn) {
 function focusMap(lat,lng) { if(map) map.setView([lat,lng],15); }
 
 function updateTicker() {
+  // Labels je nach gewähltem Kraftstoff aktualisieren
+  const labels = {
+    e5:     { de: '€ / Liter · E5',     pl: '€ / Liter · E95',  cz: '€ / Liter · Nat.95' },
+    e10:    { de: '€ / Liter · E10',    pl: '€ / Liter · E95',  cz: '€ / Liter · Nat.95' },
+    diesel: { de: '€ / Liter · Diesel', pl: '€ / Liter · Diesel', cz: '€ / Liter · Diesel' },
+  };
+  const lbl = labels[fuel] || labels.e5;
+  const deUnit = document.getElementById('t-de-unit');
+  const plUnit = document.getElementById('t-pl-unit');
+  const czUnit = document.getElementById('t-cz-unit');
+  if (deUnit) deUnit.textContent = lbl.de;
+  if (plUnit) plUnit.textContent = lbl.pl;
+  if (czUnit) czUnit.textContent = lbl.cz;
+
   const p = PRICES[fuel];
   document.getElementById('t-de').textContent = p.de.toFixed(3).replace('.',',');
   document.getElementById('t-pl').textContent = p.pl.toFixed(3).replace('.',',');
@@ -2082,8 +2143,8 @@ function showError(msg) {
 // ══════════════════════════════════════
 const IMPRESSUM=`
   <p><strong>Angaben gemäß § 5 TMG</strong></p>
-  <p>[AH Mühlmann]<br>[Gottlieb-Daimler-Str.9]<br>02828 Görlitz, Deutschland</p>
-  <h3>K.Mühlmann</h3><p>[DEIN NAME]</p>
+  <p>AH Mühlmann<br>Gottlieb-Daimler-Str. 9<br>02828 Görlitz, Deutschland</p>
+  <h3>Geschäftsführer</h3><p>K. Mühlmann</p>
   <h3>Kontakt</h3><p>E-Mail: <a href="mailto:info@bestpricetank.de">info@bestpricetank.de</a></p>
   <h3>Datenquellen</h3>
   <p>🇩🇪 <a href="https://creativecommons.tankerkoenig.de" target="_blank">Tankerkönig / MTS-K</a> · 🇵🇱🇨🇿 <a href="https://fuel-prices.eu" target="_blank">fuel-prices.eu</a> (EU-Kommission)</p>
@@ -2094,7 +2155,7 @@ const DATENSCHUTZ=`
   <p>Der Schutz Ihrer personenbezogenen Daten ist uns wichtig. Wir verarbeiten Ihre Daten gemäß DSGVO (EU) 2016/679 und TMG.</p>
 
   <h3>1. Verantwortlicher (Art. 13 Abs. 1 DSGVO)</h3>
-  <p>[AH Mühlmann]<br>Gottlieb-Daimler-str.9]<br>02828 Görlitz<br>
+  <p>AH Mühlmann<br>Gottlieb-Daimler-Str. 9<br>02828 Görlitz<br>
   E-Mail: <a href="mailto:info@bestpricetank.de">info@bestpricetank.de</a></p>
 
   <h3>2. Zweck und Rechtsgrundlage (Art. 6 DSGVO)</h3>

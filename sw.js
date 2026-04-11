@@ -3,7 +3,7 @@
 // Offline-Fähigkeit + schnelles Laden
 // ══════════════════════════════════════════════
 
-const CACHE_NAME = 'bestpricetank-v1';
+const CACHE_NAME = 'bestpricetank-v3';
 const CACHE_URLS = [
   '/',
   '/index.html',
