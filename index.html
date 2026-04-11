@@ -1404,22 +1404,23 @@ function calcS() {
   const tx = TAX[f]||TAX.diesel;
 
   ['de','pl','cz'].forEach(c => {
-    const price = p[c];
-    const t = tx[c];
+    const price  = p[c];
+    const t      = tx[c];
     const energy = t.energy;
-    const vat    = price*t.vat;
-    const total  = (energy+vat)*l;
-    const gesamtkosten = price*l;
-    const save = c!=='de' ? (p.de-price)*l : 0;
+    const co2    = t.co2 || 0;
+    const mwst   = price - price / (1 + t.vat);
+    const netto  = price / (1 + t.vat) - energy - co2;
+    const taxPerL = energy + co2 + mwst;
+    const gesamt  = price * l;
+    const save    = c !== 'de' ? (p.de - price) * l : 0;
 
-    const taxPerL = energy + vat;
-    const nettoPerL = price - taxPerL;
     document.getElementById('s-'+c+'-p').textContent = price.toFixed(3)+' €';
-    document.getElementById('s-'+c+'-n').textContent = nettoPerL.toFixed(3)+' €';
+    document.getElementById('s-'+c+'-n').textContent = netto.toFixed(3)+' €';
     document.getElementById('s-'+c+'-e').textContent = energy.toFixed(4)+' €';
-    document.getElementById('s-'+c+'-m').textContent = vat.toFixed(4)+' €';
+    document.getElementById('s-'+c+'-c').textContent = co2.toFixed(4)+' €';
+    document.getElementById('s-'+c+'-m').textContent = mwst.toFixed(4)+' €';
     document.getElementById('s-'+c+'-t').textContent = taxPerL.toFixed(3)+' €/L';
-    document.getElementById('s-'+c+'-g').textContent = gesamtkosten.toFixed(2)+' €';
+    document.getElementById('s-'+c+'-g').textContent = gesamt.toFixed(2)+' €';
     if(c!=='de') document.getElementById('s-'+c+'-s').textContent = save>0 ? '−'+save.toFixed(2)+' €' : '–';
     else document.getElementById('s-'+c+'-s').textContent = 'Referenz';
   });
