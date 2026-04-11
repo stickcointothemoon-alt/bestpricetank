@@ -1,24 +1,10 @@
-// ══════════════════════════════════════════════════════════
-// GitHub Actions Script – Fuel Prices updaten
-// Läuft 2x täglich (06:00 + 18:00 UTC)
-// Speichert Ergebnisse in data/prices.json
-// ══════════════════════════════════════════════════════════
-
+// GitHub Actions Script – updated fetch-pl-prices.js direkt!
 const fs = require('fs');
 const https = require('https');
 
 const FUELO_KEY = process.env.FUELO_KEY || 'a2cbe79aa1948e0';
 
-// Koordinaten
-const LOCATIONS = {
-  zgorzelec: { lat: 51.1534, lon: 14.9853, radius: 25, country: 'PL' },
-  hradek:    { lat: 50.8480, lon: 14.8604, radius: 15, country: 'CZ' },
-};
-
-// Fallback Preise
 const FALLBACK = {
-  timestamp: new Date().toISOString(),
-  source: 'fallback',
   zgorzelec_i:  { e5: 6.17, diesel: 7.66, lpg: 3.89, adblue: 4.19 },
   zgorzelec_ii: { e5: 6.17, diesel: 7.66, lpg: 3.94, adblue: 4.19 },
   hradek:       { e5: 41.20, diesel: 43.50, lpg: 19.80 },
@@ -26,10 +12,9 @@ const FALLBACK = {
   regional_cz:  { e5: 41.20, diesel: 43.50, lpg: 19.80 },
 };
 
-// HTTP GET Helper
 function get(url) {
   return new Promise((resolve, reject) => {
-    https.get(url, { 
+    https.get(url, {
       headers: { 'User-Agent': 'BestPriceTank/1.0 (bestpricetank.de; github-actions)' },
       timeout: 15000
     }, (res) => {
@@ -37,139 +22,120 @@ function get(url) {
       res.on('data', chunk => data += chunk);
       res.on('end', () => {
         try { resolve(JSON.parse(data)); }
-        catch(e) { reject(new Error('JSON Parse Fehler: ' + data.substring(0, 100))); }
+        catch(e) { reject(new Error('Parse Fehler')); }
       });
     }).on('error', reject).on('timeout', () => reject(new Error('Timeout')));
   });
 }
 
-// Fuelo API abfragen
 async function fetchFuelo(lat, lon, radius, fuel) {
   const url = `https://fuelo.net/api/near?key=${FUELO_KEY}&lat=${lat}&lon=${lon}&limit=30&distance=${radius}&fuel=${fuel}`;
-  console.log(`  Fuelo ${fuel} (${lat},${lon})...`);
   try {
     const data = await get(url);
-    if (data.status !== 'OK') throw new Error('Status: ' + data.status);
-    console.log(`  ✅ ${data.num_results} Stationen gefunden`);
+    if (data.status !== 'OK') return [];
+    console.log(`✅ Fuelo ${fuel}: ${data.num_results} Stationen`);
     return data.gasstations || [];
   } catch(e) {
-    console.log(`  ❌ Fehler: ${e.message}`);
+    console.log(`❌ Fuelo ${fuel}: ${e.message}`);
     return [];
   }
 }
 
-// Preise zusammenführen
-function merge(dieselList, e5List, lpgList = []) {
-  const map = new Map();
-  for (const s of dieselList) map.set(s.id, { ...s, diesel: parseFloat(s.price) || null });
-  for (const s of e5List) {
-    if (map.has(s.id)) map.get(s.id).e5 = parseFloat(s.price) || null;
-    else map.set(s.id, { ...s, diesel: null, e5: parseFloat(s.price) || null });
-  }
-  for (const s of lpgList) {
-    if (map.has(s.id)) map.get(s.id).lpg = parseFloat(s.price) || null;
-  }
-  return Array.from(map.values());
-}
-
-// Günstigste Station finden
-function cheapest(stations, minPrice, maxPrice) {
-  return stations
-    .filter(s => s.diesel > minPrice && s.diesel < maxPrice)
-    .sort((a, b) => (a.diesel || 99) - (b.diesel || 99))[0];
-}
-
 async function main() {
-  console.log('🔄 BestPriceTank Preisupdate gestartet:', new Date().toISOString());
+  console.log('🔄 Preisupdate:', new Date().toISOString());
   
-  const result = { ...FALLBACK, timestamp: new Date().toISOString(), source: 'mixed' };
-  let sources = [];
+  const prices = JSON.parse(JSON.stringify(FALLBACK));
+  let sources = ['static'];
+  const today = new Date().toLocaleDateString('de-DE');
 
-  // ── Polen (Zgorzelec Umkreis) ──
-  console.log('\n🇵🇱 Polen abrufen...');
-  const { lat: plLat, lon: plLon, radius: plR } = LOCATIONS.zgorzelec;
+  // Polen abrufen
   const [plDiesel, plE5, plLpg] = await Promise.all([
-    fetchFuelo(plLat, plLon, plR, 'diesel'),
-    fetchFuelo(plLat, plLon, plR, 'petrol95'),
-    fetchFuelo(plLat, plLon, plR, 'lpg'),
+    fetchFuelo(51.1534, 14.9853, 25, 'diesel'),
+    fetchFuelo(51.1534, 14.9853, 25, 'petrol95'),
+    fetchFuelo(51.1534, 14.9853, 25, 'lpg'),
   ]);
 
-  if (plDiesel.length > 0 || plE5.length > 0) {
-    const stations = merge(plDiesel, plE5, plLpg);
+  if (plDiesel.length > 0) {
+    // Günstigste PL Station
+    const sorted = plDiesel
+      .filter(s => s.price > 5 && s.price < 12)
+      .sort((a, b) => a.price - b.price);
     
-    // Citronex/Dyskont suchen
-    const citronex = stations.find(s =>
-      (s.brand_name || s.name || '').toLowerCase().includes('dyskont') ||
-      (s.brand_name || s.name || '').toLowerCase().includes('citronex') ||
-      (s.address || '').toLowerCase().includes('słowiańska')
+    if (sorted[0]) {
+      prices.regional_pl.diesel = parseFloat(sorted[0].price);
+      const e5match = plE5.find(s => s.id === sorted[0].id);
+      if (e5match) prices.regional_pl.e5 = parseFloat(e5match.price);
+      sources = ['fuelo_pl'];
+      console.log('✅ PL günstigste:', sorted[0].brand_name, sorted[0].price);
+    }
+
+    // Citronex suchen
+    const citronex = plDiesel.find(s =>
+      (s.brand_name||'').toLowerCase().includes('dyskont') ||
+      (s.brand_name||'').toLowerCase().includes('citronex') ||
+      (s.address||'').toLowerCase().includes('słowiańska')
     );
-
-    if (citronex?.diesel) {
-      result.zgorzelec_i = {
-        e5:     citronex.e5     || result.zgorzelec_i.e5,
-        diesel: citronex.diesel || result.zgorzelec_i.diesel,
-        lpg:    citronex.lpg   || result.zgorzelec_i.lpg,
-        adblue: 4.19,
-      };
-      sources.push('fuelo_citronex');
-      console.log(`  ✅ Citronex: E5=${citronex.e5} Diesel=${citronex.diesel}`);
-    }
-
-    // Günstigste PL Station (PLN 5-12)
-    const cheap = cheapest(stations, 5, 12);
-    if (cheap?.diesel) {
-      result.regional_pl = {
-        e5:     cheap.e5     || result.regional_pl.e5,
-        diesel: cheap.diesel || result.regional_pl.diesel,
-        lpg:    cheap.lpg   || result.regional_pl.lpg,
-      };
-      if (!sources.includes('fuelo_citronex')) sources.push('fuelo_pl');
-      console.log(`  ✅ Günstigste PL: ${cheap.brand_name} Diesel=${cheap.diesel}`);
+    if (citronex?.price) {
+      prices.zgorzelec_i.diesel = parseFloat(citronex.price);
+      const e5c = plE5.find(s => s.id === citronex.id);
+      if (e5c) prices.zgorzelec_i.e5 = parseFloat(e5c.price);
+      sources = ['fuelo_citronex'];
+      console.log('✅ Citronex:', citronex.price);
     }
   }
 
-  // ── Tschechien (Hrádek Umkreis) ──
-  console.log('\n🇨🇿 Tschechien abrufen...');
-  const { lat: czLat, lon: czLon, radius: czR } = LOCATIONS.hradek;
+  // Tschechien abrufen
   const [czDiesel, czE5] = await Promise.all([
-    fetchFuelo(czLat, czLon, czR, 'diesel'),
-    fetchFuelo(czLat, czLon, czR, 'petrol95'),
+    fetchFuelo(50.8480, 14.8604, 15, 'diesel'),
+    fetchFuelo(50.8480, 14.8604, 15, 'petrol95'),
   ]);
 
-  if (czDiesel.length > 0 || czE5.length > 0) {
-    const czStations = merge(czDiesel, czE5);
-    
-    // Günstigste CZ Station (CZK 30-60)
-    const cheapCz = cheapest(czStations, 30, 60);
-    if (cheapCz?.diesel) {
-      result.hradek = {
-        e5:     cheapCz.e5     || result.hradek.e5,
-        diesel: cheapCz.diesel || result.hradek.diesel,
-        lpg:    cheapCz.lpg   || result.hradek.lpg,
-      };
-      result.regional_cz = result.hradek;
-      sources.push('fuelo_cz');
-      console.log(`  ✅ Günstigste CZ: ${cheapCz.brand_name} Diesel=${cheapCz.diesel}`);
+  if (czDiesel.length > 0) {
+    const czSorted = czDiesel
+      .filter(s => s.price > 30 && s.price < 60)
+      .sort((a, b) => a.price - b.price);
+    if (czSorted[0]) {
+      prices.hradek.diesel = parseFloat(czSorted[0].price);
+      prices.regional_cz.diesel = prices.hradek.diesel;
+      const czE5m = czE5.find(s => s.id === czSorted[0].id);
+      if (czE5m) {
+        prices.hradek.e5 = parseFloat(czE5m.price);
+        prices.regional_cz.e5 = prices.hradek.e5;
+      }
+      if (!sources.includes('fuelo_citronex')) sources.push('fuelo_cz');
+      console.log('✅ CZ günstigste:', czSorted[0].brand_name, czSorted[0].price);
     }
   }
 
-  result.source = sources.length > 0 ? sources : ['fallback'];
+  // ══════════════════════════════════════════════
+  // Netlify Function direkt mit Preisen updaten!
+  // ══════════════════════════════════════════════
+  const functionCode = `// Auto-generiert: ${new Date().toISOString()}
+// Nächstes Update: heute um 18:00 oder morgen 06:00 UTC
+exports.handler = async () => ({
+  statusCode: 200,
+  headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*', 'Cache-Control': 'public, max-age=3600' },
+  body: JSON.stringify({
+    timestamp: "${new Date().toISOString()}",
+    source: ${JSON.stringify(sources)},
+    updated: "${today}",
+    zgorzelec_i:  ${JSON.stringify(prices.zgorzelec_i)},
+    zgorzelec_ii: ${JSON.stringify(prices.zgorzelec_ii)},
+    hradek:       ${JSON.stringify(prices.hradek)},
+    regional_pl:  ${JSON.stringify(prices.regional_pl)},
+    regional_cz:  ${JSON.stringify(prices.regional_cz)},
+  }),
+});
+`;
 
-  // Speichern
-  const outputPath = 'data/prices.json';
-  fs.mkdirSync('data', { recursive: true });
-  fs.writeFileSync(outputPath, JSON.stringify(result, null, 2));
-  
-  console.log('\n✅ Preise gespeichert:', outputPath);
-  console.log('Quellen:', result.source);
-  console.log('PL Diesel:', result.zgorzelec_i.diesel, 'PLN');
-  console.log('CZ Diesel:', result.hradek.diesel, 'CZK');
+  fs.writeFileSync('netlify/functions/fetch-pl-prices.js', functionCode);
+  console.log('✅ netlify/functions/fetch-pl-prices.js updated!');
+  console.log('Quellen:', sources);
+  console.log('PL Diesel:', prices.zgorzelec_i.diesel, 'PLN');
+  console.log('CZ Diesel:', prices.hradek.diesel, 'CZK');
 }
 
 main().catch(err => {
-  console.error('❌ Fehler:', err);
-  // Fallback speichern wenn alles fehlschlägt
-  fs.mkdirSync('data', { recursive: true });
-  fs.writeFileSync('data/prices.json', JSON.stringify(FALLBACK, null, 2));
-  process.exit(0); // Kein Fehler damit GitHub Actions nicht rot wird
+  console.error('❌ Fehler:', err.message);
+  process.exit(0);
 });
