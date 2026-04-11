@@ -1,4 +1,4 @@
-// GitHub Actions Script – updated fetch-pl-prices.js direkt!
+// GitHub Actions Script – updated beide Netlify Functions direkt!
 const fs = require('fs');
 const https = require('https');
 
@@ -47,6 +47,7 @@ async function main() {
   const prices = JSON.parse(JSON.stringify(FALLBACK));
   let sources = ['static'];
   const today = new Date().toLocaleDateString('de-DE');
+  const ts = new Date().toISOString();
 
   // Polen abrufen
   const [plDiesel, plE5, plLpg] = await Promise.all([
@@ -56,7 +57,6 @@ async function main() {
   ]);
 
   if (plDiesel.length > 0) {
-    // Günstigste PL Station
     const sorted = plDiesel
       .filter(s => s.price > 5 && s.price < 12)
       .sort((a, b) => a.price - b.price);
@@ -69,7 +69,6 @@ async function main() {
       console.log('✅ PL günstigste:', sorted[0].brand_name, sorted[0].price);
     }
 
-    // Citronex suchen
     const citronex = plDiesel.find(s =>
       (s.brand_name||'').toLowerCase().includes('dyskont') ||
       (s.brand_name||'').toLowerCase().includes('citronex') ||
@@ -107,16 +106,14 @@ async function main() {
     }
   }
 
-  // ══════════════════════════════════════════════
-  // Netlify Function direkt mit Preisen updaten!
-  // ══════════════════════════════════════════════
-  const functionCode = `// Auto-generiert: ${new Date().toISOString()}
-// Nächstes Update: heute um 18:00 oder morgen 06:00 UTC
+  // Function Code generieren
+  const functionCode = `// Auto-generiert: ${ts}
+// Nächstes Update: 06:00 oder 18:00 UTC
 exports.handler = async () => ({
   statusCode: 200,
   headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*', 'Cache-Control': 'public, max-age=3600' },
   body: JSON.stringify({
-    timestamp: "${new Date().toISOString()}",
+    timestamp: "${ts}",
     source: ${JSON.stringify(sources)},
     updated: "${today}",
     zgorzelec_i:  ${JSON.stringify(prices.zgorzelec_i)},
@@ -128,8 +125,20 @@ exports.handler = async () => ({
 });
 `;
 
+  // Beide Functions updaten!
   fs.writeFileSync('netlify/functions/fetch-pl-prices.js', functionCode);
-  console.log('✅ netlify/functions/fetch-pl-prices.js updated!');
+  fs.writeFileSync('netlify/functions/get-pl-prices.js', functionCode);
+  
+  // Auch prices.json updaten
+  fs.mkdirSync('data', { recursive: true });
+  fs.writeFileSync('data/prices.json', JSON.stringify({
+    timestamp: ts,
+    source: sources,
+    updated: today,
+    ...prices
+  }, null, 2));
+
+  console.log('✅ Alle Dateien updated!');
   console.log('Quellen:', sources);
   console.log('PL Diesel:', prices.zgorzelec_i.diesel, 'PLN');
   console.log('CZ Diesel:', prices.hradek.diesel, 'CZK');
