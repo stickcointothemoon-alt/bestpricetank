@@ -1181,13 +1181,14 @@ function renderStations() {
       const name = s.name.toLowerCase();
       let aufschlag = 0;
       if(auf) {
-        if(name.includes('orlen'))   aufschlag = parseFloat((auf.orlen/4.25).toFixed(3));
-        else if(name.includes('shell'))    aufschlag = parseFloat((auf.shell/4.25).toFixed(3));
-        else if(name.includes('circle'))   aufschlag = parseFloat((auf.circle_k/4.25).toFixed(3));
-        else if(name.includes('bp'))       aufschlag = parseFloat((auf.bp/4.25).toFixed(3));
-        else if(name.includes('lotos'))    aufschlag = parseFloat((auf.lotos/4.25).toFixed(3));
-        else if(name.includes('ab tank')) aufschlag = parseFloat((auf.ab_tank/4.25).toFixed(3));
-        else if(name.includes('areca'))    aufschlag = parseFloat((auf.areca/4.25).toFixed(3));
+        const pln = RATES.PLN || 4.25;
+        if(name.includes('orlen'))         aufschlag = parseFloat((auf.orlen/pln).toFixed(3));
+        else if(name.includes('shell'))    aufschlag = parseFloat((auf.shell/pln).toFixed(3));
+        else if(name.includes('circle'))   aufschlag = parseFloat((auf.circle_k/pln).toFixed(3));
+        else if(name.includes('bp'))       aufschlag = parseFloat((auf.bp/pln).toFixed(3));
+        else if(name.includes('lotos'))    aufschlag = parseFloat((auf.lotos/pln).toFixed(3));
+        else if(name.includes('ab tank'))  aufschlag = parseFloat((auf.ab_tank/pln).toFixed(3));
+        else if(name.includes('areca'))    aufschlag = parseFloat((auf.areca/pln).toFixed(3));
       }
       eur = parseFloat((base + aufschlag).toFixed(3));
     } else {
