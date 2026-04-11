@@ -1117,7 +1117,7 @@ function focusMap(s) {
 // ── TANKERKÖNIG ──
 async function fetchTK() {
   try {
-    const url = `https://creativecommons.tankerkoenig.de/json/list.php?lat=51.1534&lng=14.9853&rad=${currentRadius}&sort=price&type=all&apikey=${TK_KEY}`;
+    const url = `https://creativecommons.tankerkoenig.de/json/list.php?lat=51.1534&lng=14.9853&rad=${currentRadius}&sort=dist&type=all&apikey=${TK_KEY}`;
     const r = await fetch(url);
     const d = await r.json();
     if(!d.ok||!d.stations) return;
