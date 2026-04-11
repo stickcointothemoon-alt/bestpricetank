@@ -1345,7 +1345,10 @@ async function init() {
   // Raten & Preise laden
   await loadRates();
 
-  // KPIs & Stationen anzeigen
+  // Tankerkönig ZUERST laden (awaited!)
+  await fetchTK();
+
+  // DANN KPIs & Stationen anzeigen - mit echten DE Preisen!
   updateKPIs();
   renderStations();
 
@@ -1354,8 +1357,7 @@ async function init() {
   calcS();
   calcEV();
 
-  // Tankerkönig & Ladestationen laden
-  fetchTK();
+  // Ladestationen im Hintergrund
   setTimeout(fetchChargers, 2500);
 }
 
