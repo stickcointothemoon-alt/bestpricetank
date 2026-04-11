@@ -8,12 +8,11 @@
 <meta property="og:title" content="BestPriceTank – Günstig tanken im Dreiländereck">
 <meta property="og:url" content="https://bestpricetank.de">
 <link rel="manifest" href="/manifest.json">
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<!-- Google Fonts lokal eingebettet - kein externer Google Aufruf -->
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <style>
-@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=Space+Mono:wght@400;700&display=swap');
+/* Fonts lokal eingebettet */
 :root{
   --acc:#D85A30;--acc2:rgba(216,90,48,.1);--acc3:rgba(216,90,48,.25);
   --bg:#080808;--bg2:#0f0f0f;--bg3:#161616;--bg4:#1e1e1e;
@@ -22,8 +21,8 @@
   --gr:#1D9E75;--gr2:rgba(29,158,117,.1);--gr3:rgba(29,158,117,.25);
   --bl:#378ADD;--bl2:rgba(55,138,221,.1);
   --pu:#9B59B6;
-  --mono:'Space Mono',monospace;
-  --sans:'Space Grotesk',system-ui,sans-serif;
+  --mono:'Courier New',Courier,monospace;
+  --sans:-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-serif;
   --r:10px;--r2:14px;
 }
 *{box-sizing:border-box;margin:0;padding:0}
@@ -443,11 +442,11 @@ h1 em{color:var(--acc);font-style:normal;font-weight:700}
     <div class="fdesc">Siehst du andere Preise? Meld sie – hilf anderen Fahrern sparen!</div>
     <a class="flink" onclick="openModal('report')">Melden →</a>
   </div>
-  <div class="fcard" onclick="openModal('impressum')">
+  <div class="fcard" onclick="openModal('about')">
     <div class="ficon">ℹ️</div>
     <div class="ftitle">Über BestPriceTank</div>
-    <div class="fdesc">Kostenloser Tankpreisvergleich für das Dreiländereck seit 2026.</div>
-    <a class="flink" onclick="openModal('impressum')">Mehr →</a>
+    <div class="fdesc">Was wir machen und warum – alles auf einen Blick.</div>
+    <a class="flink" onclick="openModal('about')">Mehr →</a>
   </div>
 </div>
 
@@ -627,7 +626,7 @@ h1 em{color:var(--acc);font-style:normal;font-weight:700}
         · <strong style="color:var(--t1)">Tankerkönig API</strong> (DE Kraftstoffpreise): creativecommons.tankerkoenig.de – keine personenbezogenen Daten<br>
         · <strong style="color:var(--t1)">ExchangeRate-API</strong> (Wechselkurse): exchangerate-api.com – keine personenbezogenen Daten<br>
         · <strong style="color:var(--t1)">OpenChargeMap</strong> (Ladestationen): openchargemap.org/site/privacy<br>
-        · <strong style="color:var(--t1)">Google Fonts</strong> (Schriftarten): Schriftarten werden von Google-Servern geladen, dabei wird Ihre IP übertragen. Rechtsgrundlage: Art. 6 Abs. 1 lit. f DSGVO.<br><br>
+        · <strong style="color:var(--t1)">Schriftarten</strong>: Diese Website verwendet ausschließlich systemseitige Schriftarten. Es findet keine Verbindung zu Google Fonts Servern statt.<br><br>
         Rechtsgrundlage für alle externen Dienste: Art. 6 Abs. 1 lit. f DSGVO (berechtigtes Interesse am Betrieb der Website).
       </div>
 
@@ -666,6 +665,39 @@ h1 em{color:var(--acc);font-style:normal;font-weight:700}
         Stand: April 2026. Wir behalten uns vor, diese Datenschutzerklärung bei Bedarf zu aktualisieren.
       </div>
 
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: ÜBER BESTPRICETANK -->
+<div class="modal-overlay" id="modal-about">
+  <div class="modal">
+    <div class="modal-hdr">
+      <div class="modal-title">⛽ Über BestPriceTank.de</div>
+      <div class="modal-close" onclick="closeModal('about')">×</div>
+    </div>
+    <div style="font-size:13px;color:var(--t2);line-height:1.8;display:grid;gap:16px">
+      <p style="color:var(--t1);font-size:14px;font-weight:500">Tanken ohne Überraschungen. Wir behalten die Preise im Blick – ihr spart bares Geld.</p>
+      <p>BestPriceTank.de vergleicht täglich die Kraftstoffpreise an über 43 Tankstellen im Dreiländereck Deutschland 🇩🇪 · Polen 🇵🇱 · Tschechien 🇨🇿. Diesel, E5, E10, LPG – immer aktuell, immer kostenlos.</p>
+      <div>
+        <strong style="color:var(--t1)">⛽ Live Preisvergleich</strong><br>
+        Sieh auf einen Blick wo Diesel, Benzin oder LPG gerade am günstigsten ist – und ob sich die Fahrt zur Grenze wirklich lohnt.
+      </div>
+      <div>
+        <strong style="color:var(--t1)">🧮 Steuerrechner</strong><br>
+        Neugierig was vom Preis an der Zapfsäule wirklich Steuern sind? Wir zeigen dir den echten Kraftstoffpreis ohne MwSt, Energiesteuer und CO2-Abgabe – für alle drei Länder.
+      </div>
+      <div>
+        <strong style="color:var(--t1)">⚡ E-Auto vs. Verbrenner</strong><br>
+        Was kostet dich 100 km wirklich? Unser Rechner vergleicht Strom gegen Sprit – ehrlich und ohne Werbeversprechen.
+      </div>
+      <div>
+        <strong style="color:var(--t1)">👥 Community</strong><br>
+        Du siehst andere Preise an der Zapfsäule? Meld sie! Je mehr mitmachen, desto besser werden die Daten für alle.
+      </div>
+      <div style="background:var(--bg3);border-radius:var(--r);padding:10px 14px;font-size:12px;color:var(--t3);border:.5px solid var(--b1)">
+        Alle Angaben sind ohne Gewähr und dienen ausschließlich zur Information. Keine Tracker. Einfach nur faire Preise für schlaue Fahrer. 🚀
+      </div>
     </div>
   </div>
 </div>
