@@ -1,19 +1,19 @@
 {
-  "updated": "14.04.2026",
+  "updated": "15.04.2026",
   "source": "Citronex Zgorzelec",
   "citronex": {
-    "diesel": 7.58,
+    "diesel": 7.41,
     "e5": 6.12,
     "lpg": 3.94,
     "adblue": 4.19
   },
   "aufschlaege": {
-    "orlen": 0.05,
+    "orlen": 0.03,
     "shell": 0.02,
     "circle_k": 0.02,
-    "bp": 0.04,
-    "lotos": 0.05,
-    "areca": 0.07,
+    "bp": 0.03,
+    "lotos": 0.04,
+    "areca": 0.05,
     "ab_tank": 0.01
   },
   "cz": {
