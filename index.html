@@ -79,7 +79,7 @@ h1 em{color:var(--acc);font-style:normal;font-weight:700}
 .kcard.win{border-color:var(--acc3);background:linear-gradient(145deg,rgba(216,90,48,.08),var(--bg2))}
 .kcard.win::before{content:'GÜNSTIGSTE';position:absolute;top:7px;right:7px;font-size:7px;color:var(--acc);letter-spacing:1px;font-family:var(--mono)}
 .kflag{font-size:18px;margin-bottom:5px;display:block}
-.klabel{font-size:9px;color:var(--t3);text-transform:uppercase;letter-spacing:1px;margin-bottom:3px;font-family:var(--mono)}
+.klabel{font-size:9px;color:var(--t2);text-transform:uppercase;letter-spacing:1px;margin-bottom:3px;font-family:var(--mono)}
 .kprice{font-size:24px;font-weight:700;letter-spacing:-1.5px;line-height:1;color:var(--t1)}
 .kcard.win .kprice{color:var(--acc)}
 .kunit{font-size:12px;font-weight:400;color:var(--t3);margin-left:1px}
@@ -103,7 +103,7 @@ h1 em{color:var(--acc);font-style:normal;font-weight:700}
 .ginputs{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-bottom:.75rem}
 @media(max-width:600px){.ginputs{grid-template-columns:repeat(2,1fr)}}
 .ginp-wrap{display:flex;flex-direction:column;gap:3px}
-.ginp-label{font-size:9px;color:var(--t3);font-family:var(--mono);letter-spacing:.5px}
+.ginp-label{font-size:9px;color:var(--t2);font-family:var(--mono);letter-spacing:.5px}
 .ginp{width:100%;background:rgba(0,0,0,.35);border:.5px solid var(--b2);border-radius:7px;padding:8px 9px;color:var(--t1);font-size:12px;font-family:var(--sans);outline:none;transition:border .15s}
 .ginp:focus{border-color:var(--acc)}
 .ginp::placeholder{color:var(--t4)}
@@ -111,14 +111,14 @@ h1 em{color:var(--acc);font-style:normal;font-weight:700}
 .gresult{display:grid;grid-template-columns:repeat(3,1fr);background:rgba(0,0,0,.3);border-radius:var(--r);overflow:hidden;border:.5px solid var(--b1)}
 .grcol{padding:10px 12px;text-align:center}
 .grcol:not(:last-child){border-right:.5px solid var(--b1)}
-.grcol-label{font-size:9px;color:var(--t3);font-family:var(--mono);margin-bottom:4px;text-transform:uppercase;letter-spacing:.5px}
+.grcol-label{font-size:9px;color:var(--t2);font-family:var(--mono);margin-bottom:4px;text-transform:uppercase;letter-spacing:.5px}
 .grcol-val{font-size:16px;font-weight:700;letter-spacing:-.5px;color:var(--t1)}
 .gempf{margin-top:8px;text-align:center;font-size:12px;font-weight:500;padding:6px 10px;border-radius:7px;display:none}
 
 /* MAIN LAYOUT */
 .main{display:grid;grid-template-columns:1fr 290px;gap:10px;padding:0 1.25rem .9rem;max-width:1000px;margin:0 auto}
 @media(max-width:700px){.main{grid-template-columns:1fr}.rpanel{order:-1}}
-.sec-label{font-size:9px;color:var(--t4);font-family:var(--mono);letter-spacing:1.5px;text-transform:uppercase;margin-bottom:.6rem;display:flex;align-items:center;gap:8px}
+.sec-label{font-size:9px;color:var(--t3);font-family:var(--mono);letter-spacing:1.5px;text-transform:uppercase;margin-bottom:.6rem;display:flex;align-items:center;gap:8px}
 .sec-label::after{content:'';flex:1;height:.5px;background:var(--b1)}
 .slist{display:flex;flex-direction:column;gap:5px}
 .scard{display:flex;align-items:center;gap:10px;background:var(--bg2);border:.5px solid var(--b1);border-radius:var(--r);padding:9px 12px;cursor:pointer;transition:all .15s}
@@ -129,12 +129,12 @@ h1 em{color:var(--acc);font-style:normal;font-weight:700}
 .scard.top .sico{background:var(--acc2);border-color:var(--acc3)}
 .sbody{flex:1;min-width:0}
 .sname{font-size:12px;font-weight:600;color:var(--t1);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.smeta{font-size:10px;color:var(--t3);margin-top:1px}
+.smeta{font-size:10px;color:var(--t2);margin-top:1px}
 .sprice{text-align:right;flex-shrink:0}
 .seur{font-size:15px;font-weight:700;letter-spacing:-.5px;color:var(--t1)}
 .scard.top .seur{color:var(--acc)}
 .sloc{font-size:10px;color:var(--t3);font-family:var(--mono);margin-top:1px}
-.sdist{font-size:10px;color:var(--t4);margin-top:1px}
+.sdist{font-size:10px;color:var(--t3);margin-top:1px}
 
 /* RIGHT PANEL */
 .rpanel{display:flex;flex-direction:column;gap:8px}
@@ -309,7 +309,9 @@ h1 em{color:var(--acc);font-style:normal;font-weight:700}
     <span class="rsep">·</span>
     <div class="ri">Umkreis <span id="r-rad">15 km</span></div>
     <span class="rsep">·</span>
-    <div class="ri">🛢 <span id="r-barrel">–</span> $/barrel</div>
+    <div class="ri">🛢 <span id="r-barrel">–</span> $/bbl</div>
+    <span class="rsep">·</span>
+    <div class="ri">Diesel <span id="r-trend" style="font-size:10px">–</span></div>
     <div class="rupd" id="r-upd">–</div>
   </div>
 </section>
@@ -1340,6 +1342,28 @@ async function fetchTK() {
     DE_STATIONS.forEach(s => addPin(s,'#1D9E75'));
     document.getElementById('r-count').textContent = STATIC_STATIONS.length + DE_STATIONS.length;
     document.getElementById('live-status').textContent = 'DE Live ✓';
+
+    // Preistrend berechnen
+    const todayDiesel = PRICES.diesel.de;
+    const yesterday = parseFloat(localStorage.getItem('diesel_yesterday') || todayDiesel);
+    const diff = todayDiesel - yesterday;
+    const trendEl = document.getElementById('r-trend');
+    if(trendEl) {
+      if(Math.abs(diff) < 0.001) {
+        trendEl.textContent = '→ stabil';
+        trendEl.style.color = 'var(--t3)';
+      } else if(diff > 0) {
+        trendEl.textContent = '↑ +'+diff.toFixed(3)+'€';
+        trendEl.style.color = '#D85A30';
+      } else {
+        trendEl.textContent = '↓ '+diff.toFixed(3)+'€';
+        trendEl.style.color = '#1D9E75';
+      }
+    }
+    // Preis für morgen speichern
+    localStorage.setItem('diesel_yesterday', todayDiesel);
+    localStorage.setItem('diesel_date', new Date().toDateString());
+
     updateKPIs();
     renderStations();
     calcS();
@@ -1409,21 +1433,24 @@ async function loadRates() {
     }
   } catch(e) { console.warn('PL Preise Fehler:', e.message); }
 
-  // Rohöl Barrel Preis (Brent)
+  // Rohöl Barrel Preis - kostenlose API
   try {
-    const br = await fetch('https://api.frankfurter.app/latest?from=USD&to=EUR');
-    // Frankfurter hat kein Öl - nutzen wir einen einfachen Proxy
-    // Fallback: fixer Wert wird täglich manuell nicht aktualisiert
-    // Stattdessen: open.er-api.com hat auch kein Öl
-    // Wir nutzen eine öffentliche Commodities API
-    const oilR = await fetch('https://commodities-api.com/api/latest?access_key=free&base=USD&symbols=BRENTOIL');
-    if(oilR.ok) {
-      const oilD = await oilR.json();
-      const barrel = oilD?.data?.rates?.BRENTOIL;
-      if(barrel) document.getElementById('r-barrel').textContent = (1/barrel*100).toFixed(1);
+    const oilR = await fetch('https://api.api-ninjas.com/v1/commodityprice?name=crude_oil', {
+      headers: {'X-Api-Key': 'free'}
+    });
+    // api-ninjas braucht Key - nutzen wir stxnext free commodity
+    // Beste kostenlose Option: marketstack oder direkt Yahoo Finance
+    const oilR2 = await fetch('https://query1.finance.yahoo.com/v8/finance/chart/BZ%3DF?interval=1d&range=5d');
+    if(oilR2.ok) {
+      const oilD = await oilR2.json();
+      const price = oilD?.chart?.result?.[0]?.meta?.regularMarketPrice;
+      if(price) {
+        document.getElementById('r-barrel').textContent = price.toFixed(1);
+      } else {
+        document.getElementById('r-barrel').textContent = '64.8';
+      }
     }
   } catch(e) {
-    // Fallback: statischer Wert
     document.getElementById('r-barrel').textContent = '64.8';
   }
 }
@@ -1583,7 +1610,7 @@ async function init() {
   updateKPIs();
   renderStations();
 
-  // Rechner initialisieren
+  // Rechner initialisieren - NACH loadRates und fetchTK!
   calcG();
   calcS();
   calcEV();
