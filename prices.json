@@ -1,10 +1,10 @@
 {
-  "timestamp": "2026-04-14T10:00:00.000Z",
-  "source": ["manual_14042026"],
-  "zgorzelec_i":  { "e5": 6.12, "diesel": 7.58, "lpg": 3.89, "adblue": 4.19 },
-  "zgorzelec_ii": { "e5": 6.12, "diesel": 7.58, "lpg": 3.94, "adblue": 4.19 },
-  "hradek":       { "e5": 39.99, "diesel": 40.99, "lpg": 19.80 },
-  "regional_pl":  { "e5": 6.12, "diesel": 7.58, "lpg": 3.89 },
-  "regional_cz":  { "e5": 39.99, "diesel": 40.99, "lpg": 19.80 },
-  "note": "Stand: 14.04.2026"
+  "timestamp": "2026-04-11T06:00:00.000Z",
+  "source": ["manual_11042026"],
+  "zgorzelec_i":  { "e5": 6.17, "diesel": 7.66, "lpg": 3.89, "adblue": 4.19 },
+  "zgorzelec_ii": { "e5": 6.17, "diesel": 7.66, "lpg": 3.94, "adblue": 4.19 },
+  "hradek":       { "e5": 41.20, "diesel": 43.50, "lpg": 19.80 },
+  "regional_pl":  { "e5": 6.17, "diesel": 7.66, "lpg": 3.89 },
+  "regional_cz":  { "e5": 41.20, "diesel": 43.50, "lpg": 19.80 },
+  "note": "Stand: 11.04.2026"
 }
