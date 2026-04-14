@@ -88,7 +88,7 @@ h1 em{color:var(--acc);font-style:normal;font-weight:700}
 .kref{font-size:10px;color:var(--t4);margin-top:4px}
 
 /* RATE BAR */
-.rbar{display:flex;align-items:center;gap:8px;background:var(--bg2);border:.5px solid var(--b1);border-radius:var(--r);padding:8px 14px;margin-bottom:1rem;flex-wrap:wrap;font-size:11px;font-family:var(--mono);color:var(--t2)}
+.rbar{display:flex;align-items:center;gap:10px;background:var(--bg2);border:.5px solid var(--b1);border-radius:var(--r);padding:10px 14px;margin-bottom:1rem;flex-wrap:wrap;font-size:12px;font-family:var(--mono);color:var(--t2)}
 .ri{display:flex;gap:5px}.ri span{color:var(--t1);font-weight:500}
 .rsep{color:var(--b2)}
 .rupd{margin-left:auto;font-size:9px;color:var(--t4)}
@@ -1138,6 +1138,29 @@ function setLang(l) {
   calcG();
 }
 
+// ── TREND ──
+function updateTrend() {
+  const fuel = currentFuel;
+  const current = PRICES[fuel]?.de;
+  if(!current) return;
+  const prev = parseFloat(localStorage.getItem('de_prev_'+fuel) || current);
+  const diff = current - prev;
+  const trendEl = document.getElementById('r-trend');
+  if(!trendEl) return;
+  const fuelNames = {diesel:'Diesel', e5:'E5', e10:'E10', lpg:'LPG', sp98:'SP98'};
+  const name = fuelNames[fuel] || fuel;
+  if(Math.abs(diff) < 0.001) {
+    trendEl.textContent = name+' → stabil';
+    trendEl.style.color = 'var(--t3)';
+  } else if(diff > 0) {
+    trendEl.textContent = name+' ↑ +'+diff.toFixed(3)+'€';
+    trendEl.style.color = '#D85A30';
+  } else {
+    trendEl.textContent = name+' ↓ '+diff.toFixed(3)+'€';
+    trendEl.style.color = '#1D9E75';
+  }
+}
+
 // ── FUEL ──
 function setFuel(fuel, btn) {
   currentFuel = fuel;
@@ -1146,6 +1169,7 @@ function setFuel(fuel, btn) {
   updateKPIs();
   renderStations();
   calcS();
+  updateTrend();
 }
 
 // ── FILTER ──
@@ -1343,26 +1367,18 @@ async function fetchTK() {
     document.getElementById('r-count').textContent = STATIC_STATIONS.length + DE_STATIONS.length;
     document.getElementById('live-status').textContent = 'DE Live ✓';
 
-    // Preistrend berechnen
-    const todayDiesel = PRICES.diesel.de;
-    const yesterday = parseFloat(localStorage.getItem('diesel_yesterday') || todayDiesel);
-    const diff = todayDiesel - yesterday;
-    const trendEl = document.getElementById('r-trend');
-    if(trendEl) {
-      if(Math.abs(diff) < 0.001) {
-        trendEl.textContent = '→ stabil';
-        trendEl.style.color = 'var(--t3)';
-      } else if(diff > 0) {
-        trendEl.textContent = '↑ +'+diff.toFixed(3)+'€';
-        trendEl.style.color = '#D85A30';
-      } else {
-        trendEl.textContent = '↓ '+diff.toFixed(3)+'€';
-        trendEl.style.color = '#1D9E75';
-      }
+    // Preistrend - alle DE Kraftstoffe speichern
+    const today = new Date().toDateString();
+    const lastDate = localStorage.getItem('de_price_date');
+    // Nur einmal täglich den "gestrigen" Preis setzen
+    if(lastDate !== today) {
+      localStorage.setItem('de_prev_diesel', PRICES.diesel.de);
+      localStorage.setItem('de_prev_e5',     PRICES.e5.de);
+      localStorage.setItem('de_prev_e10',    PRICES.e10.de);
+      localStorage.setItem('de_prev_lpg',    PRICES.lpg.de);
+      localStorage.setItem('de_price_date',  today);
     }
-    // Preis für morgen speichern
-    localStorage.setItem('diesel_yesterday', todayDiesel);
-    localStorage.setItem('diesel_date', new Date().toDateString());
+    updateTrend();
 
     updateKPIs();
     renderStations();
@@ -1447,11 +1463,11 @@ async function loadRates() {
       if(price) {
         document.getElementById('r-barrel').textContent = price.toFixed(1);
       } else {
-        document.getElementById('r-barrel').textContent = '64.8';
+        document.getElementById('r-barrel').textContent = '95.0';
       }
     }
   } catch(e) {
-    document.getElementById('r-barrel').textContent = '64.8';
+    document.getElementById('r-barrel').textContent = '95.0';
   }
 }
 
