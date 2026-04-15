@@ -22,7 +22,7 @@
   --acc:#D85A30;--acc2:rgba(216,90,48,.1);--acc3:rgba(216,90,48,.25);
   --bg:#080808;--bg2:#0f0f0f;--bg3:#161616;--bg4:#1e1e1e;
   --b1:rgba(255,255,255,.06);--b2:rgba(255,255,255,.11);--b3:rgba(255,255,255,.18);
-  --t1:#ffffff;--t2:#cccccc;--t3:#999999;--t4:#666666;
+  --t1:#ffffff;--t2:#cccccc;--t3:#aaaaaa;--t4:#888888;
   --gr:#1D9E75;--gr2:rgba(29,158,117,.1);--gr3:rgba(29,158,117,.25);
   --bl:#378ADD;--bl2:rgba(55,138,221,.1);
   --pu:#9B59B6;
@@ -30,6 +30,26 @@
   --sans:-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-serif;
   --r:10px;--r2:14px;
 }
+body.light{
+  --bg:#f5f5f0;--bg2:#ffffff;--bg3:#ebebE4;--bg4:#e0dfd8;
+  --b1:rgba(0,0,0,.07);--b2:rgba(0,0,0,.12);--b3:rgba(0,0,0,.20);
+  --t1:#111111;--t2:#333333;--t3:#555555;--t4:#777777;
+  --gr2:rgba(29,158,117,.08);--gr3:rgba(29,158,117,.2);
+  --acc2:rgba(216,90,48,.08);--acc3:rgba(216,90,48,.2);
+}
+body.light .hdr{background:rgba(245,245,240,.96);border-bottom:.5px solid rgba(0,0,0,.08)}
+body.light .kcard{background:var(--bg2);box-shadow:0 1px 4px rgba(0,0,0,.06)}
+body.light .scard{background:var(--bg2)}
+body.light .stbox{background:var(--bg2)}
+body.light .modal{background:var(--bg2)}
+body.light .rbar{background:var(--bg2)}
+body.light .grenz{background:linear-gradient(135deg,rgba(216,90,48,.06),rgba(216,90,48,.02))}
+body.light .report-box{background:rgba(216,90,48,.06)}
+body.light .fcard{background:var(--bg2)}
+body.light #map{filter:invert(0)}
+body.light .live-pill{background:rgba(29,158,117,.08)}
+body.light .logo-text .b{color:#111111}
+* {transition:background-color .2s,color .2s,border-color .2s}
 *{box-sizing:border-box;margin:0;padding:0}
 html{scroll-behavior:smooth}
 body{background:var(--bg);color:var(--t1);font-family:var(--sans);font-size:14px;line-height:1.5;overflow-x:hidden}
@@ -57,7 +77,7 @@ body{background:var(--bg);color:var(--t1);font-family:var(--sans);font-size:14px
 .eyebrow::before{content:'';width:20px;height:1.5px;background:var(--acc)}
 h1{font-size:clamp(22px,4vw,32px);font-weight:300;letter-spacing:-1.5px;line-height:1.1;margin-bottom:.35rem;color:var(--t1)}
 h1 em{color:var(--acc);font-style:normal;font-weight:700}
-.hero-sub{font-size:11px;color:var(--t3);margin-bottom:1.1rem;line-height:1.6}
+.hero-sub{font-size:11px;color:var(--t2);margin-bottom:1.1rem;line-height:1.6}
 
 /* SEARCH */
 .sbar{display:flex;gap:6px;margin-bottom:.75rem}
@@ -89,7 +109,7 @@ h1 em{color:var(--acc);font-style:normal;font-weight:700}
 .kunit{font-size:12px;font-weight:400;color:var(--t3);margin-left:1px}
 .klocal{font-size:10px;color:var(--t4);font-family:var(--mono);margin-top:3px}
 .ksave{font-size:10px;color:var(--gr);margin-top:4px;font-family:var(--mono)}
-.kref{font-size:10px;color:var(--t4);margin-top:4px}
+.kref{font-size:10px;color:var(--t3);margin-top:4px}
 
 /* RATE BAR */
 .rbar{display:flex;align-items:center;gap:10px;background:var(--bg2);border:.5px solid var(--b1);border-radius:var(--r);padding:10px 14px;margin-bottom:1rem;flex-wrap:wrap;font-size:12px;font-family:var(--mono);color:var(--t2)}
@@ -236,6 +256,8 @@ h1 em{color:var(--acc);font-style:normal;font-weight:700}
   .kprice{font-size:19px}
   .ginputs{grid-template-columns:1fr 1fr}
   h1{font-size:20px}
+  .rbar{font-size:11px;gap:6px;padding:8px 10px}
+  .rupd{display:none}
 }
 </style>
 </head>
@@ -247,6 +269,7 @@ h1 em{color:var(--acc);font-style:normal;font-weight:700}
     <div class="logo-text"><span class="a">BEST</span><span class="b">PRICE</span><span class="c">TANK</span></div>
   </a>
   <div class="live-pill"><div class="ldot"></div><span id="live-status">Live</span></div>
+  <button id="theme-toggle" onclick="toggleTheme()" style="background:var(--bg3);border:.5px solid var(--b2);border-radius:20px;padding:4px 10px;color:var(--t2);font-size:14px;cursor:pointer;transition:all .15s" title="Light/Dark Mode">🌙</button>
   <div class="lang">
     <button class="lb on" onclick="setLang('de')">DE</button>
     <button class="lb" onclick="setLang('en')">EN</button>
@@ -367,6 +390,12 @@ h1 em{color:var(--acc);font-style:normal;font-weight:700}
         <option value="cz">🇨🇿 Tschechien</option>
       </select>
     </div>
+  </div>
+  <div style="display:flex;align-items:center;gap:10px;margin-bottom:.6rem;padding:8px 10px;background:rgba(216,90,48,.06);border:.5px solid var(--acc3);border-radius:8px">
+    <input type="checkbox" id="g-kanister" onchange="calcG()" style="width:16px;height:16px;accent-color:var(--acc);cursor:pointer">
+    <label for="g-kanister" style="font-size:12px;color:var(--t2);cursor:pointer;flex:1">Kanister mitnehmen</label>
+    <input class="ginp" type="number" id="g-kanister-lit" value="5" min="1" max="50" oninput="calcG()" style="width:60px;text-align:center">
+    <span style="font-size:11px;color:var(--t3)">Liter</span>
   </div>
   <div class="gresult">
     <div class="grcol">
@@ -1493,7 +1522,10 @@ async function loadRates() {
 // ── GRENZRECHNER ──
 function calcG() {
   const km   = parseFloat(document.getElementById('g-km').value)||8;
-  const lit  = parseFloat(document.getElementById('g-lit').value)||50;
+  const litBase = parseFloat(document.getElementById('g-lit').value)||50;
+  const kanister = document.getElementById('g-kanister')?.checked;
+  const kanisterLit = kanister ? (parseFloat(document.getElementById('g-kanister-lit').value)||5) : 0;
+  const lit = litBase + kanisterLit;
   const vbr  = parseFloat(document.getElementById('g-vbr').value)||7;
   const land = document.getElementById('g-land').value;
   const fuel = document.getElementById('g-fuel')?.value || 'diesel';
@@ -1613,6 +1645,13 @@ function declineCookies() {
   document.getElementById('cookie-banner').classList.remove('show');
 }
 
+// ── THEME ──
+function toggleTheme() {
+  const isLight = document.body.classList.toggle('light');
+  localStorage.setItem('theme', isLight ? 'light' : 'dark');
+  document.getElementById('theme-toggle').textContent = isLight ? '☀️' : '🌙';
+}
+
 // ── TOAST ──
 function showToast(msg, type='ok') {
   const t = document.getElementById('toast');
@@ -1626,6 +1665,13 @@ async function init() {
   // Datum setzen
   const dateEl = document.getElementById('report-date');
   if(dateEl) dateEl.value = new Date().toISOString().split('T')[0];
+
+  // Theme laden
+  if(localStorage.getItem('theme') === 'light') {
+    document.body.classList.add('light');
+    const tb = document.getElementById('theme-toggle');
+    if(tb) tb.textContent = '☀️';
+  }
 
   // Cookie Banner
   if(!localStorage.getItem('cookieOk')) {
