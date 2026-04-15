@@ -1545,21 +1545,13 @@ async function loadRates() {
     }
   } catch(e) { console.warn('PL Preise Fehler:', e.message); }
 
-  // Rohöl Barrel Preis - kostenlose API
+  // Rohöl Barrel Preis - via Netlify Proxy (kein CORS Problem)
   try {
-    const oilR = await fetch('https://api.api-ninjas.com/v1/commodityprice?name=crude_oil', {
-      headers: {'X-Api-Key': 'free'}
-    });
-    // api-ninjas braucht Key - nutzen wir stxnext free commodity
-    // Beste kostenlose Option: marketstack oder direkt Yahoo Finance
-    const oilR2 = await fetch('https://query1.finance.yahoo.com/v8/finance/chart/BZ%3DF?interval=1d&range=5d');
-    if(oilR2.ok) {
-      const oilD = await oilR2.json();
-      const price = oilD?.chart?.result?.[0]?.meta?.regularMarketPrice;
-      if(price) {
-        document.getElementById('r-barrel').textContent = price.toFixed(1);
-      } else {
-        document.getElementById('r-barrel').textContent = '95.0';
+    const oilR = await fetch('/.netlify/functions/get-barrel');
+    if(oilR.ok) {
+      const oilD = await oilR.json();
+      if(oilD.price) {
+        document.getElementById('r-barrel').textContent = parseFloat(oilD.price).toFixed(1);
       }
     }
   } catch(e) {
