@@ -271,6 +271,12 @@ h1 em{color:var(--acc);font-style:normal;font-weight:700}
 .flinks a{font-size:11px;color:var(--t3);text-decoration:none;transition:color .15s}
 .flinks a:hover{color:var(--t2)}
 .fcopy{font-size:10px;color:var(--t4);font-family:var(--mono)}
+.egg-btn{background:none;border:none;cursor:pointer;font-size:14px;opacity:0.3;transition:opacity .2s;padding:0}
+.egg-btn:hover{opacity:0.6}
+#modal-egg .modal{max-width:380px}
+.egg-result{background:var(--bg3);border:.5px solid var(--b1);border-radius:var(--r);padding:12px;margin-top:10px;text-align:center}
+.egg-saving{font-size:28px;font-weight:700;color:var(--gr)}
+.egg-warning{font-size:10px;color:var(--t4);margin-top:8px;font-style:italic}
 .social-links{display:flex;gap:12px;align-items:center}
 .social-btn{display:flex;align-items:center;gap:6px;padding:6px 12px;border-radius:20px;font-size:12px;font-weight:500;text-decoration:none;border:.5px solid var(--b2);color:var(--t2);background:var(--bg3);transition:all .15s}
 .social-btn:hover{border-color:var(--b3);color:var(--t1);transform:translateY(-1px)}
@@ -810,7 +816,10 @@ h1 em{color:var(--acc);font-style:normal;font-weight:700}
       Instagram
     </a>
   </div>
-  <div class="fcopy">© 2026 bestpricetank.de</div>
+  <div class="fcopy" style="display:flex;align-items:center;gap:8px;justify-content:center">
+    © 2026 bestpricetank.de
+    <button class="egg-btn" id="egg-trigger" onclick="eggTap()" title="">🚬</button>
+  </div>
 </footer>
 
 <!-- COOKIE BANNER -->
@@ -1692,6 +1701,43 @@ function toggleTheme() {
   document.getElementById('theme-toggle').textContent = isLight ? '☀️' : '🌙';
 }
 
+// ── EASTER EGG ──
+let eggTaps = 0;
+let eggTimer = null;
+let eggLand = 'pl';
+const EGG_PRICES = {
+  stange: { de: 92, pl: 50, cz: 47 }
+};
+
+function eggTap() {
+  eggTaps++;
+  if(eggTimer) clearTimeout(eggTimer);
+  eggTimer = setTimeout(() => { eggTaps = 0; }, 1500);
+  if(eggTaps >= 3) {
+    eggTaps = 0;
+    calcEgg();
+    openModal('egg');
+  }
+}
+
+function setEggLand(land) {
+  eggLand = land;
+  document.getElementById('egg-pl').classList.toggle('on', land==='pl');
+  document.getElementById('egg-cz').classList.toggle('on', land==='cz');
+  calcEgg();
+}
+
+function calcEgg() {
+  const stangen = Math.min(4, parseInt(document.getElementById('egg-stangen')?.value)||2);
+  const de = EGG_PRICES.stange.de * stangen;
+  const abroad = EGG_PRICES.stange[eggLand] * stangen;
+  const saving = de - abroad;
+  const savEl = document.getElementById('egg-saving');
+  const detEl = document.getElementById('egg-detail');
+  if(savEl) savEl.textContent = saving.toFixed(0)+'€';
+  if(detEl) detEl.textContent = stangen+' Stangen: '+abroad+'€ statt '+de+'€ in DE';
+}
+
 // ── TOAST ──
 function showToast(msg, type='ok') {
   const t = document.getElementById('toast');
@@ -1742,5 +1788,38 @@ async function init() {
 
 document.addEventListener('DOMContentLoaded', init);
 </script>
+<!-- EASTER EGG MODAL -->
+<div class="modal-overlay" id="modal-egg">
+  <div class="modal" style="max-width:380px">
+    <div class="modal-hdr">
+      <div class="modal-title">🚬 Grenz-Schnäppchen Rechner</div>
+      <div class="modal-close" onclick="closeModal('egg')">×</div>
+    </div>
+    <div style="font-size:12px;color:var(--t2);display:grid;gap:12px">
+      <p style="color:var(--t3);font-size:11px">Psst! Nur zur Information. Alle Angaben ohne Gewähr. 😅</p>
+      <div>
+        <div class="ginp-label" style="margin-bottom:4px">Anzahl Stangen Marlboro</div>
+        <div style="display:flex;align-items:center;gap:8px">
+          <input class="ginp" type="number" id="egg-stangen" value="2" min="1" max="4" oninput="calcEgg()" style="width:80px;text-align:center">
+          <span style="color:var(--t3);font-size:11px">Max. 4 Stangen (800 Stück) ⚠️</span>
+        </div>
+      </div>
+      <div>
+        <div class="ginp-label" style="margin-bottom:6px">Zielland</div>
+        <div style="display:flex;gap:8px">
+          <button class="ftab on" id="egg-pl" onclick="setEggLand('pl')">🇵🇱 Polen</button>
+          <button class="ftab" id="egg-cz" onclick="setEggLand('cz')">🇨🇿 Tschechien</button>
+        </div>
+      </div>
+      <div class="egg-result">
+        <div style="font-size:11px;color:var(--t3);margin-bottom:6px">Deine Ersparnis</div>
+        <div class="egg-saving" id="egg-saving">–</div>
+        <div style="font-size:11px;color:var(--t3);margin-top:4px" id="egg-detail">–</div>
+        <div class="egg-warning">⚠️ Max. 800 Zigaretten (4 Stangen) erlaubt bei Einreise nach DE!<br>Alle Angaben ohne Gewähr · Nur zur Information 😅</div>
+      </div>
+    </div>
+  </div>
+</div>
+
 </body>
 </html>
