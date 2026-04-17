@@ -1,0 +1,15 @@
+# robots.txt für bestpricetank.de
+# Alle Suchmaschinen dürfen alles crawlen
+User-agent: *
+Allow: /
+
+# Bösartige Bots blockieren (WordPress/Admin-Scanner)
+User-agent: SemrushBot
+Disallow: /
+User-agent: AhrefsBot
+Disallow: /
+User-agent: MJ12bot
+Disallow: /
+
+# Sitemap-Standort
+Sitemap: https://bestpricetank.de/sitemap.xml
