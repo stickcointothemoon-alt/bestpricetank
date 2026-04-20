@@ -1,9 +1,9 @@
 {
-  "updated": "15.04.2026",
+  "updated": "20.04.2026",
   "source": "Citronex Zgorzelec",
   "citronex": {
-    "diesel": 7.07,
-    "e5": 6.03,
+    "diesel": 6.89,
+    "e5": 5.99,
     "lpg": 3.94,
     "adblue": 4.19
   },
@@ -18,7 +18,7 @@
   },
   "cz": {
     "e5": 38.90,
-    "diesel": 41.90,
+    "diesel": 39.50,
     "lpg": 19.80
   }
 }
