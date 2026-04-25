@@ -1,0 +1,2070 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"/>
+<title>BestPriceTank – Live Spritpreise Dreiländereck DE · PL · CZ</title>
+<meta name="description" content="Aktuelle Spritpreise in Zgorzelec, Hrádek & Görlitz live vergleichen. Diesel, E5, E10, LPG – günstigste Tankstellen Polen & Tschechien sofort sehen. Grenzrechner, KI-Assistent."/>
+<meta name="robots" content="index, follow"/>
+<link rel="canonical" href="https://bestpricetank.de/"/>
+<meta property="og:type" content="website"/>
+<meta property="og:url" content="https://bestpricetank.de/"/>
+<meta property="og:title" content="BestPriceTank – Live Spritpreise Dreiländereck"/>
+<meta property="og:description" content="Günstig tanken in Polen & Tschechien. Live-Preise, Grenzrechner, KI-Assistent."/>
+<meta property="og:image" content="https://bestpricetank.de/og-image.png"/>
+<meta name="twitter:card" content="summary_large_image"/>
+<meta name="theme-color" content="#020812"/>
+<meta name="apple-mobile-web-app-capable" content="yes"/>
+<meta name="mobile-web-app-capable" content="yes"/>
+<meta name="apple-mobile-web-app-title" content="BestPriceTank"/>
+<meta name="google-site-verification" content="Npd1-bNsIVMigacdTSX-Zu1JTbldGJP_JuEa1zXnbPs"/>
+<link rel="manifest" href="/manifest.json"/>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>⛽</text></svg>"/>
+<link rel="apple-touch-icon" href="/icon-192.png"/>
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"WebApplication","name":"BestPriceTank","url":"https://bestpricetank.de","description":"Live Spritpreisvergleich Dreiländereck Deutschland, Polen, Tschechien.","applicationCategory":"UtilitiesApplication","offers":{"@type":"Offer","price":"0","priceCurrency":"EUR"}}</script>
+
+<!-- Leaflet -->
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+<style>
+:root{
+  --bg:#020812;--glass:rgba(5,12,28,.84);--glass2:rgba(8,18,42,.78);
+  --rim:rgba(255,255,255,.10);--rim2:rgba(255,255,255,.18);
+  --text:#eef2ff;--muted:rgba(170,190,240,.64);--faint:rgba(130,155,210,.36);
+  --green:#00e676;--blue:#448aff;--purple:#7c4dff;--amber:#ffab00;--red:#ff5252;--cyan:#00e5ff;
+  --pg:rgba(124,77,255,.22);--gg:rgba(0,230,118,.18);
+  --sans:-apple-system,BlinkMacSystemFont,"SF Pro Display","Segoe UI",sans-serif;
+  --mono:"SF Mono","Fira Code",monospace;
+  --spring:cubic-bezier(0.34,1.56,0.64,1);--smooth:cubic-bezier(0.4,0,0.2,1);
+}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+html,body{width:100%;height:100dvh;overflow:hidden;font-family:var(--sans);color:var(--text);background:var(--bg);-webkit-font-smoothing:antialiased}
+button{cursor:pointer;border:none;background:none;font:inherit;color:inherit}
+input,select{font:inherit;color:inherit;border:none;outline:none;background:none}
+select option{background:#0a1628}
+
+/* MAP */
+#map{position:fixed;inset:0;z-index:0;background:#020d1a}
+.leaflet-container{background:#020d1a!important}
+.leaflet-control-attribution{font-size:9px!important;background:rgba(0,0,0,.55)!important;color:rgba(255,255,255,.35)!important}
+.leaflet-control-attribution a{color:rgba(255,255,255,.35)!important}
+
+/* PRICE BUBBLES (Leaflet divIcon) */
+.pbub{
+  display:flex;align-items:center;gap:6px;
+  padding:5px 11px 5px 6px;border-radius:999px;border:1.5px solid;
+  backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);
+  font:800 12.5px var(--mono);white-space:nowrap;
+  box-shadow:0 6px 22px rgba(0,0,0,.5);cursor:pointer;
+  animation:bfloat 4s ease infinite;
+  flex-direction:column;align-items:flex-start;gap:1px;
+}
+.pbub-row{display:flex;align-items:center;gap:6px}
+.pbub-sub{font:700 9.5px var(--mono);opacity:.78;padding-left:28px;margin-top:1px}
+.pbub-logo{width:22px;height:22px;border-radius:50%;display:grid;place-items:center;font-size:10px;font-weight:900;flex-shrink:0}
+.pbub.de{background:rgba(20,50,120,.72);border-color:rgba(68,138,255,.48);color:#93c5fd}
+.pbub.de .pbub-logo{background:#2563eb;color:#fff}
+.pbub.pl{background:rgba(0,40,15,.72);border-color:rgba(0,200,83,.45);color:#6ee7b7}
+.pbub.pl .pbub-logo{background:#16a34a;color:#fff}
+.pbub.cz{background:rgba(50,20,0,.72);border-color:rgba(255,171,0,.42);color:#fcd34d}
+.pbub.cz .pbub-logo{background:#b45309;color:#fff}
+.pbub.best-price{border-width:2px}
+.pbub.pl.best-price{border-color:rgba(0,230,118,.8);box-shadow:0 0 20px rgba(0,230,118,.25),0 6px 22px rgba(0,0,0,.5)}
+.pbub-star{position:absolute;top:-7px;right:-4px;width:16px;height:16px;border-radius:50%;background:var(--green);display:grid;place-items:center;font-size:9px;color:#012e0a;font-weight:900;box-shadow:0 0 10px var(--green)}
+@keyframes bfloat{0%,100%{transform:translateY(0)}50%{transform:translateY(-4px)}}
+.pbub:hover{animation:none;transform:scale(1.08)!important;z-index:999}
+.leaflet-marker-icon{border:none!important;background:none!important;overflow:visible}
+
+/* UI LAYER */
+.ui{position:fixed;inset:0;z-index:10;pointer-events:none}
+.ui>*{pointer-events:all}
+
+/* HEADER */
+.hdr{
+  position:absolute;top:max(env(safe-area-inset-top),10px);left:50%;transform:translateX(-50%);
+  display:flex;align-items:center;gap:3px;
+  height:48px;padding:0 5px;border-radius:999px;
+  border:1px solid var(--rim2);background:var(--glass);
+  backdrop-filter:blur(28px);-webkit-backdrop-filter:blur(28px);
+  box-shadow:0 8px 40px rgba(0,0,0,.55),inset 0 1px 0 rgba(255,255,255,.05);
+  animation:drop .6s var(--spring) both;white-space:nowrap;
+}
+@keyframes drop{from{opacity:0;transform:translateX(-50%) translateY(-16px)}to{opacity:1;transform:translateX(-50%) translateY(0)}}
+.logo{display:flex;align-items:center;gap:8px;padding:0 6px 0 3px;margin-right:3px}
+.logo-ico{width:32px;height:32px;border-radius:10px;background:conic-gradient(from 180deg at 40% 40%,#ff6b1a,#ffd700,#ff6b1a);display:grid;place-items:center;font-size:16px;box-shadow:0 0 14px rgba(255,107,26,.3)}
+.logo-txt{font-size:13px;font-weight:800}.logo-txt em{color:#ff9d38;font-style:normal}
+.hdiv{width:1px;height:26px;background:var(--rim)}
+.hnav{display:flex;gap:2px}
+.hbtn{height:36px;padding:0 11px;border-radius:999px;color:var(--muted);font-size:12px;font-weight:700;transition:all .18s}
+.hbtn:hover{color:var(--text);background:rgba(255,255,255,.06)}
+.hbtn.on{color:#fff;background:rgba(124,77,255,.28)}
+.hacts{display:flex;gap:3px}
+.hico{width:33px;height:33px;border-radius:999px;border:1px solid var(--rim);display:grid;place-items:center;font-size:13px;transition:all .18s}
+.hico:hover{background:rgba(255,255,255,.06)}
+.lp{display:flex;gap:2px;padding:3px;border:1px solid var(--rim);border-radius:999px;background:rgba(255,255,255,.04)}
+.lbtn{height:24px;min-width:30px;border-radius:999px;font:700 10.5px var(--mono);color:var(--muted)}
+.lbtn.on{background:rgba(124,77,255,.35);color:#fff}
+.nwrap{position:relative}
+.ndot{position:absolute;top:2px;right:2px;width:7px;height:7px;border-radius:50%;background:var(--red);border:1.5px solid var(--bg);box-shadow:0 0 8px var(--red);animation:np 2s ease infinite}
+@keyframes np{0%,100%{transform:scale(1)}50%{transform:scale(1.4)}}
+
+/* LIVE BADGE */
+.live{
+  position:absolute;top:calc(max(env(safe-area-inset-top),10px) + 58px);left:50%;transform:translateX(-50%);
+  display:flex;align-items:center;gap:6px;height:22px;padding:0 9px;
+  border-radius:999px;border:1px solid rgba(0,230,118,.22);background:rgba(0,230,118,.07);
+  backdrop-filter:blur(12px);font:800 9px var(--mono);color:var(--green);letter-spacing:1.5px;
+  animation:drop .7s .1s var(--spring) both;
+}
+.ldot{width:6px;height:6px;border-radius:50%;background:var(--green);box-shadow:0 0 10px var(--green);animation:lb 2s ease infinite}
+@keyframes lb{0%,100%{opacity:1}50%{opacity:.25}}
+
+/* LOCATION + FUEL BAR */
+.locfuel{
+  position:absolute;top:calc(max(env(safe-area-inset-top),10px) + 90px);left:50%;transform:translateX(-50%);
+  display:flex;flex-direction:column;gap:6px;align-items:center;
+  animation:drop .8s .15s var(--spring) both;
+}
+.locrow{
+  display:flex;align-items:center;gap:5px;height:40px;padding:4px 5px;
+  border-radius:999px;border:1px solid var(--rim2);background:var(--glass);
+  backdrop-filter:blur(24px);-webkit-backdrop-filter:blur(24px);
+  box-shadow:0 8px 28px rgba(0,0,0,.45);
+}
+.loc-input{
+  width:140px;height:30px;border-radius:999px;border:1px solid var(--rim);
+  background:rgba(255,255,255,.08);color:var(--text);padding:0 10px;font-size:12.5px;font-weight:700;
+}
+.loc-input::placeholder{color:var(--faint)}
+.loc-sel{
+  height:30px;border-radius:999px;border:1px solid var(--rim);
+  background:rgba(255,255,255,.08);color:var(--text);padding:0 8px;
+  font-size:12px;font-weight:700;cursor:pointer;-webkit-appearance:none;
+}
+.loc-btn{width:30px;height:30px;border-radius:50%;background:linear-gradient(135deg,var(--purple),var(--blue));color:#fff;display:grid;place-items:center;font-size:13px;transition:transform .3s}
+.loc-btn:hover{transform:rotate(180deg)}
+.loc-btn.spin{animation:spin .8s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* FUEL PILLS */
+.fuelpills{
+  display:flex;gap:4px;padding:4px 6px;border-radius:999px;
+  border:1px solid var(--rim2);background:var(--glass);
+  backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);
+  box-shadow:0 6px 20px rgba(0,0,0,.4);
+}
+.fp{height:28px;padding:0 12px;border-radius:999px;border:1px solid var(--rim);background:rgba(255,255,255,.05);color:var(--muted);font:800 11.5px var(--sans);transition:all .18s}
+.fp:hover{color:var(--text);background:rgba(255,255,255,.08)}
+.fp.on{color:#fff;background:rgba(124,77,255,.28);border-color:rgba(124,77,255,.45)}
+
+/* AI CARD */
+.aic{
+  position:absolute;top:calc(max(env(safe-area-inset-top),10px) + 86px);left:16px;
+  width:min(292px,calc(50vw - 24px));border-radius:20px;
+  border:1px solid rgba(124,77,255,.28);background:var(--glass);
+  backdrop-filter:blur(28px);-webkit-backdrop-filter:blur(28px);
+  box-shadow:0 20px 60px rgba(0,0,0,.5),0 0 40px rgba(124,77,255,.08);
+  overflow:hidden;animation:sil .7s .2s var(--spring) both;
+}
+@keyframes sil{from{opacity:0;transform:translateX(-22px)}to{opacity:1;transform:none}}
+.aic-top{padding:12px 14px 10px;background:linear-gradient(135deg,rgba(124,77,255,.14),rgba(0,229,255,.05));border-bottom:1px solid var(--rim)}
+.ai-badge{display:inline-flex;align-items:center;gap:4px;font:800 9px var(--mono);color:var(--cyan);letter-spacing:1.5px;margin-bottom:6px}
+.ai-av{width:13px;height:13px;border-radius:4px;background:linear-gradient(135deg,var(--cyan),var(--purple));display:grid;place-items:center;font-size:7px}
+.ai-hl{font-size:14.5px;font-weight:900;letter-spacing:-.4px;line-height:1.2}
+.ai-hl strong{background:linear-gradient(90deg,var(--green),var(--cyan));-webkit-background-clip:text;background-clip:text;color:transparent}
+.aic-body{padding:9px 14px 11px;display:grid;gap:5px}
+.ai-row{display:flex;align-items:center;gap:6px;font-size:11px;font-weight:700;color:var(--muted)}
+.ai-ri{width:18px;height:18px;border-radius:5px;display:grid;place-items:center;font-size:10px;flex-shrink:0}
+.ai-cta{width:100%;height:33px;border-radius:10px;margin-top:3px;background:linear-gradient(135deg,var(--purple),var(--blue));color:#fff;font:800 11.5px var(--sans);display:flex;align-items:center;justify-content:center;gap:5px;box-shadow:0 5px 18px var(--pg);transition:all .2s var(--spring)}
+.ai-cta:hover{transform:translateY(-1px);box-shadow:0 8px 26px var(--pg)}
+
+/* MOBILE KI CARD — bottom strip */
+@media(max-width:900px){
+  .aic{
+    top:auto;left:50%;
+    bottom:calc(env(safe-area-inset-bottom,0px) + 120px);
+    transform:translateX(-50%);
+    width:calc(100vw - 28px);max-width:420px;
+    border-radius:16px;
+    animation:mob-aic .7s .3s var(--spring) both;
+  }
+  @keyframes mob-aic{from{opacity:0;transform:translateX(-50%) translateY(18px)}to{opacity:1;transform:translateX(-50%) translateY(0)}}
+  .aic-top{padding:9px 13px;border-bottom:none;background:none}
+  .ai-badge{display:none}
+  .aic-body{display:none}
+  .aic-top{display:flex;align-items:center;justify-content:space-between;gap:10px}
+  .ai-hl{font-size:13.5px}
+  .ai-cta-mob{height:30px;padding:0 14px;border-radius:999px;background:linear-gradient(135deg,var(--purple),var(--blue));color:#fff;font:800 11px var(--sans);display:flex;align-items:center;gap:4px;white-space:nowrap;box-shadow:0 4px 14px var(--pg);flex-shrink:0}
+}
+
+/* COUNTRY FILTER */
+.cfilter{
+  position:absolute;top:calc(max(env(safe-area-inset-top),10px) + 90px);right:14px;
+  display:flex;flex-direction:column;gap:5px;
+  animation:sil .8s .4s var(--spring) both;
+}
+.cfbtn{
+  height:32px;padding:0 11px;border-radius:999px;
+  border:1px solid var(--rim);background:var(--glass);
+  backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);
+  color:var(--muted);font:800 11.5px var(--sans);
+  box-shadow:0 4px 14px rgba(0,0,0,.3);transition:all .2s var(--spring);
+}
+.cfbtn:hover{color:var(--text);transform:scale(1.04)}
+.cfbtn.on{color:#fff;border-color:rgba(124,77,255,.5);background:rgba(124,77,255,.25)}
+.cfbtn[data-c="de"].on{border-color:rgba(68,138,255,.5);background:rgba(68,138,255,.22)}
+.cfbtn[data-c="pl"].on{border-color:rgba(0,200,83,.5);background:rgba(0,200,83,.18)}
+.cfbtn[data-c="cz"].on{border-color:rgba(255,171,0,.5);background:rgba(255,171,0,.15)}
+
+/* SIDE PANELS */
+.spanel{
+  position:fixed;top:0;right:0;bottom:0;width:min(500px,100vw);
+  border-left:1px solid var(--rim2);background:var(--glass2);
+  backdrop-filter:blur(32px);-webkit-backdrop-filter:blur(32px);
+  box-shadow:-16px 0 80px rgba(0,0,0,.6);
+  transform:translateX(100%);transition:transform .4s var(--spring);
+  display:flex;flex-direction:column;z-index:30;pointer-events:none;
+}
+.spanel.open{transform:none;pointer-events:all}
+.ph{padding:15px 18px;border-bottom:1px solid var(--rim);display:flex;align-items:center;gap:10px;flex-shrink:0}
+.ph h2{font-size:19px;font-weight:900;letter-spacing:-.5px;flex:1}
+.ph p{font-size:11.5px;color:var(--muted);margin-top:2px}
+.px{width:34px;height:34px;border-radius:999px;border:1px solid var(--rim);background:rgba(255,255,255,.06);display:grid;place-items:center;font-size:17px;color:var(--muted);flex-shrink:0}
+.pb{flex:1;overflow-y:auto;padding:16px;display:grid;gap:12px;align-content:start;scrollbar-width:thin;scrollbar-color:rgba(255,255,255,.07) transparent}
+
+/* STATION PANEL (bottom popup) */
+.stpop{
+  position:fixed;bottom:72px;left:50%;transform:translateX(-50%) translateY(calc(100% + 14px));
+  width:min(430px,calc(100vw - 24px));border-radius:22px;
+  border:1px solid var(--rim2);background:var(--glass2);
+  backdrop-filter:blur(28px);-webkit-backdrop-filter:blur(28px);
+  box-shadow:0 -8px 60px rgba(0,0,0,.6);overflow:hidden;
+  transition:transform .4s var(--spring),opacity .3s;opacity:0;pointer-events:none;z-index:20;
+}
+.stpop.open{transform:translateX(-50%) translateY(0);opacity:1;pointer-events:all}
+.sph2{padding:13px 15px 11px;border-bottom:1px solid var(--rim);display:flex;align-items:center;gap:9px}
+.sp-logo{width:40px;height:40px;border-radius:12px;border:1px solid var(--rim2);display:grid;place-items:center;font-size:17px;font-weight:900;flex-shrink:0}
+.sp-name{font-size:15.5px;font-weight:900;letter-spacing:-.3px}
+.sp-meta{font-size:11px;color:var(--muted);margin-top:2px;display:flex;align-items:center;gap:4px}
+.spx{width:29px;height:29px;border-radius:999px;border:1px solid var(--rim);background:rgba(255,255,255,.06);display:grid;place-items:center;font-size:15px;color:var(--muted);margin-left:auto;flex-shrink:0}
+.sp-prices{display:grid;grid-template-columns:repeat(4,1fr);gap:5px;padding:12px 14px}
+.spp{text-align:center;padding:8px 4px;border-radius:12px;border:1px solid var(--rim);background:rgba(255,255,255,.04);cursor:pointer;transition:all .15s}
+.spp.on{background:rgba(0,230,118,.1);border-color:rgba(0,230,118,.28)}
+.spp-t{font:800 9px var(--mono);letter-spacing:.5px;color:var(--faint);margin-bottom:3px;text-transform:uppercase}
+.spp-v{font-size:15px;font-weight:900;letter-spacing:-.3px}
+.spp.on .spp-v{color:var(--green)}
+.sp-foot{padding:0 14px 13px;display:grid;grid-template-columns:1fr auto;gap:7px}
+.btn-p{height:42px;border-radius:12px;background:linear-gradient(135deg,var(--purple),var(--blue));color:#fff;font:900 13px var(--sans);display:flex;align-items:center;justify-content:center;gap:5px;box-shadow:0 6px 22px var(--pg);transition:all .2s var(--spring)}
+.btn-p:hover{transform:translateY(-1px);box-shadow:0 10px 30px var(--pg)}
+.btn-s{height:42px;padding:0 13px;border-radius:12px;border:1px solid var(--rim2);background:rgba(255,255,255,.06);color:var(--text);font:800 12px var(--sans)}
+
+/* TABS */
+.tabrow{display:flex;gap:3px;padding:4px;border-radius:13px;border:1px solid var(--rim);background:rgba(255,255,255,.04)}
+.tab{height:32px;border-radius:9px;flex:1;color:var(--muted);font:800 11.5px var(--sans);transition:all .18s;white-space:nowrap}
+.tab.on{color:#fff;background:rgba(124,77,255,.28)}
+
+/* FORM */
+.fl{font:800 10px var(--mono);letter-spacing:1.5px;color:var(--faint);text-transform:uppercase;margin-bottom:4px;display:block}
+.fi{width:100%;height:44px;border-radius:12px;border:1px solid var(--rim);background:rgba(255,255,255,.06);color:var(--text);padding:0 12px;font:700 13.5px var(--sans);transition:border-color .15s}
+.fi:focus{border-color:rgba(124,77,255,.5);background:rgba(124,77,255,.06)}
+.fi::placeholder{color:var(--faint)}
+.fsel{width:100%;height:44px;border-radius:12px;border:1px solid var(--rim);background:rgba(255,255,255,.06);color:var(--text);padding:0 12px;font:700 13.5px var(--sans);-webkit-appearance:none;cursor:pointer}
+.fg2{display:grid;grid-template-columns:1fr 1fr;gap:9px}
+.frange{width:100%;height:5px;-webkit-appearance:none;border-radius:3px;background:rgba(255,255,255,.1);accent-color:var(--purple);cursor:pointer}
+.frange::-webkit-slider-thumb{-webkit-appearance:none;width:20px;height:20px;border-radius:50%;background:linear-gradient(135deg,var(--purple),var(--blue));box-shadow:0 3px 12px var(--pg);border:2.5px solid rgba(255,255,255,.9)}
+
+/* RESULT */
+.rhero{border-radius:16px;padding:16px;background:linear-gradient(135deg,rgba(0,200,83,.12),rgba(0,229,255,.05));border:1px solid rgba(0,230,118,.2)}
+.rlabel{font:800 9px var(--mono);letter-spacing:2px;color:var(--green);margin-bottom:4px;text-transform:uppercase}
+.rnum{font-size:46px;font-weight:900;letter-spacing:-3px;line-height:1;background:linear-gradient(90deg,var(--green),var(--cyan));-webkit-background-clip:text;background-clip:text;color:transparent}
+.rsub{font-size:12px;color:var(--muted);margin-top:4px}
+.rdets{display:flex;gap:12px;margin-top:9px;flex-wrap:wrap}
+.rdet{font-size:11px;color:var(--muted)}.rdet strong{color:var(--text);margin-left:3px}
+
+/* COMPARE */
+.cmp{border-radius:13px;border:1px solid var(--rim);background:rgba(255,255,255,.03);overflow:hidden}
+.cr{display:flex;align-items:center;gap:8px;padding:10px 12px;border-bottom:1px solid var(--rim)}
+.cr:last-child{border:none}
+.cf{font-size:17px;flex-shrink:0}
+.cn{flex:1}.cn b{display:block;font-size:12.5px;font-weight:800}.cn small{font-size:10.5px;color:var(--muted)}
+.cpr{font:900 16px var(--mono)}.csave{padding:2px 6px;border-radius:999px;font:800 10px var(--mono);margin-left:5px;color:var(--green);background:rgba(0,230,118,.1);border:1px solid rgba(0,230,118,.18)}
+
+/* TAX BARS */
+.tbar{display:grid;gap:4px;margin-bottom:8px}
+.tbarlbl{display:flex;justify-content:space-between;align-items:baseline}
+.tbarnm{font-size:12.5px;font-weight:800}
+.tbarpr{font:900 16px var(--mono)}
+.ttrack{height:12px;border-radius:6px;background:rgba(255,255,255,.06);overflow:hidden;display:flex}
+.tnet{height:100%;background:linear-gradient(90deg,#00e676,#00b0ff);transition:width .7s var(--spring)}
+.ttax{height:100%;background:linear-gradient(90deg,#ff6d00,#ff1744);transition:width .7s var(--spring)}
+.tmeta{font-size:10.5px;color:var(--muted);font-weight:700}
+
+/* EV */
+.evvs{display:grid;grid-template-columns:1fr auto 1fr;gap:8px;align-items:center;text-align:center}
+.evitem{padding:10px;border-radius:13px;border:1px solid var(--rim);background:rgba(255,255,255,.04)}
+.evlbl{font:800 9px var(--mono);letter-spacing:1.5px;color:var(--faint);margin-bottom:4px}
+.evval{font-size:20px;font-weight:900;letter-spacing:-.8px}
+.evsep{font:900 18px var(--sans);color:var(--faint)}
+.evdiff{font-size:12px;font-weight:800;padding:4px 9px;border-radius:999px;margin:8px auto 0;display:inline-block}
+.evgood{color:var(--green);background:rgba(0,230,118,.1);border:1px solid rgba(0,230,118,.18)}
+.evbad{color:#fca5a5;background:rgba(255,82,82,.08);border:1px solid rgba(255,82,82,.18)}
+
+/* KI CHAT */
+.kimsgs{flex:1;overflow-y:auto;padding:13px 16px;display:flex;flex-direction:column;gap:9px;scrollbar-width:thin;scrollbar-color:rgba(255,255,255,.07) transparent}
+.mu{align-self:flex-end;max-width:84%;background:linear-gradient(135deg,rgba(124,77,255,.28),rgba(68,138,255,.18));border:1px solid rgba(124,77,255,.28);border-radius:14px 14px 3px 14px;padding:9px 12px;font-size:13px;font-weight:600;animation:mpop .25s var(--spring) both}
+.ma{align-self:flex-start;max-width:92%;animation:mpop .25s var(--spring) both}
+@keyframes mpop{from{opacity:0;transform:translateY(7px)scale(.96)}to{opacity:1;transform:none}}
+.mai{background:rgba(255,255,255,.05);border:1px solid var(--rim2);border-radius:3px 14px 14px 14px;padding:10px 12px}
+.mah{display:flex;align-items:center;gap:6px;margin-bottom:7px}
+.mav{width:22px;height:22px;border-radius:7px;background:linear-gradient(135deg,var(--cyan),var(--purple));display:grid;place-items:center;font-size:11px;flex-shrink:0}
+.man{font:800 10px var(--mono);color:var(--cyan)}
+.mat{font-size:12.5px;line-height:1.5}
+.mfs{display:grid;gap:3px;margin-top:7px}
+.mf{display:flex;align-items:center;gap:5px;padding:5px 7px;border-radius:8px;background:rgba(255,255,255,.04);border:1px solid var(--rim);font-size:11.5px;font-weight:700}
+.mfi{width:18px;height:18px;border-radius:5px;display:grid;place-items:center;font-size:10px;flex-shrink:0}
+.typing{display:flex;align-items:center;gap:3px;padding:8px 12px;background:rgba(255,255,255,.05);border:1px solid var(--rim2);border-radius:3px 13px 13px 13px;width:fit-content}
+.td{width:6px;height:6px;border-radius:50%;background:var(--cyan);animation:tb 1.2s ease infinite}
+.td:nth-child(2){animation-delay:.15s}.td:nth-child(3){animation-delay:.3s}
+@keyframes tb{0%,100%{transform:translateY(0);opacity:.4}50%{transform:translateY(-5px);opacity:1}}
+.kiinp{padding:11px 15px calc(env(safe-area-inset-bottom,0px) + 11px);border-top:1px solid var(--rim);flex-shrink:0}
+.kibar{display:flex;gap:6px;padding:6px;border-radius:14px;border:1px solid var(--rim);background:rgba(255,255,255,.05)}
+.kibar input{flex:1;height:34px;background:transparent;color:var(--text);padding:0 8px;font-size:13px;font-weight:600}
+.kibar input::placeholder{color:var(--faint)}
+.kisend{width:34px;height:34px;border-radius:9px;flex-shrink:0;background:linear-gradient(135deg,var(--purple),var(--blue));display:grid;place-items:center;font-size:14px;box-shadow:0 3px 12px var(--pg)}
+.kimic{width:34px;height:34px;border-radius:9px;flex-shrink:0;border:1px solid var(--rim);background:rgba(255,255,255,.06);display:grid;place-items:center;font-size:14px}
+.qqs{display:flex;gap:5px;overflow-x:auto;margin-top:7px;scrollbar-width:none;padding-bottom:1px}
+.qqs::-webkit-scrollbar{display:none}
+.qq,.fq-btn{height:26px;padding:0 9px;border-radius:999px;flex-shrink:0;border:1px solid var(--rim);background:rgba(255,255,255,.05);color:var(--muted);font:800 11px var(--sans);transition:all .15s;white-space:nowrap}
+.qq:hover,.fq-btn:hover{background:rgba(124,77,255,.15);color:#fff;border-color:rgba(124,77,255,.3)}
+.on-fq{background:rgba(124,77,255,.2)!important;color:#fff!important;border-color:rgba(124,77,255,.35)!important}
+
+/* DOCK */
+.dock{
+  position:fixed;bottom:calc(env(safe-area-inset-bottom,0px) + 12px);left:50%;transform:translateX(-50%);
+  display:flex;gap:1px;padding:5px;border-radius:999px;
+  border:1px solid var(--rim2);background:var(--glass);
+  backdrop-filter:blur(28px);-webkit-backdrop-filter:blur(28px);
+  box-shadow:0 14px 50px rgba(0,0,0,.6),inset 0 1px 0 rgba(255,255,255,.05);
+  z-index:25;animation:dup .7s .3s var(--spring) both;
+}
+@keyframes dup{from{opacity:0;transform:translateX(-50%) translateY(18px)}to{opacity:1;transform:translateX(-50%) translateY(0)}}
+.dbtn{display:flex;flex-direction:column;align-items:center;gap:2px;padding:6px 13px;border-radius:999px;color:var(--muted);font-size:10px;font-weight:800;transition:all .2s var(--spring);position:relative}
+.dbtn:hover{color:var(--text)}
+.dbtn.on{color:#fff;background:rgba(124,77,255,.28)}
+.dico{font-size:16px;line-height:1;margin-bottom:1px}
+.ddot{position:absolute;bottom:4px;left:50%;transform:translateX(-50%);width:4px;height:4px;border-radius:50%;background:var(--purple);opacity:0;transition:opacity .2s}
+.dbtn.on .ddot{opacity:1}
+
+/* MARKET STRIP */
+.mstrip{
+  position:fixed;bottom:calc(env(safe-area-inset-bottom,0px) + 68px);left:50%;transform:translateX(-50%);
+  display:flex;align-items:center;gap:7px;height:24px;padding:0 12px;
+  border-radius:999px;border:1px solid var(--rim);background:var(--glass);
+  backdrop-filter:blur(14px);font:700 10.5px var(--mono);color:var(--muted);
+  white-space:nowrap;z-index:12;animation:dup .8s .5s var(--spring) both;
+}
+.ms-item{display:flex;align-items:center;gap:3px}
+.mstrip b{color:var(--text);font-weight:900}
+.ms-sep{color:var(--rim2)}
+.ms-legal{color:var(--faint);text-decoration:none;transition:color .15s}
+.ms-legal:hover{color:var(--text)}
+
+/* MODALS */
+.mbg{position:fixed;inset:0;z-index:200;background:rgba(2,8,22,.75);backdrop-filter:blur(14px);display:none;align-items:center;justify-content:center;padding:18px}
+.mbg.open{display:flex}
+.mbox{width:min(740px,100%);max-height:86dvh;border-radius:22px;border:1px solid var(--rim2);background:linear-gradient(145deg,rgba(10,18,36,.97),rgba(5,10,22,.97));box-shadow:0 30px 100px rgba(0,0,0,.7);display:flex;flex-direction:column;overflow:hidden}
+.mhead{display:flex;align-items:center;justify-content:space-between;padding:16px 20px;border-bottom:1px solid var(--rim);flex-shrink:0}
+.mhead h2{font-size:19px;font-weight:900;letter-spacing:-.4px}
+.mx{width:34px;height:34px;border-radius:999px;border:1px solid var(--rim);background:rgba(255,255,255,.06);display:grid;place-items:center;font-size:17px;color:var(--muted)}
+.mbody{padding:20px;overflow-y:auto;font-size:12.5px;color:var(--muted);line-height:1.8;scrollbar-width:thin;scrollbar-color:rgba(255,255,255,.07) transparent}
+.mbody h3{color:var(--text);font-size:13.5px;font-weight:900;margin:12px 0 4px}.mbody h3:first-child{margin-top:0}
+.mbody strong{color:var(--text)}
+
+/* COOKIE BANNER */
+.cbanner{position:fixed;bottom:0;left:0;right:0;z-index:500;background:linear-gradient(0deg,rgba(5,12,28,.98),rgba(8,18,42,.96));border-top:1px solid var(--rim2);backdrop-filter:blur(20px);box-shadow:0 -10px 40px rgba(0,0,0,.55);display:none}
+.cbanner.show{display:block}
+.cbanner.hide{animation:slidedown .4s var(--smooth) forwards}
+@keyframes slidedown{to{transform:translateY(100%)}}
+.cinn{max-width:1100px;margin:0 auto;padding:14px 18px;display:flex;align-items:center;gap:14px;flex-wrap:wrap}
+.ctxt{display:flex;align-items:flex-start;gap:10px;flex:1;min-width:0}
+.ctxt strong{display:block;font-size:13.5px;font-weight:900;margin-bottom:3px}
+.ctxt p{font-size:11.5px;color:var(--muted);line-height:1.45;margin:0}
+.cacts{display:flex;gap:7px;flex-shrink:0}
+.c-more{height:36px;padding:0 12px;border-radius:999px;border:1px solid var(--rim);background:transparent;color:var(--muted);font:800 11.5px var(--sans);transition:all .18s}
+.c-more:hover{color:var(--text)}
+.c-dec{height:36px;padding:0 12px;border-radius:999px;border:1px solid var(--rim);background:rgba(255,255,255,.05);color:var(--muted);font:800 11.5px var(--sans)}
+.c-acc{height:36px;padding:0 16px;border-radius:999px;background:linear-gradient(135deg,var(--purple),var(--blue));color:#fff;font:900 12px var(--sans);box-shadow:0 5px 18px var(--pg)}
+
+/* DIM */
+.dim{position:fixed;inset:0;z-index:15;background:rgba(2,6,16,.52);backdrop-filter:blur(3px);opacity:0;pointer-events:none;transition:opacity .3s}
+.dim.show{opacity:1;pointer-events:all}
+
+/* RESPONSIVE */
+@media(max-width:900px){
+  .cfilter{top:calc(max(env(safe-area-inset-top),10px) + 60px)}
+  .hnav,.hdiv:first-of-type{display:none}
+  .hdr{width:calc(100vw - 20px);justify-content:space-between}
+  .logo{margin-right:0}
+  .aic{width:calc(60vw - 20px);max-width:260px}
+  .aic-top{padding:10px 12px 8px}.ai-hl{font-size:13px}
+  .aic-body{padding:7px 12px 9px;gap:4px}.ai-row{font-size:10.5px}
+  .locfuel{top:calc(max(env(safe-area-inset-top),10px) + 58px)}
+  .live{display:none}
+  .loc-input{width:110px}
+  .cfilter{top:calc(max(env(safe-area-inset-top),10px) + 148px);right:10px}
+  .cfbtn{height:28px;font-size:10.5px;padding:0 9px}
+  .spanel{width:100vw;border-left:none;border-top:1px solid var(--rim2);border-radius:20px 20px 0 0;top:auto;bottom:0;height:88dvh;transform:translateY(100%)}
+  .spanel.open{transform:none}
+  .stpop{bottom:76px}
+  .dbtn{padding:6px 9px;font-size:9.5px}
+  .dico{font-size:15px}
+  .mstrip{display:none}
+  .cinn{padding:10px 12px;gap:10px}
+  .cacts{width:100%;justify-content:flex-end}
+  .mbg{padding:0;align-items:flex-end}
+  .mbox{width:100%;max-height:88dvh;border-radius:20px 20px 0 0;border-bottom:none}
+}
+@media(max-width:480px){
+  .hdr{height:44px;padding:0 4px}
+  .logo-ico{width:28px;height:28px;font-size:14px}
+  .logo-txt{font-size:12px}
+  .hico,.lbtn{transform:scale(.9)}
+  .aic{width:calc(100vw - 100px);max-width:220px}
+  .ai-hl{font-size:12px}
+  .aic-body{display:none}
+  .aic-top{padding:8px 11px}
+  .loc-input{width:90px;font-size:11.5px}
+  .fuelpills{gap:3px;padding:3px 5px}
+  .fp{height:25px;padding:0 9px;font-size:10.5px}
+  .dbtn{padding:5px 7px;font-size:9px}
+}
+
+@keyframes pulse{0%{transform:scale(1);opacity:.8}70%{transform:scale(2.2);opacity:0}100%{opacity:0}}
+
+/* VOICE INPUT */
+.kimic{width:34px;height:34px;border-radius:9px;flex-shrink:0;border:1px solid var(--rim);background:rgba(255,255,255,.06);display:grid;place-items:center;font-size:14px;transition:all .2s var(--spring);position:relative}
+.kimic.listening{background:rgba(255,82,82,.18);border-color:rgba(255,82,82,.5);animation:mic-pulse 1s ease infinite}
+@keyframes mic-pulse{0%,100%{box-shadow:0 0 0 0 rgba(255,82,82,.4)}50%{box-shadow:0 0 0 8px rgba(255,82,82,0)}}
+.voice-indicator{
+  position:absolute;bottom:calc(100% + 8px);left:50%;transform:translateX(-50%);
+  background:rgba(255,82,82,.9);color:#fff;
+  font:800 11px var(--mono);padding:5px 12px;border-radius:999px;
+  white-space:nowrap;pointer-events:none;
+  display:none;animation:drop .3s var(--spring);
+}
+.voice-indicator::after{content:'';position:absolute;top:100%;left:50%;transform:translateX(-50%);border:5px solid transparent;border-top-color:rgba(255,82,82,.9)}
+.kimic.listening .voice-indicator{display:block}
+.kisend{width:34px;height:34px;border-radius:9px;flex-shrink:0;background:linear-gradient(135deg,var(--purple),var(--blue));display:grid;place-items:center;font-size:14px;box-shadow:0 3px 12px var(--pg);transition:all .2s}
+.kisend:active{transform:scale(.92)}
+/* Speaker toggle */
+.ki-speaker{display:flex;align-items:center;gap:5px;font:700 10.5px var(--mono);color:var(--faint);cursor:pointer;padding:3px 6px;border-radius:999px;border:1px solid transparent;transition:all .15s}
+.ki-speaker:hover{color:var(--text);border-color:var(--rim)}
+.ki-speaker.on{color:var(--cyan);border-color:rgba(0,229,255,.25);background:rgba(0,229,255,.06)}
+
+
+/* WETTER + STAU WIDGET */
+.wx-bar{
+  display:flex;flex-wrap:wrap;gap:6px;padding:10px 16px;
+  border-bottom:1px solid var(--rim);flex-shrink:0;
+}
+.wx-chip{
+  display:flex;align-items:center;gap:5px;
+  padding:5px 10px;border-radius:999px;
+  border:1px solid var(--rim);background:rgba(255,255,255,.04);
+  font:700 11.5px var(--sans);color:var(--muted);
+  white-space:nowrap;
+}
+.wx-chip b{color:var(--text);margin-left:2px}
+.wx-chip.warn{border-color:rgba(255,171,0,.35);background:rgba(255,171,0,.07);color:#fcd34d}
+.wx-chip.good{border-color:rgba(0,230,118,.25);background:rgba(0,230,118,.06);color:var(--green)}
+.wx-chip.load{opacity:.4}
+
+/* HOME Wetter Pill (unter Live Badge) */
+.wx-home{
+  position:absolute;
+  top:calc(max(env(safe-area-inset-top),10px) + 178px);
+  left:50%;transform:translateX(-50%);
+  display:flex;align-items:center;gap:8px;
+  height:24px;padding:0 11px;
+  border-radius:999px;border:1px solid var(--rim);
+  background:var(--glass);backdrop-filter:blur(14px);
+  font:700 10.5px var(--sans);color:var(--muted);
+  white-space:nowrap;z-index:12;
+  animation:drop .9s .4s var(--spring) both;
+}
+.wx-home b{color:var(--text)}
+.wx-home .wx-dot{width:5px;height:5px;border-radius:50%;background:var(--green);margin-right:2px}
+@media(max-width:900px){
+  .wx-home{
+    top:calc(max(env(safe-area-inset-top),10px) + 162px);
+    font-size:10px;
+    max-width:calc(100vw - 120px);
+  }
+}
+@media(max-width:480px){
+  .wx-home{top:calc(max(env(safe-area-inset-top),10px) + 152px)}
+}
+
+</style>
+</head>
+<body>
+
+<!-- MAP -->
+<div id="map"></div>
+
+<!-- UI -->
+<div class="ui">
+  <!-- Header -->
+  <div class="hdr">
+    <div class="logo"><div class="logo-ico">⛽</div><div class="logo-txt"><b>BestPrice</b><em>Tank</em></div></div>
+    <div class="hdiv"></div>
+    <nav class="hnav">
+      <button class="hbtn on" onclick="sv('home')">Start</button>
+      <button class="hbtn" onclick="sv('stations')">Tankstellen</button>
+      <button class="hbtn" onclick="sv('rechner')">Sparen</button>
+      <button class="hbtn" onclick="sv('ki')">KI-Assist</button>
+    </nav>
+    <div class="hdiv"></div>
+    <div class="hacts">
+      <div class="lp">
+  <button class="lbtn on" onclick="setLang('de')">DE</button>
+  <button class="lbtn" onclick="setLang('pl')">PL</button>
+  <button class="lbtn" onclick="setLang('cz')">CZ</button>
+  <button class="lbtn" onclick="setLang('en')">EN</button>
+</div>
+      <div class="nwrap"><button class="hico">🔔</button><div class="ndot"></div></div>
+      <button class="hico" id="themeBtn">🌙</button>
+    </div>
+  </div>
+
+  <!-- Live badge -->
+  <div class="live"><div class="ldot"></div>LIVE · DREILÄNDERECK</div>
+
+  <!-- Wetter Home Pill -->
+  <div class="wx-home" id="wxHome">
+    <div class="wx-dot"></div>
+    <span id="wx-home-txt">Wetter lädt…</span>
+  </div>
+
+  <!-- Location + Fuel bar -->
+  <div class="locfuel" id="locfuel">
+    <div class="locrow">
+      <span style="font-size:15px;padding:0 3px">📍</span>
+      <input type="text" id="locInput" class="loc-input" placeholder="Görlitz / PLZ..." value="Görlitz"/>
+      <select id="locRadius" class="loc-sel" onchange="refreshPrices()">
+        <option value="10">10 km</option>
+        <option value="15" selected>15 km</option>
+        <option value="25">25 km</option>
+        <option value="50">50 km</option>
+      </select>
+      <button class="loc-btn" id="locBtn" onclick="refreshPrices()">🔄</button>
+    </div>
+    <div class="fuelpills">
+      <button class="fp on" data-fuel="diesel" onclick="setFuel(this,'diesel')">🛢 Diesel</button>
+      <button class="fp" data-fuel="e5" onclick="setFuel(this,'e5')">🟢 E5</button>
+      <button class="fp" data-fuel="e10" onclick="setFuel(this,'e10')">🌿 E10</button>
+      <button class="fp" data-fuel="lpg" onclick="setFuel(this,'lpg')">💧 LPG</button>
+    </div>
+  </div>
+
+  <!-- AI Card -->
+  <div class="aic" id="aic">
+    <div class="aic-top">
+      <div class="ai-badge"><div class="ai-av">🤖</div>KI-ASSISTENT · HEUTE</div>
+      <div class="ai-hl">Polen spart <strong id="ai-save">–</strong> bei 60L</div>
+      <button class="ai-cta-mob" onclick="sv('rechner')">🚗 Berechnen</button>
+    </div>
+    <div class="aic-body">
+      <div class="ai-row"><div class="ai-ri" style="background:rgba(0,230,118,.15)">⛽</div>Citronex Zgorzelec — <b style="color:var(--green)" id="ai-best-price">–</b></div>
+      <div class="ai-row"><div class="ai-ri" style="background:rgba(68,138,255,.15)">📍</div>8,4 km · ca. 10 Min</div>
+      <div class="ai-row"><div class="ai-ri" style="background:rgba(255,171,0,.15)">🌤</div>18°C · kein Stau</div>
+      <button class="ai-cta" onclick="sv('rechner')">🚗 Fahrt berechnen →</button>
+    </div>
+  </div>
+
+  <!-- Country Filter -->
+  <div class="cfilter">
+    <button class="cfbtn on" data-c="all" onclick="filterC(this,'all')">Alle</button>
+    <button class="cfbtn" data-c="de" onclick="filterC(this,'de')">🇩🇪</button>
+    <button class="cfbtn" data-c="pl" onclick="filterC(this,'pl')">🇵🇱</button>
+    <button class="cfbtn" data-c="cz" onclick="filterC(this,'cz')">🇨🇿</button>
+  </div>
+
+  <!-- Dock -->
+  <div class="dock">
+    <button class="dbtn on" id="d-home" onclick="sv('home')"><div class="dico">🏠</div>Start<div class="ddot"></div></button>
+    <button class="dbtn" id="d-stations" onclick="sv('stations')"><div class="dico">⛽</div>Stationen<div class="ddot"></div></button>
+    <button class="dbtn" id="d-rechner" onclick="sv('rechner')"><div class="dico">💰</div>Sparen<div class="ddot"></div></button>
+    <button class="dbtn" id="d-ki" onclick="sv('ki')"><div class="dico">🤖</div>KI<div class="ddot"></div></button>
+    <button class="dbtn" id="d-community" onclick="sv('community')"><div class="dico">📍</div>Melden<div class="ddot"></div></button>
+  </div>
+
+  <!-- Market strip -->
+  <div class="mstrip">
+    <span class="ms-item">EUR/PLN <b id="s-pln">4,25</b></span>
+    <span class="ms-sep">·</span>
+    <span class="ms-item">EUR/CZK <b id="s-czk">24,37</b></span>
+    <span class="ms-sep">·</span>
+    <span class="ms-item">Brent <b id="s-oil">–</b></span>
+    <span class="ms-sep">·</span>
+    <a href="#" class="ms-legal" onclick="openM('imprint');return false">Impressum</a>
+    <span class="ms-sep">·</span>
+    <a href="#" class="ms-legal" onclick="openM('privacy');return false">Datenschutz</a>
+    <span class="ms-sep">·</span>
+    <a href="#" class="ms-legal" onclick="openM('cookies');return false">Cookies</a>
+  </div>
+
+  <!-- Mobile legal -->
+  <div style="position:fixed;bottom:calc(env(safe-area-inset-bottom,0px)+64px);left:50%;transform:translateX(-50%);gap:8px;font-size:11px;font-weight:700;color:var(--faint);white-space:nowrap;z-index:12;display:none" id="mob-legal">
+    <a href="#" style="color:var(--faint);text-decoration:none" onclick="openM('imprint');return false">Impressum</a>
+    <span style="color:var(--rim2)">·</span>
+    <a href="#" style="color:var(--faint);text-decoration:none" onclick="openM('privacy');return false">Datenschutz</a>
+    <span style="color:var(--rim2)">·</span>
+    <a href="#" style="color:var(--faint);text-decoration:none" onclick="openM('cookies');return false">Cookies</a>
+  </div>
+</div><!-- /ui -->
+
+<!-- DIM -->
+<div class="dim" id="dim" onclick="closePanels()"></div>
+
+<!-- STATION POPUP -->
+<div class="stpop" id="stpop">
+  <div class="sph2">
+    <div class="sp-logo" id="sp-logo">?</div>
+    <div><div class="sp-name" id="sp-name">–</div><div class="sp-meta" id="sp-meta">–</div></div>
+    <button class="spx" onclick="closeStp()">×</button>
+  </div>
+  <div class="sp-prices" id="sp-prices">
+    <div class="spp on"><div class="spp-t">Diesel</div><div class="spp-v" id="sp-d">–</div></div>
+    <div class="spp"><div class="spp-t">E5</div><div class="spp-v" id="sp-e5">–</div></div>
+    <div class="spp"><div class="spp-t">E10</div><div class="spp-v" id="sp-e10">–</div></div>
+    <div class="spp"><div class="spp-t">LPG</div><div class="spp-v" id="sp-lpg">–</div></div>
+  </div>
+  <div class="sp-foot">
+    <button class="btn-p" onclick="sv('rechner');closeStp()">🚗 Fahrt berechnen</button>
+    <button class="btn-s" id="sp-maps" onclick="openMaps()">🗺</button>
+  </div>
+</div>
+
+<!-- STATIONEN PANEL -->
+<div class="spanel" id="panel-stations">
+  <div class="ph"><div><h2>Tankstellen</h2><p>Live · Dreiländereck</p></div><button class="px" onclick="cp('stations')">×</button></div>
+  <div class="pb">
+    <div style="display:flex;gap:5px;flex-wrap:wrap">
+      <button class="fq-btn on-fq" id="fq-diesel" onclick="setFuelQ(this,'diesel')">🛢 Diesel</button>
+      <button class="fq-btn" id="fq-e5" onclick="setFuelQ(this,'e5')">🟢 E5</button>
+      <button class="fq-btn" id="fq-e10" onclick="setFuelQ(this,'e10')">🌿 E10</button>
+      <button class="fq-btn" id="fq-lpg" onclick="setFuelQ(this,'lpg')">💧 LPG</button>
+    </div>
+    <div id="st-list" style="display:grid;gap:5px"></div>
+    <div style="display:flex;align-items:center;gap:7px;padding:8px 11px;border-radius:12px;border:1px solid var(--rim);background:rgba(255,255,255,.03);font:700 10px var(--mono)">
+      <span style="color:var(--muted)">niedrig</span>
+      <div style="flex:1;height:5px;border-radius:3px;background:linear-gradient(90deg,#00e676,#ffab00,#ff5252)"></div>
+      <span style="color:var(--muted)">hoch</span>
+    </div>
+  </div>
+</div>
+
+<!-- RECHNER PANEL -->
+<div class="spanel" id="panel-rechner">
+  <div class="ph"><div><h2>Sparen</h2><p>Grenz-, Steuer- & E-Auto-Rechner</p></div><button class="px" onclick="cp('rechner')">×</button></div>
+  <div class="pb">
+    <div class="tabrow">
+      <button class="tab on" onclick="showTab('border')">🚗 Grenze</button>
+      <button class="tab" onclick="showTab('tax')">🧮 Steuer</button>
+      <button class="tab" onclick="showTab('ev')">⚡ E-Auto</button>
+    </div>
+    <!-- BORDER -->
+    <div id="tab-border" style="display:grid;gap:11px">
+      <div><label class="fl">Startort</label><input class="fi" type="text" value="Görlitz" placeholder="Stadt / PLZ"/></div>
+      <div class="fg2">
+        <div><label class="fl">Kraftstoff</label><select class="fsel" id="g-fuel"><option value="diesel">Diesel</option><option value="e5">E5</option><option value="e10">E10</option></select></div>
+        <div><label class="fl">Ziel</label><select class="fsel" id="g-ziel"><option value="pl">🇵🇱 Polen</option><option value="cz">🇨🇿 Tschechien</option></select></div>
+      </div>
+      <div>
+        <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:6px"><label class="fl" style="margin:0">Tankmenge</label><span style="font-size:22px;font-weight:900;letter-spacing:-1px"><span id="g-lit">60</span><sup style="font-size:12px;color:var(--muted)"> L</sup></span></div>
+        <input type="range" class="frange" min="10" max="120" value="60" oninput="glit(this.value)"/>
+      </div>
+      <div class="fg2">
+        <div><label class="fl">Verbrauch L/100</label><input class="fi" id="g-use" type="number" value="7" oninput="gcalc()"/></div>
+        <div><label class="fl">Entfernung km</label><input class="fi" id="g-km" type="number" value="8" oninput="gcalc()"/></div>
+      </div>
+      <div class="rhero">
+        <div class="rlabel" id="g-status">ERGEBNIS</div>
+        <div class="rnum" id="g-net" onclick="onSavingsClick()" style="cursor:pointer;user-select:none" title="🤫">–</div>
+        <div class="rsub">Netto-Ersparnis nach Fahrtkosten</div>
+        <div class="rdets">
+          <div class="rdet">Brutto<strong id="g-gross">–</strong></div>
+          <div class="rdet">Fahrtkosten<strong id="g-cost" style="color:#fca5a5">–</strong></div>
+          <div class="rdet">Break-even<strong id="g-be">–</strong></div>
+        </div>
+      </div>
+      <div class="cmp">
+        <div class="cr"><div class="cf">🇩🇪</div><div class="cn"><b id="g-de-name">Shell Görlitz</b><small>📍 1,2 km</small></div><div class="cpr" id="g-de-price">–</div></div>
+        <div class="cr"><div class="cf">🇵🇱</div><div class="cn"><b>Citronex Zgorzelec</b><small>📍 8,4 km</small></div><div class="cpr" style="color:var(--green)" id="g-pl-price">–</div><span class="csave" id="g-diff">–</span></div>
+      </div>
+
+      <!-- 🪣 KANISTER TOGGLE -->
+      <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 12px;border-radius:13px;border:1px solid var(--rim);background:rgba(255,255,255,.03)">
+        <div style="display:flex;align-items:center;gap:8px">
+          <span style="font-size:18px">🪣</span>
+          <div>
+            <div id="canister-label" style="font-size:13px;font-weight:800">+ Kanister</div>
+            <div id="canister-tip" style="font-size:10.5px;color:var(--faint)">Max. 60L in Kanistern erlaubt</div>
+          </div>
+        </div>
+        <div style="display:flex;align-items:center;gap:6px">
+          <input type="number" id="g-canister" value="0" min="0" max="60" step="10"
+            style="width:54px;height:32px;border-radius:9px;border:1px solid var(--rim);background:rgba(255,255,255,.08);color:var(--text);text-align:center;font:800 14px var(--mono)"
+            oninput="gcalc()"/>
+          <span style="font-size:11.5px;color:var(--muted);font-weight:700">L</span>
+        </div>
+      </div>
+
+      <!-- Kanister Ergebnis -->
+      <div id="canister-result" style="display:none;padding:9px 12px;border-radius:12px;border:1px solid rgba(0,230,118,.22);background:rgba(0,230,118,.07);font-size:12.5px;color:var(--muted)">
+        🪣 Kanister spart zusätzlich <strong style="color:var(--green)" id="canister-save">–</strong>
+        &nbsp;·&nbsp; Gesamt: <strong style="color:var(--text)" id="canister-total">–</strong>
+      </div>
+
+      <!-- 🚬 Easter Egg: Kippenrechner (3x auf Ersparnis klicken) -->
+      <div id="cig-zone" style="display:none;padding:10px 12px;border-radius:13px;border:1px solid rgba(255,171,0,.22);background:rgba(255,171,0,.06)">
+        <div style="font:800 11px var(--mono);color:var(--amber);letter-spacing:1px;margin-bottom:5px" id="cig-egg-btn">🚬 Kippenrechner</div>
+        <div style="font-size:13px;color:var(--muted)">Deine Ersparnis entspricht <strong style="color:#fbbf24" id="cig-count">–</strong> 🤑</div>
+        <div style="font-size:10px;color:var(--faint);margin-top:2px">Basis: 9,00 €/Packung (DE 2026)</div>
+      </div>
+
+    </div>
+    <!-- TAX -->
+    <div id="tab-tax" style="display:none;grid;gap:11px">
+      <div class="fg2">
+        <div><label class="fl">Kraftstoff</label><select class="fsel" id="t-fuel" onchange="tcalc()"><option value="diesel">Diesel</option><option value="e5">E5</option><option value="e10">E10</option><option value="lpg">LPG</option></select></div>
+        <div><label class="fl">Liter</label><input class="fi" id="t-lit" type="number" value="60" oninput="tcalc()"/></div>
+      </div>
+      <div style="padding:12px;border-radius:14px;border:1px solid rgba(0,230,118,.2);background:rgba(0,230,118,.07)"><div id="t-hl" style="font-size:14px;font-weight:900;line-height:1.35">–</div></div>
+      <div id="t-bars"></div>
+      <div style="padding:9px 11px;border-radius:12px;border:1px solid var(--rim);background:rgba(255,255,255,.03);font-size:11.5px;color:var(--muted)">🇩🇪 Energiesteuer + CO₂-Abgabe + MwSt. = über 40% des Preises.</div>
+      <button id="t-detail-btn" onclick="toggleTD()" style="height:38px;border-radius:11px;border:1px solid var(--rim);background:rgba(255,255,255,.05);color:var(--text);font:800 12px var(--sans)">Details anzeigen</button>
+      <div id="t-detail" style="display:none;border-radius:13px;border:1px solid var(--rim);background:rgba(255,255,255,.03);overflow:hidden">
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;padding:8px 11px;border-bottom:1px solid var(--rim);font:800 9.5px var(--mono);color:var(--faint)"><span>Posten</span><span>DE</span><span>PL</span><span>CZ</span></div>
+        <div id="t-rows"></div>
+      </div>
+    </div>
+    <!-- EV -->
+    <div id="tab-ev" style="display:none;grid;gap:11px">
+      <div class="fg2">
+        <div><label class="fl">Strecke km</label><input class="fi" id="ev-km" type="number" value="200" oninput="evcalc()"/></div>
+        <div><label class="fl">kWh/100 km</label><input class="fi" id="ev-kwh" type="number" value="18" step=".5" oninput="evcalc()"/></div>
+      </div>
+      <div class="fg2">
+        <div><label class="fl">Strompreis €/kWh</label><input class="fi" id="ev-price" type="number" value="0.32" step="0.01" oninput="evcalc()"/></div>
+        <div><label class="fl">L/100 km</label><input class="fi" id="ev-lkm" type="number" value="7" step=".5" oninput="evcalc()"/></div>
+      </div>
+      <div class="fg2">
+        <div><label class="fl">Kraftstoff</label><select class="fsel" id="ev-fuel" onchange="evcalc()"><option>Diesel</option><option>E5</option><option>E10</option></select></div>
+        <div><label class="fl">Vergleichspreis</label><select class="fsel" id="ev-country" onchange="evcalc()"><option value="pl">🇵🇱 PL-Preis</option><option value="de">🇩🇪 DE-Preis</option><option value="cz">🇨🇿 CZ-Preis</option></select></div>
+      </div>
+      <div style="border-radius:14px;padding:14px;border:1px solid var(--rim);background:rgba(255,255,255,.03)">
+        <div class="evvs">
+          <div class="evitem"><div class="evlbl">⚡ E-AUTO</div><div class="evval" id="ev-cost" style="color:var(--cyan)">–</div><div style="font-size:10px;color:var(--muted);margin-top:2px" id="ev-kwh-t">–</div></div>
+          <div class="evsep">vs</div>
+          <div class="evitem"><div class="evlbl">🛢 VERBRENNER</div><div class="evval" id="ev-fcost">–</div><div style="font-size:10px;color:var(--muted);margin-top:2px" id="ev-fuel-t">–</div></div>
+        </div>
+        <div style="text-align:center"><div class="evdiff" id="ev-diff">–</div><div style="font-size:11px;color:var(--muted);margin-top:5px" id="ev-story">Strompreis eintragen.</div></div>
+      </div>
+      <div style="padding:9px 11px;border-radius:12px;border:1px solid rgba(255,171,0,.18);background:rgba(255,171,0,.07);font-size:11.5px;color:var(--muted)">⚡ Hausstrom (0,32 €) vs. Schnelllader (0,59-0,79 €) macht den Unterschied.</div>
+    </div>
+  </div>
+</div>
+
+<!-- KI PANEL -->
+<div class="spanel" id="panel-ki">
+  <div class="ph">
+    <div><h2>KI-Assistent</h2><p>GPT-4o-mini · Sprit & Wetter</p></div>
+    <button class="ki-speaker" id="speakerBtn" onclick="toggleSpeaker()" title="Sprachausgabe">🔇 Ton</button>
+    <button class="px" onclick="cp('ki')">×</button>
+  </div>
+  <!-- Wetter + Stau Strip -->
+  <div class="wx-bar" id="wx-bar">
+    <div class="wx-chip load" id="wx-goerlitz">🌡 Görlitz…</div>
+    <div class="wx-chip load" id="wx-zgorzelec">🌡 Zgorzelec…</div>
+    <div class="wx-chip load" id="wx-hradek">🌡 Hrádek…</div>
+    <div class="wx-chip load" id="wx-a4">🚗 A4…</div>
+  </div>
+
+  <div class="kimsgs" id="ki-msgs">
+    <div style="text-align:center;padding:14px 0">
+      <div style="width:48px;height:48px;border-radius:15px;background:linear-gradient(135deg,#00e5ff,#7c4dff);display:grid;place-items:center;font-size:22px;margin:0 auto 9px">🤖</div>
+      <div style="font:900 15px var(--sans);margin-bottom:4px" id="ki-greeting">BestPriceTank KI</div>
+      <div style="color:var(--muted);font-size:12px;max-width:280px;margin:0 auto">Frag mich alles über Spritpreise, Wetter und Stau im Dreiländereck.</div>
+    </div>
+    <div class="mu">Lohnt sich Polen heute? 60L Diesel ab Görlitz.</div>
+    <div class="ma"><div class="mai"><div class="mah"><div class="mav">🤖</div><div class="man">BestPriceTank KI</div></div><div class="mat"><strong>Ja, heute lohnt sich Polen! 🇵🇱</strong><br><br>Netto-Ersparnis nach Fahrtkosten: <strong style="color:var(--green)" id="ki-save-demo">–</strong>.</div><div class="mfs"><div class="mf"><div class="mfi" style="background:rgba(0,230,118,.15)">⛽</div>Citronex Zgorzelec · <b style="color:var(--green)" id="ki-pl-demo">–</b></div><div class="mf"><div class="mfi" style="background:rgba(68,138,255,.15)">📍</div>8,4 km · 10 Min</div><div class="mf"><div class="mfi" style="background:rgba(255,171,0,.15)">🌤</div>18°C · kein Stau</div></div></div></div>
+  </div>
+  <div class="kiinp">
+    <div class="kibar"><input type="text" id="ki-input" placeholder="Frag mich etwas..." onkeydown="if(event.key==='Enter')sendKI()"/><button class="kimic" id="kimic" onclick="toggleVoice()" title="Spracheingabe">
+  🎙️
+  <span class="voice-indicator">🔴 Ich höre zu…</span>
+</button><button class="kisend" onclick="sendKI()">➤</button></div>
+    <div class="qqs">
+      <button class="qq ki-qq" onclick="askKI('Wie ist das Wetter an der Grenze?')">🌤 Wetter</button>
+      <button class="qq ki-qq" onclick="askKI('Gibt es Baustellen nach Polen?')">🚧 Baustellen</button>
+      <button class="qq ki-qq" onclick="askKI('Lohnt sich Tschechien heute?')">🇨🇿 CZ-Check</button>
+      <button class="qq ki-qq" onclick="askKI('Mit 20L Kanister, was spare ich?')">🪣 Kanister</button>
+      <button class="qq ki-qq" onclick="askKI('Wann sind die Preise am günstigsten?')">📊 Preistrend</button>
+    </div>
+  </div>
+</div>
+
+<!-- COOKIE BANNER -->
+<div class="cbanner" id="cbanner">
+  <div class="cinn">
+    <div class="ctxt"><span style="font-size:26px;flex-shrink:0">🍪</span><div><strong>Cookies & Datenspeicherung</strong><p>Wir speichern deinen Namen lokal (localStorage) und nutzen Tankerkönig, ExchangeRate-API sowie OpenAI für Live-Daten. Keine Tracking-Cookies, keine Werbung.</p></div></div>
+    <div class="cacts">
+      <button class="c-more" onclick="openM('cookies')">Details</button>
+      <button class="c-dec" onclick="decCookies()">Ablehnen</button>
+      <button class="c-acc" onclick="accCookies()">Akzeptieren ✓</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODALS -->
+<div class="mbg" id="m-imprint" onclick="if(event.target===this)closeM('imprint')"><div class="mbox"><div class="mhead"><h2>Impressum</h2><button class="mx" onclick="closeM('imprint')">×</button></div><div class="mbody"><h3>Angaben gemäß § 5 TMG</h3>AH Mühlmann<br>Gottlieb-Daimler-Str. 9<br>02828 Görlitz<br><br><h3>Kontakt</h3>info [at] bestpricetank [dot] de<br><br><h3>Verantwortlich</h3>K. Mühlmann, Gottlieb-Daimler-Str. 9, 02828 Görlitz<br><br><h3>Haftung</h3>Preisangaben ohne Gewähr. Aus öffentlichen Quellen (MTS-K, Community-Meldungen). Bitte vor Ort prüfen.<br><br><h3>Datenquellen</h3>🇩🇪 Tankerkönig / MTS-K · 🇵🇱 Dyskont Paliwowy / Community · 🇨🇿 Community / Fuelo.net · Wechselkurse: exchangerate-api.com<br><br><h3>Streitschlichtung</h3>Wir nehmen nicht an Verfahren vor Verbraucherschlichtungsstellen teil.</div></div></div>
+
+<div class="mbg" id="m-privacy" onclick="if(event.target===this)closeM('privacy')"><div class="mbox"><div class="mhead"><h2>Datenschutzerklärung</h2><button class="mx" onclick="closeM('privacy')">×</button></div><div class="mbody"><h3>1. Verantwortlicher</h3>AH Mühlmann, Gottlieb-Daimler-Str. 9, 02828 Görlitz · info [at] bestpricetank [dot] de<h3>2. Hosting</h3>Netlify Inc., San Francisco, USA. Server-Logfiles möglich. Netlify EU-US DPF-zertifiziert. Rechtsgrundlage: Art. 6 Abs. 1 lit. f DSGVO.<h3>3. Lokale Speicherung</h3>Keine Tracking-Cookies. Wir speichern: <strong>bpt_userName</strong> (Name für KI) und <strong>cookieOk</strong> (Cookie-Entscheidung) in localStorage. Kein Transfer an Dritte.<h3>4. Externe Dienste</h3>· Tankerkönig API (DE Preise) – keine personenbezogenen Daten<br>· Dyskont Paliwowy API (PL Preise) – keine pers. Daten<br>· ExchangeRate-API (Wechselkurse) – keine pers. Daten<br>· OpenAI API (KI-Assistent) – Fragen werden verarbeitet<br>· OpenStreetMap / CartoDB (Karte) – IP-Adresse<br>· Keine Google Fonts<h3>5. Ihre Rechte (Art. 15–22 DSGVO)</h3>Auskunft, Berichtigung, Löschung: info [at] bestpricetank [dot] de · Stand: April 2026</div></div></div>
+
+<div class="mbg" id="m-cookies" onclick="if(event.target===this)closeM('cookies')"><div class="mbox"><div class="mhead"><h2>Cookies & Speicherung</h2><button class="mx" onclick="closeM('cookies')">×</button></div><div class="mbody"><h3>Keine Tracking-Cookies</h3>Kein Google Analytics, keine Werbecookies.<h3>Technisch notwendig</h3><strong>bpt_userName</strong> – dein Name für den KI-Assistenten<br><strong>cookieOk</strong> – deine Cookie-Entscheidung<br><br>Verbleiben auf deinem Gerät, kein Transfer.<h3>Service Worker</h3>Für schnelles Laden und Offline-Fähigkeit. Keine pers. Daten werden gecacht.<h3>Externe Dienste</h3>Für Karten, Preise und KI werden externe Dienste geladen. Details in der Datenschutzerklärung.</div></div></div>
+
+<script>
+// ══════════════════════════════════════
+// DATA
+// ══════════════════════════════════════
+const TK_KEY = '4b799919-31cf-4e2d-baa4-b84f7c4bcae5';
+const ER_KEY = '3b6be993697eeea74f5db4a0';
+
+const PRICES = {
+  diesel:{de:1.649,pl:1.440,cz:1.477,label:'Diesel'},
+  e5:    {de:1.699,pl:1.479,cz:1.497,label:'Super E5'},
+  e10:   {de:1.669,pl:1.459,cz:1.487,label:'Super E10'},
+  lpg:   {de:0.979,pl:0.937,cz:0.813,label:'LPG'}
+};
+const TAX = {
+  diesel:{de:{p:2.359,net:1.366,eng:.4704,co2:.1458,vat:.3766},pl:{p:1.577,net:1.167,eng:.0753,co2:.040,vat:.2949},cz:{p:1.597,net:1.192,eng:.0780,co2:.050,vat:.2772}},
+  e5:{de:{p:2.199,net:1.250,eng:.6545,co2:.120,vat:.1745},pl:{p:1.439,net:1.065,eng:.080,co2:.035,vat:.259},cz:{p:1.637,net:1.210,eng:.085,co2:.040,vat:.302}},
+  e10:{de:{p:2.169,net:1.225,eng:.6545,co2:.115,vat:.1745},pl:{p:1.419,net:1.050,eng:.080,co2:.035,vat:.254},cz:{p:1.637,net:1.210,eng:.085,co2:.040,vat:.302}},
+  lpg:{de:{p:.979,net:.620,eng:.180,co2:.045,vat:.134},pl:{p:.927,net:.710,eng:.040,co2:.018,vat:.159},cz:{p:.812,net:.620,eng:.035,co2:.016,vat:.141}}
+};
+// DP-Benchmark — wird von Dyskont-Paliwowy-API live überschrieben
+let DP_BENCH = {diesel:1.440,e5:1.472,e10:1.452,lpg:0.929};
+
+// Statische Stationen — DP-Stationen kommen von der API, nicht hier!
+// PL-Preise = DP-Benchmark + kleiner Aufschlag (realistisch)
+let STATIONS = [
+  // ── POLSKA (PL) ───────────────────────────────────────────────
+  {id:'citronex', name:'Citronex I, Zgorzelec',         country:'pl',lat:51.1517,lng:15.0055,dist:8.4,  diesel:1.443,e5:1.480,e10:1.460,lpg:0.938,logo:'C', best:false},
+  {id:'shell_zg', name:'Shell Zgorzelec (Stadtbrücke)', country:'pl',lat:51.1497,lng:15.0008,dist:7.8,  diesel:1.455,e5:1.492,e10:1.472,lpg:0.939,logo:'🐚',best:false},
+  {id:'cirk_z',   name:'Circle K Zgorzelec',            country:'pl',lat:51.1533,lng:15.0110,dist:8.6,  diesel:1.448,e5:1.486,e10:1.465,lpg:0.942,logo:'CK',best:false},
+  {id:'orlen_z',  name:'ORLEN Zgorzelec',               country:'pl',lat:51.1441,lng:14.9982,dist:8.9,  diesel:1.463,e5:1.499,e10:1.479,lpg:0.942,logo:'O', best:false},
+  {id:'abtank',   name:'AB Tank Sieniawka',             country:'pl',lat:51.0460,lng:14.9630,dist:14.2, diesel:1.462,e5:1.496,e10:1.475,lpg:0.938,logo:'AB',best:false},
+  {id:'moya',     name:'MOYA Pieńsk',                   country:'pl',lat:51.2364,lng:15.0532,dist:14.2, diesel:1.451,e5:1.487,e10:1.467,lpg:0.936,logo:'MY',best:false},
+  {id:'pod1',     name:'Stacja Lasów',                  country:'pl',lat:51.2180,lng:14.9980,dist:10.3, diesel:1.449,e5:1.484,e10:1.464,lpg:0.935,logo:'SL',best:false},
+  {id:'pod2',     name:'Tankstacja Żarki',              country:'pl',lat:51.2290,lng:15.0120,dist:11.8, diesel:1.452,e5:1.487,e10:1.467,lpg:0.937,logo:'TZ',best:false},
+  {id:'pod3',     name:'BP Pieńsk/Podrosche',           country:'pl',lat:51.2364,lng:15.0140,dist:12.5, diesel:1.457,e5:1.491,e10:1.470,lpg:0.940,logo:'BP',best:false},
+  {id:'orlen_b',  name:'ORLEN Bogatynia',               country:'pl',lat:50.9240,lng:14.9580,dist:22.4, diesel:1.473,e5:1.509,e10:1.488,lpg:0.952,logo:'O', best:false},
+  // ── ČESKÁ REPUBLIKA (CZ) ──────────────────────────────────────
+  {id:'mol',      name:'MOL Hrádek n.N.',               country:'cz',lat:50.8543,lng:14.8455,dist:18.5, diesel:1.477,e5:1.497,e10:1.487,lpg:0.813,logo:'M', best:false},
+  {id:'eurooil',  name:'EuroOil Hrádek',                country:'cz',lat:50.8559,lng:14.8464,dist:19.2, diesel:1.497,e5:1.517,e10:1.507,lpg:0.829,logo:'E', best:false},
+  {id:'ono',      name:'ONO Hrádek n.N.',               country:'cz',lat:50.8501,lng:14.8371,dist:18.8, diesel:1.481,e5:1.503,e10:1.491,lpg:0.821,logo:'ON',best:false},
+  {id:'benzina',  name:'Benzina Hrádek',                country:'cz',lat:50.8520,lng:14.8420,dist:18.6, diesel:1.483,e5:1.505,e10:1.493,lpg:0.819,logo:'BZ',best:false},
+  {id:'shell_cz', name:'Shell Žitava / CZ',             country:'cz',lat:50.8968,lng:14.7699,dist:24.1, diesel:1.473,e5:1.495,e10:1.483,lpg:0.818,logo:'🐚',best:false},
+  // ── DEUTSCHLAND (DE) — TK-API liefert echte Positionen ───────
+  {id:'jet_gr',   name:'JET Görlitz',                   country:'de',lat:51.1543,lng:14.9754,dist:2.1,  diesel:1.639,e5:1.689,e10:1.659,lpg:0.969,logo:'J', best:false,fallback:true},
+  {id:'total_gr', name:'TotalEnergies Görlitz',         country:'de',lat:51.1607,lng:14.9720,dist:2.8,  diesel:1.659,e5:1.709,e10:1.679,lpg:0.989,logo:'T', best:false,fallback:true},
+  {id:'hem_gr',   name:'HEM Görlitz',                   country:'de',lat:51.1497,lng:14.9901,dist:1.8,  diesel:1.629,e5:1.679,e10:1.649,lpg:0.959,logo:'H', best:false,fallback:true},
+];
+
+// Nach DP-API-Load: PL-Preise relativ zum echten DP-Benchmark setzen
+function adjustPLPricesToBenchmark(dpDiesel){
+  if(!dpDiesel||dpDiesel<=0) return;
+  DP_BENCH.diesel = dpDiesel;
+  const SURCHARGE = {
+    citronex:0.003, shell_zg:0.015, cirk_z:0.008, orlen_z:0.023,
+    abtank:0.022, moya:0.011, pod1:0.009, pod2:0.012, pod3:0.017, orlen_b:0.033,
+  };
+  STATIONS.filter(s=>s.country==='pl'&&!s.source).forEach(s=>{
+    const add = SURCHARGE[s.id] ?? 0.010;
+    s.diesel = +(dpDiesel + add).toFixed(3);
+    s.e5     = +(dpDiesel + add + 0.037).toFixed(3);
+    s.e10    = +(dpDiesel + add + 0.017).toFixed(3);
+  });
+  console.log('✅ PL-Preise auf DP-Benchmark angepasst: Diesel', dpDiesel.toFixed(3),'€/L');
+}
+const BPT_RATES = {PLN:4.25,CZK:24.37,BRENT:0};
+let currentFuel = 'diesel';
+let currentCountry = 'all';
+let currentView = 'home';
+let userName = localStorage.getItem('bpt_userName') || '';
+let bptMap = null;
+let mapMarkers = [];
+let currentStation = null;
+
+// ══════════════════════════════════════
+// MAP INIT
+// ══════════════════════════════════════
+function initMap(){
+  try{
+    if(typeof L === 'undefined') throw new Error('Leaflet not available');
+    bptMap = L.map('map',{zoomControl:false,scrollWheelZoom:true,attributionControl:true})
+      .setView([51.1534,14.9853],12);
+    L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png',{
+      attribution:'© OpenStreetMap · © CARTO',maxZoom:19,subdomains:'abcd'
+    }).addTo(bptMap);
+    L.control.zoom({position:'bottomright'}).addTo(bptMap);
+    document.getElementById('map').style.background='#020d1a';
+    renderMapMarkers();
+    console.log('✅ Leaflet map initialized');
+  }catch(e){
+    console.warn('Leaflet unavailable, using dark background:', e.message);
+    document.getElementById('map').style.background =
+      'radial-gradient(ellipse at 45% 45%,#0a2040 0%,#020812 60%)';
+  }
+}
+
+function makeMarkerIcon(s){
+  if(typeof L === 'undefined') return null;
+  const p = s[currentFuel] || s.diesel || 0;
+  const sub = s.country==='pl'&&BPT_RATES.PLN>0 ? `<div class="pbub-sub">${(p*BPT_RATES.PLN).toFixed(2).replace('.',',')} PLN</div>` :
+              s.country==='cz'&&BPT_RATES.CZK>0 ? `<div class="pbub-sub">${(p*BPT_RATES.CZK).toFixed(1).replace('.',',')} CZK</div>` : '';
+  const star = s.best ? '<div class="pbub-star">★</div>' : '';
+  const cls = `pbub ${s.country}${s.best?' best-price':''}`;
+  const html = `<div class="${cls}" style="position:relative;animation-delay:${(Math.random()*2).toFixed(1)}s">
+    ${star}
+    <div class="pbub-row"><div class="pbub-logo">${s.logo}</div>${p.toFixed(3).replace('.',',')}°</div>
+    ${sub}
+  </div>`;
+  return L.divIcon({html, className:'', iconSize:null, iconAnchor:[0,20]});
+}
+
+function updateStaticDistances(coords){
+  STATIONS.filter(s=>!s.source).forEach(s=>{
+    s.dist=+haversine(coords,{lat:s.lat,lng:s.lng}).toFixed(1);
+  });
+}
+
+function renderMapMarkers(){
+  if(!bptMap || typeof L === 'undefined') return;
+  mapMarkers.forEach(m=>{try{bptMap.removeLayer(m)}catch(e){}});
+  mapMarkers = [];
+  const rad = +document.getElementById('locRadius').value || 15;
+  STATIONS
+    .filter(s => currentCountry==='all' || s.country===currentCountry)
+    .filter(s => s.dist <= rad)
+    .filter(s => s[currentFuel] != null)
+    .forEach(s=>{
+      const icon = makeMarkerIcon(s);
+      if(!icon) return;
+      const m = L.marker([s.lat,s.lng],{icon,zIndexOffset:s.best?1000:0}).addTo(bptMap);
+      m.on('click',()=>openStation(s.id));
+      mapMarkers.push(m);
+    });
+}
+
+// ══════════════════════════════════════
+// LIVE DATA
+// ══════════════════════════════════════
+const LOC_COORDS = {
+  goerlitz:{lat:51.1534,lng:14.9853},
+  zittau:{lat:50.8970,lng:14.8070},
+  lobau:{lat:51.0996,lng:14.6674}
+};
+function normLoc(v){
+  const s=(v||'').toLowerCase();
+  if(s.includes('zittau')||s.includes('02763')) return 'zittau';
+  if(s.includes('löbau')||s.includes('loebau')||s.includes('02708')) return 'lobau';
+  return 'goerlitz';
+}
+// ══════════════════════════════════════
+// GEOCODING + USER LOCATION MARKER
+// ══════════════════════════════════════
+let userLocationCoords = {lat:51.1534, lng:14.9853}; // default: Görlitz
+let userMarker = null;
+let userCircle = null;
+
+async function geocodeAndCenter(){
+  const query = document.getElementById('locInput')?.value?.trim();
+  if(!query || query.length < 3) return userLocationCoords;
+  try{
+    const url = `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(query)}&format=json&limit=1&countrycodes=de,pl,cz&addressdetails=1`;
+    const res = await fetch(url, {headers:{'Accept-Language':'de','User-Agent':'BestPriceTank/1.0'}});
+    const data = await res.json();
+    if(data && data[0]){
+      const lat=+data[0].lat, lng=+data[0].lon;
+      userLocationCoords={lat,lng};
+      showUserMarker(lat,lng);
+      if(bptMap){
+      const rad=+document.getElementById('locRadius')?.value||15;
+      const zoom=rad<=10?14:rad<=15?13:rad<=25?12:rad<=50?11:10;
+      bptMap.setView([lat,lng],zoom,{animate:true,duration:.8});
+    }
+      console.log('📍 Standort gefunden:',data[0].display_name?.split(',')[0]);
+      return {lat,lng};
+    }
+  }catch(e){console.warn('Geocoding:',e.message)}
+  return userLocationCoords;
+}
+
+function showUserMarker(lat,lng){
+  if(!bptMap||typeof L==='undefined') return;
+  if(userMarker){try{bptMap.removeLayer(userMarker)}catch(e){}}
+  if(userCircle){try{bptMap.removeLayer(userCircle)}catch(e){}}
+  const rad = (+document.getElementById('locRadius')?.value||15)*1000;
+  userCircle = L.circle([lat,lng],{radius:rad,color:'rgba(68,138,255,.35)',fillColor:'rgba(68,138,255,.06)',fillOpacity:1,weight:1.5,dashArray:'6 4'}).addTo(bptMap);
+  const icon = L.divIcon({
+    html:`<div style="position:relative">
+      <div style="width:18px;height:18px;border-radius:50%;background:#448aff;border:3px solid #fff;box-shadow:0 0 24px rgba(68,138,255,.7)"></div>
+      <div style="position:absolute;top:-2px;left:-2px;width:22px;height:22px;border-radius:50%;border:2px solid rgba(68,138,255,.4);animation:pulse 2s ease infinite"></div>
+    </div>`,
+    className:'',iconSize:[18,18],iconAnchor:[9,9]
+  });
+  userMarker = L.marker([lat,lng],{icon,zIndexOffset:2000}).addTo(bptMap);
+  userMarker.bindPopup(`<b>📍 Dein Standort</b><br><span style="font-size:11px;color:#888">${document.getElementById('locInput')?.value||'Görlitz'}</span>`);
+}
+
+function haversine(a,b){
+  const R=6371,r=x=>x*Math.PI/180;
+  const dLat=r(b.lat-a.lat),dLng=r(b.lng-a.lng);
+  const h=Math.sin(dLat/2)**2+Math.cos(r(a.lat))*Math.cos(r(b.lat))*Math.sin(dLng/2)**2;
+  return R*2*Math.atan2(Math.sqrt(h),Math.sqrt(1-h));
+}
+
+async function loadRates(){
+  try{
+    const r=await fetch(`https://v6.exchangerate-api.com/v6/${ER_KEY}/latest/EUR`);
+    const d=await r.json();
+    if(d.result==='success'){
+      BPT_RATES.PLN=+d.conversion_rates.PLN.toFixed(3);
+      BPT_RATES.CZK=+d.conversion_rates.CZK.toFixed(3);
+      updateStrip();
+      renderMapMarkers(); // refresh PLN/CZK sub-prices
+    }
+  }catch(e){}
+}
+
+function updateStrip(){
+  const pln=document.getElementById('s-pln');
+  const czk=document.getElementById('s-czk');
+  const oil=document.getElementById('s-oil');
+  if(pln) pln.textContent=BPT_RATES.PLN.toFixed(2).replace('.',',');
+  if(czk) czk.textContent=BPT_RATES.CZK.toFixed(2).replace('.',',');
+  if(oil&&BPT_RATES.BRENT>0) oil.textContent=BPT_RATES.BRENT.toFixed(1)+'$';
+}
+
+async function refreshPrices(){
+  const btn=document.getElementById('locBtn');
+  if(btn){btn.classList.add('spin');btn.textContent='⏳'}
+  const rad=+document.getElementById('locRadius').value||15;
+  // Geocode the input location
+  const locInput=document.getElementById('locInput')?.value||'Görlitz';
+  const locKey=normLoc(locInput);
+  const staticCoords=LOC_COORDS[locKey]||LOC_COORDS.goerlitz;
+  // Try live geocoding first, fallback to static
+  let coords=staticCoords;
+  try{ const gc=await geocodeAndCenter(); if(gc) coords=gc; }catch(e){}
+  if(!userLocationCoords.lat) userLocationCoords=coords;
+  updateStaticDistances(userLocationCoords);
+  const apiRad=Math.min(rad,25);
+  try{
+    const url=`https://creativecommons.tankerkoenig.de/json/list.php?lat=${coords.lat}&lng=${coords.lng}&rad=${apiRad}&sort=dist&type=all&apikey=${TK_KEY}`;
+    const res=await fetch(url,{cache:'no-store'});
+    const data=await res.json();
+    if(!data.ok||!Array.isArray(data.stations)) throw new Error('TK error: '+JSON.stringify(data).slice(0,80));
+    // Remove old API stations + fallback stations when TK loads
+    STATIONS=STATIONS.filter(s=>s.country!=='de'||(!s.source&&!s.fallback)||s.source==='api');
+    STATIONS=STATIONS.filter(s=>s.source!=='api'); // clear before re-adding
+    // Add live DE stations
+    data.stations.filter(s=>s.isOpen).forEach(s=>{
+      if(!s.lat||!s.lng) return;
+      const dist=haversine(userLocationCoords.lat?userLocationCoords:coords,{lat:+s.lat,lng:+s.lng});
+      if(dist>rad+0.5) return;
+      const existing=STATIONS.find(x=>x.id==='tk_'+s.id);
+      if(existing){
+        existing.diesel=s.diesel||existing.diesel;
+        existing.e5=s.e5||existing.e5;
+        existing.e10=s.e10||existing.e10;
+        existing.lpg=s.lpg||existing.lpg;
+        existing.dist=+dist.toFixed(1);
+      }else{
+        STATIONS.push({
+          id:'tk_'+s.id,name:s.brand||s.name||'Tankstelle',
+          country:'de',lat:+s.lat,lng:+s.lng,dist:+dist.toFixed(1),
+          diesel:s.diesel||0,e5:s.e5||0,e10:s.e10||0,lpg:s.lpg||0,
+          logo:(s.brand||'DE').substring(0,2).toUpperCase(),
+          best:false,source:'api'
+        });
+      }
+    });
+    // Update DE price
+    const cheapDe=STATIONS.filter(s=>s.country==='de'&&s.diesel>0).sort((a,b)=>a.diesel-b.diesel)[0];
+    if(cheapDe){PRICES.diesel.de=cheapDe.diesel;PRICES.diesel.deStation=cheapDe.name;}
+    // Mark cheapest PL station
+    const plStations=STATIONS.filter(s=>s.country==='pl'&&(s[currentFuel]||s.diesel)>0);
+    const cheapPl=plStations.sort((a,b)=>(a[currentFuel]||a.diesel)-(b[currentFuel]||b.diesel))[0];
+    STATIONS.forEach(s=>s.best=false);
+    if(cheapPl) cheapPl.best=true;
+    updateAICard();
+    renderMapMarkers();
+    renderStationList();
+    gcalc();
+    console.log('✅ TK geladen:',STATIONS.filter(s=>s.country==='de').length,'DE Stationen');
+  }catch(e){console.warn('TK Fehler:',e.message)}
+  // Load PL stations from Dyskont Paliwowy Live API
+  try{
+    const dpurl=`/.netlify/functions/dp-prices?lat=${coords.lat}&lng=${coords.lng}&rad=${rad}`;
+    const dpres=await fetch(dpurl,{cache:'no-store',signal:AbortSignal.timeout(8000)});
+    if(dpres.ok){
+      const dpdata=await dpres.json();
+      if(dpdata.status==='success'&&dpdata.stations?.length){
+        // Remove old DP stations, keep manual PL stations as fallback
+        STATIONS=STATIONS.filter(s=>s.source!=='dyskont_paliwowy');
+        // Update exchange rate if provided
+        if(dpdata.pln_eur_rate>0){
+          BPT_RATES.PLN=dpdata.pln_eur_rate;
+          updateStrip();
+        }
+        dpdata.stations.forEach(s=>{
+          const km=s.dist_km||+haversine(userLocationCoords,{lat:s.lat,lng:s.lng}).toFixed(1);
+          STATIONS.push({
+            ...s,
+            dist:km,
+            logo:'DP',
+            best:false,
+          });
+        });
+        console.log('✅ Dyskont Paliwowy:',dpdata.stations.length,'Stationen, Kurs:',dpdata.pln_eur_rate,'PLN/EUR');
+        const dpBench=dpdata.stations.filter(s=>s.diesel>0).sort((a,b)=>a.diesel-b.diesel)[0]?.diesel;
+        if(dpBench) adjustPLPricesToBenchmark(dpBench);
+        // DP-Benchmark: günstigster DP-Diesel in €
+        const dpDieselBench = dpdata.stations.filter(s=>s.diesel>0).sort((a,b)=>a.diesel-b.diesel)[0]?.diesel;
+        if(dpDieselBench) adjustPLPricesToBenchmark(dpDieselBench);
+        // Recalc best PL station
+        const pl=STATIONS.filter(s=>s.country==='pl'&&s[currentFuel]>0);
+        const cheap=pl.sort((a,b)=>a[currentFuel]-b[currentFuel])[0];
+        STATIONS.forEach(s=>s.best=false);
+        if(cheap) cheap.best=true;
+      } else if(dpdata.status==='no_key'){
+        console.info('DP API: Key noch nicht konfiguriert (Netlify Dashboard)');
+      }
+    }
+  }catch(e){console.warn('DP Fehler:',e.message)}
+  if(btn){btn.classList.remove('spin');btn.textContent='🔄'}
+}
+
+function updateAICard(){
+  const f=currentFuel;
+  const plSt=STATIONS.filter(s=>s.country==='pl'&&(s[f]||s.diesel)>0).sort((a,b)=>(a[f]||a.diesel)-(b[f]||b.diesel));
+  const deSt=STATIONS.filter(s=>s.country==='de'&&(s[f]||s.diesel)>0).sort((a,b)=>(a[f]||a.diesel)-(b[f]||b.diesel));
+  const plPrice=(plSt[0]?.[f]||plSt[0]?.diesel)||PRICES[f]?.pl||PRICES.diesel.pl;
+  const dePrice=(deSt[0]?.[f]||deSt[0]?.diesel)||PRICES[f]?.de||PRICES.diesel.de;
+  const save=Math.max(0,(dePrice-plPrice)*60);
+  const el=document.getElementById('ai-save');
+  if(el) el.textContent=save.toFixed(2).replace('.',',')+' €';
+  const bp=document.getElementById('ai-best-price');
+  if(bp) bp.textContent=plPrice.toFixed(3).replace('.',',')+'€/L';
+  // KI demo values
+  const net=Math.max(0,save-1.2);
+  const ks=document.getElementById('ki-save-demo');
+  if(ks) ks.textContent=net.toFixed(2).replace('.',',')+' €';
+  const kp=document.getElementById('ki-pl-demo');
+  if(kp) kp.textContent=plPrice.toFixed(3).replace('.',',')+'€/L';
+}
+
+// ══════════════════════════════════════
+// NAVIGATION
+// ══════════════════════════════════════
+const NAVMAP={home:'Start',stations:'Tankstellen',rechner:'Sparen',ki:'KI-Assist'};
+function sv(view){
+  closePanels(true);
+  currentView=view;
+  document.querySelectorAll('.hbtn').forEach(b=>b.classList.toggle('on',b.textContent.trim()===NAVMAP[view]));
+  document.querySelectorAll('.dbtn').forEach(b=>b.classList.remove('on'));
+  const d=document.getElementById('d-'+view);if(d)d.classList.add('on');
+  const aic=document.getElementById('aic');
+  const lf=document.getElementById('locfuel');
+  if(view==='home'){
+    if(aic){aic.style.opacity='1';aic.style.transform='none';aic.style.display='';}
+    if(lf){lf.style.opacity='1';lf.style.transform='translateX(-50%)';}
+  }else{
+    if(aic){aic.style.opacity='0';aic.style.transform='translateX(-22px)';setTimeout(()=>aic.style.display='none',250);}
+  }
+  if(['stations','rechner','ki'].includes(view)) setTimeout(()=>openPanel(view),30);
+  setTimeout(()=>{try{if(bptMap)bptMap.invalidateSize()}catch(e){}},300);
+}
+function openPanel(name){
+  const p=document.getElementById('panel-'+name);
+  if(p){p.classList.add('open');document.getElementById('dim').classList.add('show');}
+  if(name==='stations'){renderStationList();}
+  if(name==='rechner'){gcalc();tcalc();evcalc();}
+}
+function cp(name){
+  const p=document.getElementById('panel-'+name);
+  if(p) p.classList.remove('open');
+  document.getElementById('dim').classList.remove('show');
+  document.querySelectorAll('.dbtn').forEach(b=>b.classList.remove('on'));
+  document.getElementById('d-home').classList.add('on');
+  document.querySelectorAll('.hbtn').forEach(b=>b.classList.toggle('on',b.textContent.trim()==='Start'));
+  const aic=document.getElementById('aic');
+  if(aic){aic.style.display='';aic.style.opacity='1';aic.style.transform='none';}
+  currentView='home';
+}
+function closePanels(silent){
+  ['stations','rechner','ki','community'].forEach(n=>{const p=document.getElementById('panel-'+n);if(p)p.classList.remove('open');});
+  closeStp(true);
+  if(!silent){
+    document.getElementById('dim').classList.remove('show');
+    document.querySelectorAll('.dbtn').forEach(b=>b.classList.remove('on'));
+    document.getElementById('d-home').classList.add('on');
+    document.querySelectorAll('.hbtn').forEach(b=>b.classList.toggle('on',b.textContent.trim()==='Start'));
+    const aic=document.getElementById('aic');
+    if(aic){aic.style.display='';aic.style.opacity='1';aic.style.transform='none';}
+    currentView='home';
+  }
+}
+
+// ══════════════════════════════════════
+// FUEL SELECTOR
+// ══════════════════════════════════════
+function setFuel(btn,fuel){
+  currentFuel=fuel;
+  document.querySelectorAll('.fp').forEach(b=>b.classList.toggle('on',b.dataset.fuel===fuel));
+  // sync station panel fuel buttons
+  ['diesel','e5','e10','lpg'].forEach(f=>{
+    const q=document.getElementById('fq-'+f);
+    if(q) q.style.background=f===fuel?'rgba(124,77,255,.2)':'';
+  });
+  renderMapMarkers();
+  renderStationList();
+  updateAICard();
+  gcalc();
+}
+function setFuelQ(btn,fuel){
+  // From stations panel
+  document.querySelectorAll('.fq-btn').forEach(b=>{b.classList.remove('on-fq');b.style.background=''});
+  btn.classList.add('on-fq');
+  currentFuel=fuel;
+  document.querySelectorAll('.fp').forEach(b=>b.classList.toggle('on',b.dataset.fuel===fuel));
+  renderStationList();
+  renderMapMarkers();
+  updateAICard();
+}
+
+// ══════════════════════════════════════
+// COUNTRY FILTER
+// ══════════════════════════════════════
+function filterC(btn,c){
+  currentCountry=c;
+  document.querySelectorAll('.cfbtn').forEach(b=>b.classList.remove('on'));
+  btn.classList.add('on');
+  renderMapMarkers();
+  renderStationList();
+}
+
+// ══════════════════════════════════════
+// STATION POPUP
+// ══════════════════════════════════════
+function openStation(id){
+  const s=STATIONS.find(x=>x.id===id);if(!s) return;
+  currentStation=s;
+  const colMap={pl:'rgba(0,200,83,.18)',de:'rgba(68,138,255,.18)',cz:'rgba(255,171,0,.14)'};
+  const el=document.getElementById('sp-logo');
+  if(el){el.textContent=s.logo;el.style.background=colMap[s.country]||'rgba(255,255,255,.1)';}
+  document.getElementById('sp-name').textContent=s.name;
+  document.getElementById('sp-meta').innerHTML=
+    (s.country==='pl'?'🇵🇱 Polen':s.country==='cz'?'🇨🇿 Tschechien':'🇩🇪 Deutschland')+
+    ' · '+s.dist.toFixed(1)+' km · <span style="color:var(--green)">● Geöffnet</span>';
+  const fmtP=v=>v>0?v.toFixed(3).replace('.',',')+'\u00b0':'–';
+  document.getElementById('sp-d').textContent=fmtP(s.diesel);
+  document.getElementById('sp-e5').textContent=fmtP(s.e5);
+  document.getElementById('sp-e10').textContent=fmtP(s.e10);
+  document.getElementById('sp-lpg').textContent=fmtP(s.lpg);
+  document.getElementById('stpop').classList.add('open');
+}
+function closeStp(silent){document.getElementById('stpop').classList.remove('open');if(!silent)currentStation=null;}
+function openMaps(){
+  if(!currentStation) return;
+  window.open(`https://maps.google.com/?q=${currentStation.lat},${currentStation.lng}`,'_blank');
+}
+
+// ══════════════════════════════════════
+// STATION LIST
+// ══════════════════════════════════════
+function renderStationList(){
+  const el=document.getElementById('st-list');if(!el) return;
+  const rad=+document.getElementById('locRadius').value||15;
+  const flags={de:'🇩🇪',pl:'🇵🇱',cz:'🇨🇿'};
+  const cols={de:'#93c5fd',pl:'#6ee7b7',cz:'#fcd34d'};
+  const list=STATIONS
+    .filter(s=>currentCountry==='all'||s.country===currentCountry)
+    .filter(s=>s.dist<=rad)
+    .filter(s=>s[currentFuel]>0)
+    .sort((a,b)=>(a[currentFuel]||9)-(b[currentFuel]||9));
+  if(!list.length){
+    el.innerHTML='<div style="padding:18px;text-align:center;color:var(--muted);font-size:13px">Keine Stationen im gewählten Umkreis</div>';
+    return;
+  }
+  const p=PRICES[currentFuel];
+  el.innerHTML=list.map((s,i)=>{
+    const pr=s[currentFuel];
+    const sub=s.country==='pl'&&BPT_RATES.PLN>0?`<span style="color:var(--green);font-size:10px;margin-left:4px">${(pr*BPT_RATES.PLN).toFixed(2).replace('.',',')} PLN</span>`:
+               s.country==='cz'&&BPT_RATES.CZK>0?`<span style="color:var(--amber);font-size:10px;margin-left:4px">${(pr*BPT_RATES.CZK).toFixed(1).replace('.',',')} CZK</span>`:'';
+    return`<div style="display:flex;align-items:center;gap:8px;padding:10px;border-radius:13px;border:1px solid ${i===0?'rgba(0,230,118,.25)':'var(--rim)'};background:${i===0?'rgba(0,200,83,.07)':'rgba(255,255,255,.03)'};cursor:pointer" onclick="openStation('${s.id}');cp('stations')">
+      <div style="width:24px;height:24px;border-radius:8px;background:${i===0?'rgba(0,230,118,.2)':'rgba(255,255,255,.06)'};display:grid;place-items:center;font:900 11px var(--mono);color:${i===0?'var(--green)':'var(--muted)'};">${i+1}</div>
+      <div style="flex:1;min-width:0"><div style="font:800 13px var(--sans);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${s.name}</div><div style="font-size:10.5px;color:var(--muted);margin-top:1px">${flags[s.country]} ${s.dist.toFixed(1)} km${i===0?' <span style="color:var(--green)">★</span>':''}</div></div>
+      <div style="text-align:right;flex-shrink:0"><div style="font:900 16px var(--mono);color:${cols[s.country]}">${pr.toFixed(3).replace('.',',')}°</div>${sub}</div>
+    </div>`;
+  }).join('');
+}
+
+// ══════════════════════════════════════
+// RECHNER TABS
+// ══════════════════════════════════════
+function showTab(tab){
+  ['border','tax','ev'].forEach((t,i)=>{
+    const el=document.getElementById('tab-'+t);
+    const btn=document.querySelectorAll('.tab')[i];
+    if(el) el.style.display=t===tab?'grid':'none';
+    if(btn) btn.classList.toggle('on',t===tab);
+  });
+  if(tab==='tax') tcalc();
+  if(tab==='ev') evcalc();
+}
+
+// ══════════════════════════════════════
+// GRENZRECHNER
+// ══════════════════════════════════════
+const money=v=>v.toLocaleString('de-DE',{minimumFractionDigits:2,maximumFractionDigits:2})+'€';
+const e3=v=>v.toFixed(3).replace('.',',')+'€';
+function glit(v){document.getElementById('g-lit').textContent=v;gcalc()}
+function gcalc(){
+  const lit=+document.getElementById('g-lit').textContent||60;
+  const use=+document.getElementById('g-use').value||7;
+  const km=+document.getElementById('g-km').value||8;
+  const ziel=document.getElementById('g-ziel').value||'pl';
+  const f=document.getElementById('g-fuel').value||'diesel';
+  const p=PRICES[f]||PRICES.diesel;
+  // Use real live prices if available
+  const deRef = (STATIONS.filter(s=>s.country==='de'&&(s[f]||s.diesel)>0).sort((a,b)=>(a[f]||a.diesel)-(b[f]||b.diesel))[0]?.[f]) || p.de;
+  const plRef = (STATIONS.filter(s=>s.country===ziel&&(s[f]||s.diesel)>0).sort((a,b)=>(a[f]||a.diesel)-(b[f]||b.diesel))[0]?.[f]) || p[ziel];
+  const diff=deRef-plRef;
+  const gross=diff*lit;
+  const cost=(km*2/100)*use*deRef;
+  const net=gross-cost;
+  const be=diff>0?Math.ceil(cost/diff):0;
+  document.getElementById('g-gross').textContent=money(gross);
+  document.getElementById('g-cost').textContent='-'+money(cost);
+  document.getElementById('g-net').textContent=money(Math.max(0,net));
+  document.getElementById('g-be').textContent='ab '+be+'L';
+  document.getElementById('g-status').textContent=net>15?'✅ LOHNT SICH KLAR':net>5?'✅ LOHNT SICH':net>0?'🟡 LOHNT KNAPP':'🔴 LOHNT NICHT';
+  // Use real cheapest stations from live data
+  const deStations = STATIONS.filter(s=>s.country==='de'&&(s[f]||s.diesel)>0).sort((a,b)=>(a[f]||a.diesel)-(b[f]||b.diesel));
+  const plStations = STATIONS.filter(s=>s.country===ziel&&(s[f]||s.diesel)>0).sort((a,b)=>(a[f]||a.diesel)-(b[f]||b.diesel));
+  const bestDe = deStations[0];
+  const bestPl = plStations[0];
+  const realDe = bestDe?(bestDe[f]||bestDe.diesel):p.de;
+  const realPl = bestPl?(bestPl[f]||bestPl.diesel):p[ziel];
+  // Update names
+  const deName = document.getElementById('g-de-name');
+  if(deName) deName.textContent = bestDe?.name||'Günstigste DE Station';
+  const deDist = deName?.parentElement?.querySelector('small');
+  if(deDist&&bestDe) deDist.textContent = '📍 '+bestDe.dist.toFixed(1)+' km';
+  // Update prices with real data
+  document.getElementById('g-de-price').textContent=e3(realDe);
+  document.getElementById('g-pl-price').textContent=e3(realPl);
+  const realDiff = realDe - realPl;
+  document.getElementById('g-diff').textContent = realDiff>0?'-'+e3(realDiff):'–';
+
+  // Kanister
+  const can = +document.getElementById('g-canister')?.value||0;
+  const canRes = document.getElementById('canister-result');
+  if(can > 0 && diff > 0){
+    const canSave = diff * can;
+    const totalNet = Math.max(0, net) + canSave;
+    document.getElementById('canister-save').textContent = money(canSave);
+    document.getElementById('canister-total').textContent = money(totalNet);
+    if(canRes) canRes.style.display='block';
+  } else {
+    if(canRes) canRes.style.display='none';
+  }
+
+  // Easter Egg counter
+  window._gcalcNet = Math.max(0, net + (can>0?diff*can:0));
+  updateCigCalc();
+}
+
+// Kippenrechner Easter Egg
+let _cigClicks = 0;
+function onSavingsClick(){
+  _cigClicks++;
+  if(_cigClicks >= 3){
+    const zone = document.getElementById('cig-zone');
+    if(zone) zone.style.display = zone.style.display==='none'?'block':'none';
+    _cigClicks = 0;
+  }
+}
+function updateCigCalc(){
+  const net = window._gcalcNet || 0;
+  const packs = (net / 9).toFixed(1);
+  const el = document.getElementById('cig-count');
+  if(el) el.textContent = packs + ' Packungen';
+}
+
+// ══════════════════════════════════════
+// STEUERVERGLEICH
+// ══════════════════════════════════════
+function tcalc(){
+  const f=document.getElementById('t-fuel').value||'diesel';
+  const lit=+document.getElementById('t-lit').value||60;
+  const td=TAX[f];if(!td) return;
+  const diff=td.de.p-td.pl.p;
+  const diffCz=td.de.p-td.cz.p;
+  document.getElementById('t-hl').innerHTML=
+    `Polen ist <strong style="color:var(--green)">${e3(diff)}/L</strong> günstiger · Bei ${lit}L = <strong style="color:var(--green)">${money(diff*lit)}</strong>`;
+  const maxP=Math.max(td.de.p,td.pl.p,td.cz.p);
+  document.getElementById('t-bars').innerHTML=[
+    {flag:'🇩🇪',name:'Deutschland',t:td.de,col:'#448aff'},
+    {flag:'🇵🇱',name:'Polen',t:td.pl,col:'#00e676'},
+    {flag:'🇨🇿',name:'Tschechien',t:td.cz,col:'#ffab00'}
+  ].map(b=>{
+    const nPct=(b.t.net/b.t.p*100).toFixed(0);
+    return`<div class="tbar">
+      <div class="tbarlbl"><div class="tbarnm">${b.flag} ${b.name}</div><div class="tbarpr" style="color:${b.col}">${e3(b.t.p)}</div></div>
+      <div class="ttrack"><div class="tnet" style="width:${nPct}%"></div><div class="ttax" style="width:${100-nPct}%"></div></div>
+      <div class="tmeta">Netto ${e3(b.t.net)} · Abgaben ${e3(b.t.p-b.t.net)}</div>
+    </div>`;
+  }).join('');
+  document.getElementById('t-rows').innerHTML=[
+    {l:'Netto/L',v:[td.de.net,td.pl.net,td.cz.net]},
+    {l:'Energiesteuer/L',v:[td.de.eng,td.pl.eng,td.cz.eng]},
+    {l:'CO₂/L',v:[td.de.co2,td.pl.co2,td.cz.co2]},
+    {l:'MwSt./L',v:[td.de.vat,td.pl.vat,td.cz.vat]},
+  ].map(r=>`<div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;padding:7px 11px;border-bottom:1px solid var(--rim);font-size:11.5px"><span style="color:var(--muted)">${r.l}</span><span style="font-weight:800">${e3(r.v[0])}</span><span style="font-weight:800;color:var(--green)">${e3(r.v[1])}</span><span style="font-weight:800;color:var(--amber)">${e3(r.v[2])}</span></div>`).join('');
+}
+function toggleTD(){
+  const d=document.getElementById('t-detail');
+  const b=document.getElementById('t-detail-btn');
+  if(d.style.display==='none'){d.style.display='block';b.textContent='Details ausblenden';}
+  else{d.style.display='none';b.textContent='Details anzeigen';}
+}
+
+// ══════════════════════════════════════
+// EV RECHNER
+// ══════════════════════════════════════
+function evcalc(){
+  const km=+document.getElementById('ev-km').value||200;
+  const kwh=+document.getElementById('ev-kwh').value||18;
+  const pr=+document.getElementById('ev-price').value||0.32;
+  const lkm=+document.getElementById('ev-lkm').value||7;
+  const c=document.getElementById('ev-country').value||'pl';
+  const f=(document.getElementById('ev-fuel').value||'diesel').toLowerCase();
+  const fk=f.includes('e5')?'e5':f.includes('e10')?'e10':'diesel';
+  const fp=PRICES[fk]?.[c]||PRICES.diesel[c];
+  const evT=(km/100)*kwh,evC=evT*pr,fuT=(km/100)*lkm,fuC=fuT*fp,diff=fuC-evC;
+  document.getElementById('ev-cost').textContent=money(evC);
+  document.getElementById('ev-kwh-t').textContent=evT.toFixed(1)+' kWh';
+  document.getElementById('ev-fcost').textContent=money(fuC);
+  document.getElementById('ev-fuel-t').textContent=fuT.toFixed(1)+' L';
+  const good=diff>0;
+  const bd=document.getElementById('ev-diff');
+  bd.textContent=(good?'✅ E-Auto spart ':'🔴 Verbrenner spart ')+money(Math.abs(diff));
+  bd.className='evdiff '+(good?'evgood':'evbad');
+  document.getElementById('ev-story').textContent=good
+    ?`Auf ${km}km ist das E-Auto ${money(diff)} günstiger als ${PRICES[fk].label} zum ${c.toUpperCase()}-Preis (${e3(fp)}).`
+    :`Auf ${km}km ist der Verbrenner ${money(Math.abs(diff))} günstiger. Schnellladen kann teuer werden.`;
+}
+
+// ══════════════════════════════════════
+// KI CHAT
+// ══════════════════════════════════════
+const KI_REPLIES={
+  wetter:'🌤 <strong>Grenzwetter heute:</strong><br>Görlitz: 18°C, leicht bewölkt · Zgorzelec: 18°C · Hrádek: 17°C<br>✅ Keine Unwetterwarnungen.',
+  baust:'🚧 <strong>Baustellen:</strong><br>✅ B115 → Grenze: frei · A4 → Polen: frei<br>⚠️ B178 Zittau: Engstelle (~10 Min)',
+  cz:'🇨🇿 <strong>Tschechien heute:</strong><br>MOL Hrádek: 1,477€/L · Netto ca. 4,80€ bei 60L<br>Polen ist günstiger, CZ lohnt bei Zittau-Route.',
+  kanister:'🪣 <strong>+20L Kanister:</strong><br>80L gesamt · Brutto: ~11,52€ · Netto: ~10,32€<br>⚠️ Max. 60L in Kanistern. Zugelassene Behälter nutzen.',
+  default:'Basierend auf Live-Daten lohnt sich Polen heute. Soll ich die genaue Route berechnen?'
+};
+let awaitingName=false;
+async function sendKI(){
+  const inp=document.getElementById('ki-input');
+  const q=(inp?.value||'').trim();if(!q) return;
+  inp.value='';
+  const msgs=document.getElementById('ki-msgs');
+  if(awaitingName){
+    userName=q;localStorage.setItem('bpt_userName',q);awaitingName=false;
+    const um=document.createElement('div');um.className='mu';um.textContent=q;msgs.appendChild(um);
+    const am=document.createElement('div');am.className='ma';
+    am.innerHTML=`<div class="mai"><div class="mah"><div class="mav">🤖</div><div class="man">BestPriceTank KI</div></div><div class="mat">Super, <strong>${q}</strong>! Ich helfe dir mit Spritpreisen, Wetter und Stau. Frag einfach!</div></div>`;
+    msgs.appendChild(am);msgs.scrollTop=msgs.scrollHeight;return;
+  }
+  const um=document.createElement('div');um.className='mu';um.textContent=q;msgs.appendChild(um);
+  const t=document.createElement('div');t.className='ma';
+  t.innerHTML='<div class="typing"><div class="td"></div><div class="td"></div><div class="td"></div></div>';
+  msgs.appendChild(t);msgs.scrollTop=msgs.scrollHeight;
+  try{
+    const p=PRICES.diesel;
+    const res=await fetch('/.netlify/functions/ki-chat',{method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({
+          question:q,
+          userName,
+          lang:currentLang,
+          prices:{
+            de:(PRICES[currentFuel]||PRICES.diesel).de.toFixed(3).replace('.',','),
+            pl:(PRICES[currentFuel]||PRICES.diesel).pl.toFixed(3).replace('.',','),
+            cz:(PRICES[currentFuel]||PRICES.diesel).cz.toFixed(3).replace('.',','),
+            grenz:buildGrenzContext().replace('\nGrenzrechner (aktuell): ',''),
+            wetter:Object.values(wxData).map(w=>`${w.name} ${w.temp}°C ${w.desc}`).join(', ')||'',
+            stau:stauData.length?stauData.map(s=>`${s.road}: ${s.items.map(i=>i.title).join(', ')}`).join(' | '):'A4+A15 frei',
+          }
+        })});
+    const data=await res.json();
+    t.remove();
+    const am=document.createElement('div');am.className='ma';
+    am.innerHTML=`<div class="mai"><div class="mah"><div class="mav">🤖</div><div class="man">BestPriceTank KI · GPT-4o-mini</div></div><div class="mat">${data.answer||'–'}</div></div>`;
+    msgs.appendChild(am);msgs.scrollTop=msgs.scrollHeight;
+    speak(data.answer||'');
+  }catch(e){
+    const ql=q.toLowerCase();
+    let r=KI_REPLIES.default;
+    if(ql.includes('wetter')||ql.includes('regen'))r=KI_REPLIES.wetter;
+    else if(ql.includes('baust'))r=KI_REPLIES.baust;
+    else if(ql.includes('tschech')||ql.includes('cz'))r=KI_REPLIES.cz;
+    else if(ql.includes('kanister'))r=KI_REPLIES.kanister;
+    t.remove();
+    const am=document.createElement('div');am.className='ma';
+    am.innerHTML=`<div class="mai"><div class="mah"><div class="mav">🤖</div><div class="man">BestPriceTank KI · Offline</div></div><div class="mat">${r}</div></div>`;
+    msgs.appendChild(am);msgs.scrollTop=msgs.scrollHeight;
+    speak(r);
+  }
+}
+function askKI(q){document.getElementById('ki-input').value=q;sendKI();if(currentView!=='ki')sv('ki');}
+function checkFirstVisit(){
+  if(!userName&&currentView==='ki'){
+    setTimeout(()=>{
+      const msgs=document.getElementById('ki-msgs');if(!msgs) return;
+      const am=document.createElement('div');am.className='ma';
+      am.innerHTML=`<div class="mai"><div class="mah"><div class="mav">🤖</div><div class="man">BestPriceTank KI</div></div><div class="mat">Willkommen! Wie soll ich dich nennen? 👋</div></div>`;
+      msgs.appendChild(am);msgs.scrollTop=msgs.scrollHeight;awaitingName=true;
+    },400);
+  }else if(userName){
+    const g=document.getElementById('ki-greeting');
+    if(g) g.textContent='Hallo, '+userName+'! 👋';
+  }
+}
+
+// ══════════════════════════════════════
+// MODALS
+// ══════════════════════════════════════
+function openM(id){const m=document.getElementById('m-'+id);if(m) m.classList.add('open');}
+function closeM(id){const m=document.getElementById('m-'+id);if(m) m.classList.remove('open');}
+document.addEventListener('keydown',e=>{if(e.key==='Escape'){['imprint','privacy','cookies'].forEach(closeM);}});
+
+// ══════════════════════════════════════
+// COOKIES
+// ══════════════════════════════════════
+function showCookieBanner(){
+  if(localStorage.getItem('cookieOk')) return;
+  document.getElementById('cbanner').classList.add('show');
+}
+function accCookies(){localStorage.setItem('cookieOk','accepted');hideCookies();}
+function decCookies(){localStorage.setItem('cookieOk','declined');hideCookies();}
+function hideCookies(){
+  const b=document.getElementById('cbanner');
+  b.classList.add('hide');setTimeout(()=>b.classList.remove('show','hide'),450);
+}
+
+// ══════════════════════════════════════
+// LANG / THEME
+// ══════════════════════════════════════
+// ══════════════════════════════════════
+// LANGUAGE SYSTEM
+// ══════════════════════════════════════
+let currentLang = localStorage.getItem('bpt_lang') || 'de';
+
+// ══════════════════════════════════════
+// I18N — Vollständige UI-Übersetzung
+// ══════════════════════════════════════
+const I18N = {
+  de:{
+    nav_home:'Start', nav_stations:'Tankstellen', nav_save:'Sparen', nav_ki:'KI-Assist',
+    dock_stations:'Stationen', dock_save:'Sparen', dock_report:'Melden',
+    live:'LIVE · DREILÄNDERECK',
+    ai_badge:'KI-ASSISTENT · HEUTE', ai_hl:'Polen spart heute', ai_at:'bei 60L',
+    ai_dist:'8,4 km · ca. 10 Min', ai_weather:'18°C · kein Stau',
+    ai_cta:'🚗 Fahrt berechnen →', ai_cta_mob:'🚗 Berechnen',
+    pnl_stations:'Tankstellen', pnl_stations_sub:'Live · Dreiländereck',
+    pnl_save:'Sparen', pnl_save_sub:'Grenz-, Steuer- & E-Auto-Rechner',
+    pnl_ki:'KI-Assistent', pnl_ki_sub:'GPT-4o-mini · Sprit & Wetter',
+    tab_border:'🚗 Grenze', tab_tax:'🧮 Steuer', tab_ev:'⚡ E-Auto',
+    lbl_startort:'Startort', lbl_fuel:'Kraftstoff', lbl_dest:'Ziel',
+    lbl_volume:'Tankmenge', lbl_use:'Verbrauch L/100', lbl_km:'Entfernung km',
+    lbl_canister:'+ Kanister', canister_tip:'Max. 60L in Kanistern erlaubt',
+    dest_pl:'🇵🇱 Polen', dest_cz:'🇨🇿 Tschechien',
+    result_label:'ERGEBNIS', result_sub:'Netto-Ersparnis nach Fahrtkosten',
+    result_gross:'Brutto', result_cost:'Fahrtkosten', result_be:'Break-even',
+    cig_egg:'🚬 Kippenrechner',
+    ki_placeholder:'Frag mich etwas...', ki_listening:'🔴 Spreche …',
+    ki_greeting_pre:'BestPriceTank KI',
+    qs:['🌤 Wetter','🚧 Baustellen','🇨🇿 CZ-Check','🪣 Kanister','📊 Preistrend'],
+    qp:['Wie ist das Wetter an der Grenze?','Gibt es Baustellen nach Polen?','Lohnt sich Tschechien heute?','Mit 20L Kanister, was spare ich?','Wann sind die Preise am günstigsten?'],
+  },
+  pl:{
+    nav_home:'Start', nav_stations:'Stacje', nav_save:'Oszczędzaj', nav_ki:'Asystent AI',
+    dock_stations:'Stacje', dock_save:'Oszczędź', dock_report:'Zgłoś',
+    live:'NA ŻYWO · TRÓJSTYK',
+    ai_badge:'ASYSTENT AI · DZIŚ', ai_hl:'Polska tańsza dziś', ai_at:'przy 60L',
+    ai_dist:'8,4 km · ok. 10 min', ai_weather:'18°C · bez korków',
+    ai_cta:'🚗 Oblicz przejazd →', ai_cta_mob:'🚗 Oblicz',
+    pnl_stations:'Stacje paliw', pnl_stations_sub:'Na żywo · Trójstyk',
+    pnl_save:'Oszczędzaj', pnl_save_sub:'Kalkulator graniczny i E-Auto',
+    pnl_ki:'Asystent AI', pnl_ki_sub:'GPT-4o-mini · Paliwo & Pogoda',
+    tab_border:'🚗 Granica', tab_tax:'🧮 Podatki', tab_ev:'⚡ E-Auto',
+    lbl_startort:'Miejsce startowe', lbl_fuel:'Paliwo', lbl_dest:'Cel',
+    lbl_volume:'Ilość paliwa', lbl_use:'Zużycie L/100', lbl_km:'Odległość km',
+    lbl_canister:'+ Kanister', canister_tip:'Max. 60L w kanistrach dozwolone',
+    dest_pl:'🇵🇱 Polska', dest_cz:'🇨🇿 Czechy',
+    result_label:'WYNIK', result_sub:'Oszczędność netto po kosztach',
+    result_gross:'Brutto', result_cost:'Koszty jazdy', result_be:'Break-even',
+    cig_egg:'🚬 Kalkulator papierosów',
+    ki_placeholder:'Zapytaj mnie coś...', ki_listening:'🔴 Mówię …',
+    ki_greeting_pre:'BestPriceTank AI',
+    qs:['🌤 Pogoda','🚧 Remonty','🇨🇿 CZ-Check','🪣 Kanister','📊 Trend cen'],
+    qp:['Jaka jest pogoda na granicy?','Czy są remonty dróg do Polski?','Czy Czechy opłacają się dziś?','Z 20L kanistra, ile oszczędzam?','Kiedy ceny są najtańsze?'],
+  },
+  cz:{
+    nav_home:'Start', nav_stations:'Čerpací stanice', nav_save:'Ušetřit', nav_ki:'AI Asistent',
+    dock_stations:'Stanice', dock_save:'Ušetřit', dock_report:'Hlásit',
+    live:'ŽIVĚ · TROJMEZÍ',
+    ai_badge:'AI ASISTENT · DNES', ai_hl:'Polsko levnější dnes', ai_at:'při 60L',
+    ai_dist:'8,4 km · cca 10 min', ai_weather:'18°C · bez zácp',
+    ai_cta:'🚗 Vypočítat cestu →', ai_cta_mob:'🚗 Vypočítat',
+    pnl_stations:'Čerpací stanice', pnl_stations_sub:'Živě · Trojmezí',
+    pnl_save:'Ušetřit', pnl_save_sub:'Kalkulačka hranic & E-Auto',
+    pnl_ki:'AI Asistent', pnl_ki_sub:'GPT-4o-mini · Palivo & Počasí',
+    tab_border:'🚗 Hranice', tab_tax:'🧮 Daně', tab_ev:'⚡ E-Auto',
+    lbl_startort:'Místo odjezdu', lbl_fuel:'Palivo', lbl_dest:'Cíl',
+    lbl_volume:'Množství paliva', lbl_use:'Spotřeba L/100', lbl_km:'Vzdálenost km',
+    lbl_canister:'+ Kanystr', canister_tip:'Max. 60L v kanystrech povoleno',
+    dest_pl:'🇵🇱 Polsko', dest_cz:'🇨🇿 Česká republika',
+    result_label:'VÝSLEDEK', result_sub:'Čistá úspora po nákladech na cestu',
+    result_gross:'Hrubá', result_cost:'Náklady cesty', result_be:'Break-even',
+    cig_egg:'🚬 Kalkulačka cigaret',
+    ki_placeholder:'Zeptej se mě...', ki_listening:'🔴 Mluvím …',
+    ki_greeting_pre:'BestPriceTank AI',
+    qs:['🌤 Počasí','🚧 Opravy','🇵🇱 PL-Check','🪣 Kanystr','📊 Trend cen'],
+    qp:['Jaké je počasí na hranici?','Jsou opravy silnic do Polska?','Vyplatí se dnes Polsko?','S 20L kanystrů, kolik ušetřím?','Kdy jsou ceny nejlevnější?'],
+  },
+  en:{
+    nav_home:'Start', nav_stations:'Stations', nav_save:'Save', nav_ki:'AI Assist',
+    dock_stations:'Stations', dock_save:'Save', dock_report:'Report',
+    live:'LIVE · THREE-COUNTRY CORNER',
+    ai_badge:'AI ASSISTANT · TODAY', ai_hl:'Poland saves today', ai_at:'per 60L',
+    ai_dist:'8.4 km · approx 10 min', ai_weather:'18°C · no traffic',
+    ai_cta:'🚗 Calculate trip →', ai_cta_mob:'🚗 Calculate',
+    pnl_stations:'Fuel Stations', pnl_stations_sub:'Live · Three-Country Corner',
+    pnl_save:'Save Money', pnl_save_sub:'Border, Tax & EV Calculator',
+    pnl_ki:'AI Assistant', pnl_ki_sub:'GPT-4o-mini · Fuel & Weather',
+    tab_border:'🚗 Border', tab_tax:'🧮 Tax', tab_ev:'⚡ EV',
+    lbl_startort:'Starting point', lbl_fuel:'Fuel type', lbl_dest:'Destination',
+    lbl_volume:'Fuel amount', lbl_use:'Consumption L/100', lbl_km:'Distance km',
+    lbl_canister:'+ Canister', canister_tip:'Max. 60L in canisters allowed',
+    dest_pl:'🇵🇱 Poland', dest_cz:'🇨🇿 Czech Republic',
+    result_label:'RESULT', result_sub:'Net savings after travel costs',
+    result_gross:'Gross', result_cost:'Travel costs', result_be:'Break-even',
+    cig_egg:'🚬 Cigarette calculator',
+    ki_placeholder:'Ask me something...', ki_listening:'🔴 Speaking …',
+    ki_greeting_pre:'BestPriceTank AI',
+    qs:['🌤 Weather','🚧 Roadworks','🇨🇿 CZ-Check','🪣 Canister','📊 Price trend'],
+    qp:['What is the weather at the border?','Are there roadworks to Poland?','Is Czech Republic worth it today?','With 20L canister, what do I save?','When are prices cheapest?'],
+  },
+};
+
+const LANG_CFG = {
+  de: { code:'de-DE', label:'DE', kiLang:'Deutsch',   greeting:'Hallo', qlabels:['🌤 Wetter','🚧 Baustellen','🇨🇿 CZ-Check','🪣 Kanister','📊 Preistrend'], qprompts:['Wie ist das Wetter an der Grenze?','Gibt es Baustellen nach Polen?','Lohnt sich Tschechien heute?','Mit 20L Kanister, was spare ich?','Wann sind die Preise am günstigsten?'] },
+  pl: { code:'pl-PL', label:'PL', kiLang:'Polnisch',  greeting:'Cześć',  qlabels:['🌤 Pogoda','🚧 Remonty','🇨🇿 CZ-Check','🪣 Kanister','📊 Trend cen'], qprompts:['Jaka jest pogoda na granicy?','Czy są remonty dróg do Polski?','Czy Czechy opłacają się dziś?','Z 20L kanistra, ile oszczędzam?','Kiedy ceny są najtańsze?'] },
+  cz: { code:'cs-CZ', label:'CZ', kiLang:'Tschechisch', greeting:'Ahoj', qlabels:['🌤 Počasí','🚧 Opravy','🇵🇱 PL-Check','🪣 Kanystr','📊 Trend cen'], qprompts:['Jaké je počasí na hranici?','Jsou opravy silnic do Polska?','Vyplatí se dnes Polsko?','S 20L kanystrů, kolik ušetřím?','Kdy jsou ceny nejlevnější?'] },
+  en: { code:'en-US', label:'EN', kiLang:'Englisch',  greeting:'Hi',     qlabels:['🌤 Weather','🚧 Roadworks','🇨🇿 CZ-Check','🪣 Canister','📊 Price trend'], qprompts:['What is the weather at the border?','Are there roadworks to Poland?','Is Czech Republic worth it today?','With 20L canister, what do I save?','When are prices cheapest?'] },
+};
+
+function setLang(l) {
+  currentLang = l;
+  localStorage.setItem('bpt_lang', l);
+  const t  = I18N[l] || I18N.de;
+  const cfg = LANG_CFG[l] || LANG_CFG.de;
+
+  // Header lang buttons
+  document.querySelectorAll('.lbtn').forEach(b => b.classList.toggle('on', b.textContent.trim() === l.toUpperCase()));
+
+  // Nav buttons (desktop)
+  const hbtns = document.querySelectorAll('.hbtn');
+  if(hbtns[0]) hbtns[0].textContent = t.nav_home;
+  if(hbtns[1]) hbtns[1].textContent = t.nav_stations;
+  if(hbtns[2]) hbtns[2].textContent = t.nav_save;
+  if(hbtns[3]) hbtns[3].textContent = t.nav_ki;
+
+  // Dock buttons
+  const dbtns = document.querySelectorAll('.dbtn');
+  if(dbtns[1]) dbtns[1].querySelector(':last-of-type, div:not(.dico):not(.ddot)') && (dbtns[1].childNodes[2].textContent = t.dock_stations);
+  // Simpler: update text nodes in dock
+  document.querySelectorAll('.dbtn').forEach((b,i)=>{
+    const labels = ['Start', t.dock_stations, t.dock_save, 'KI', t.dock_report];
+    if(labels[i]) { const tn = [...b.childNodes].find(n=>n.nodeType===3&&n.textContent.trim()); if(tn) tn.textContent = labels[i]; }
+  });
+
+  // Live badge
+  const lb = document.querySelector('.live');
+  if(lb) { const ld = lb.querySelector('.ldot'); lb.textContent=''; if(ld) lb.appendChild(ld); lb.append(' '+t.live); }
+
+  // AI card
+  const aiBadge = document.querySelector('.ai-badge');
+  if(aiBadge) { const av=aiBadge.querySelector('.ai-av'); aiBadge.textContent=''; if(av) aiBadge.appendChild(av); aiBadge.append(t.ai_badge); }
+  const aiHl = document.querySelector('.ai-hl');
+  if(aiHl) aiHl.innerHTML = t.ai_hl + '<br><strong id="ai-save">–</strong> '+t.ai_at;
+  document.querySelectorAll('.ai-cta').forEach(b => b.innerHTML = t.ai_cta);
+  document.querySelectorAll('.ai-cta-mob').forEach(b => b.innerHTML = t.ai_cta_mob);
+
+  // Panel titles
+  const psub = document.querySelector('#panel-stations .ph p');
+  const ph2  = document.querySelector('#panel-stations .ph h2');
+  if(ph2) ph2.textContent = t.pnl_stations;
+  if(psub) psub.textContent = t.pnl_stations_sub;
+  const rs = document.querySelector('#panel-rechner .ph p');
+  const rh = document.querySelector('#panel-rechner .ph h2');
+  if(rh) rh.textContent = t.pnl_save;
+  if(rs) rs.textContent = t.pnl_save_sub;
+  const ks = document.querySelector('#panel-ki .ph p');
+  const kh = document.querySelector('#panel-ki .ph h2');
+  if(kh) kh.textContent = t.pnl_ki;
+  if(ks) ks.textContent = t.pnl_ki_sub;
+
+  // Tabs
+  const tabs = document.querySelectorAll('.tab');
+  if(tabs[0]) tabs[0].textContent = t.tab_border;
+  if(tabs[1]) tabs[1].textContent = t.tab_tax;
+  if(tabs[2]) tabs[2].textContent = t.tab_ev;
+
+  // Grenzrechner labels
+  const labels = document.querySelectorAll('.fl');
+  const labelMap = [t.lbl_startort, t.lbl_fuel, t.lbl_dest, t.lbl_volume, t.lbl_use, t.lbl_km];
+  labels.forEach((el,i) => { if(labelMap[i]) el.textContent = labelMap[i]; });
+
+  // Destination options
+  const gziel = document.getElementById('g-ziel');
+  if(gziel) { gziel.options[0].text = t.dest_pl; gziel.options[1].text = t.dest_cz; }
+
+  // Result area
+  const rl = document.getElementById('g-status');
+  const rsub = document.querySelector('.rsub');
+  if(rsub) rsub.textContent = t.result_sub;
+  const rdets = document.querySelectorAll('.rdet');
+  if(rdets[0]) rdets[0].childNodes[0].textContent = t.result_gross;
+  if(rdets[1]) rdets[1].childNodes[0].textContent = t.result_cost;
+  if(rdets[2]) rdets[2].childNodes[0].textContent = t.result_be;
+
+  // KI input placeholder
+  const kiInp = document.getElementById('ki-input');
+  if(kiInp) kiInp.placeholder = t.ki_placeholder;
+
+  // KI greeting
+  const gr = document.getElementById('ki-greeting');
+  if(gr) gr.textContent = userName ? t.ki_greeting_pre + ' · Hallo, ' + userName + '!' : t.ki_greeting_pre;
+
+  // Quick questions (only KI panel)
+  const qqBtns = document.querySelectorAll('.ki-qq');
+  qqBtns.forEach((btn, i) => {
+    if(t.qs[i]) { btn.textContent = t.qs[i]; btn.onclick = () => askKI(t.qp[i]); }
+  });
+
+  // Canister label
+  const canLabel = document.getElementById('canister-label');
+  if(canLabel) canLabel.textContent = t.lbl_canister;
+
+  // Cigarette egg label
+  const cigBtn = document.getElementById('cig-egg-btn');
+  if(cigBtn) cigBtn.textContent = t.cig_egg;
+
+  // Speech
+  if(recognition) try{ recognition.lang = cfg.code; }catch(e){}
+  console.log('🌐 Sprache:', l, '→', cfg.kiLang);
+}
+
+function initLang() {
+  setLang(currentLang);
+}
+document.getElementById('themeBtn').addEventListener('click',()=>{
+  document.body.style.filter=document.body.style.filter?'':'invert(.92) hue-rotate(180deg)';
+});
+
+// ══════════════════════════════════════
+// MOBILE LEGAL LINKS
+// ══════════════════════════════════════
+function checkMobileLayout(){
+  const mob=document.getElementById('mob-legal');
+  if(mob) mob.style.display=window.innerWidth<=900?'flex':'none';
+  // On mobile: hide market strip (already CSS), show mob-legal
+}
+
+// ══════════════════════════════════════
+// WETTER (Open-Meteo, kostenlos, kein Key)
+// ══════════════════════════════════════
+const WX_LOCS = [
+  {id:'goerlitz',  name:'Görlitz',    lat:51.1534, lng:14.9853},
+  {id:'zgorzelec', name:'Zgorzelec',  lat:51.1517, lng:15.0055},
+  {id:'hradek',    name:'Hrádek',     lat:50.8543, lng:14.8455},
+];
+let wxData = {};   // { goerlitz: {temp,emoji,wind,desc}, ... }
+let stauData = []; // [{road, items:[]}]
+
+function wxCode(c){
+  if(c===0) return{e:'☀️',d:'klar'};
+  if(c<=3)  return{e:'⛅',d:'bewölkt'};
+  if(c<=48) return{e:'🌫',d:'Nebel'};
+  if(c<=67) return{e:'🌧',d:'Regen'};
+  if(c<=77) return{e:'❄️',d:'Schnee'};
+  if(c<=82) return{e:'🌦',d:'Schauer'};
+  return     {e:'⛈',d:'Gewitter'};
+}
+
+async function loadWeather(){
+  try{
+    await Promise.all(WX_LOCS.map(async loc=>{
+      const url=`https://api.open-meteo.com/v1/forecast?latitude=${loc.lat}&longitude=${loc.lng}&current=temperature_2m,weather_code,wind_speed_10m,precipitation&timezone=Europe%2FBerlin&forecast_days=1`;
+      const r=await fetch(url,{signal:AbortSignal.timeout(6000)});
+      const d=await r.json();
+      const cur=d.current;
+      const wx=wxCode(cur.weather_code);
+      wxData[loc.id]={
+        name:loc.name,
+        temp:Math.round(cur.temperature_2m),
+        emoji:wx.e, desc:wx.d,
+        wind:Math.round(cur.wind_speed_10m),
+        rain:cur.precipitation,
+      };
+      // Update KI panel chip
+      const chip=document.getElementById('wx-'+loc.id);
+      if(chip){
+        chip.innerHTML=`${wx.e} <b>${loc.name}</b> ${Math.round(cur.temperature_2m)}°C`;
+        chip.classList.remove('load');
+      }
+    }));
+    // Update home pill
+    const g=wxData.goerlitz;
+    if(g){
+      const el=document.getElementById('wx-home-txt');
+      if(el) el.innerHTML=`${g.emoji} <b>${g.temp}°C</b> · ${g.desc} · ${g.wind}km/h`;
+    }
+    console.log('✅ Wetter geladen:',Object.keys(wxData).length,'Orte');
+  }catch(e){console.warn('Wetter:',e.message)}
+}
+
+// ══════════════════════════════════════
+// STAU / BAUSTELLEN (Autobahn-API, kostenlos)
+// ══════════════════════════════════════
+const AUTOBAHN_ROADS = ['A4','A15'];
+
+async function loadTraffic(){
+  stauData=[];
+  let totalItems=0;
+  try{
+    await Promise.all(AUTOBAHN_ROADS.map(async road=>{
+      const [w,r]=await Promise.all([
+        fetch(`https://verkehr.autobahn.de/o/autobahn/${road}/services/warning`,{signal:AbortSignal.timeout(5000)}).then(x=>x.ok?x.json():{warning:[]}),
+        fetch(`https://verkehr.autobahn.de/o/autobahn/${road}/services/roadworks`,{signal:AbortSignal.timeout(5000)}).then(x=>x.ok?x.json():{roadworks:[]}),
+      ]).catch(()=>[{warning:[]},{roadworks:[]}]);
+      const items=[
+        ...(w.warning||[]).map(x=>({type:'warn',title:x.title||'Warnung',desc:(x.description||[]).join(' ').slice(0,80)})),
+        ...(r.roadworks||[]).map(x=>({type:'work',title:x.title||'Baustelle',desc:(x.description||[]).join(' ').slice(0,80)})),
+      ];
+      if(items.length) stauData.push({road,items});
+      totalItems+=items.length;
+    }));
+    // Update A4 chip
+    const chip=document.getElementById('wx-a4');
+    if(chip){
+      const a4=stauData.find(s=>s.road==='A4');
+      if(a4&&a4.items.length){
+        chip.innerHTML=`⚠️ <b>A4</b> ${a4.items.length} Meldung${a4.items.length>1?'en':''}`;
+        chip.classList.add('warn');chip.classList.remove('load','good');
+      }else{
+        chip.innerHTML=`✅ <b>A4</b> frei`;
+        chip.classList.add('good');chip.classList.remove('load','warn');
+      }
+    }
+    console.log('✅ Stau/Baustellen:',totalItems,'Meldungen auf',AUTOBAHN_ROADS.join('+'));
+  }catch(e){console.warn('Autobahn-API:',e.message)}
+}
+
+// Grenzrechner-Kontext für KI
+function buildGrenzContext(){
+  try{
+    const lit = +document.getElementById('g-lit')?.textContent || 60;
+    const use = +document.getElementById('g-use')?.value || 7;
+    const km  = +document.getElementById('g-km')?.value  || 8;
+    const ziel = document.getElementById('g-ziel')?.value || 'pl';
+    const f   = currentFuel;
+    const p   = PRICES[f] || PRICES.diesel;
+    const diff = p.de - p[ziel];
+    const gross = diff * lit;
+    const cost = (km*2/100) * use * p.de;
+    const net  = gross - cost;
+    const land = ziel==='pl'?'Polen':'Tschechien';
+    if(diff <= 0) return `
+Grenzrechner: ${land} ist aktuell nicht günstiger als Deutschland.`;
+    return `
+Grenzrechner (aktuell): ${lit}L ${p.label||'Diesel'} nach ${land} → Brutto ${gross.toFixed(2)}€, Fahrtkosten ${cost.toFixed(2)}€, Netto-Ersparnis ${net.toFixed(2)}€. ${net>5?'LOHNT SICH.':'Lohnt knapp.'}`;
+  }catch(e){ return ''; }
+}
+
+// Baue Kontext-String für KI-Prompt
+function buildWeatherTrafficContext(){
+  const wx=Object.values(wxData).map(w=>`${w.name}: ${w.emoji} ${w.temp}°C, ${w.desc}, Wind ${w.wind}km/h`).join(' · ');
+  const stau=stauData.length===0
+    ?'A4 und A15: keine Meldungen, freie Fahrt'
+    :stauData.map(s=>`${s.road}: ${s.items.map(i=>i.title).join(', ')}`).join(' · ');
+  return wx?`
+Aktuelles Wetter: ${wx}
+Verkehr: ${stau}`:'';
+}
+
+// ══════════════════════════════════════
+// VOICE INPUT + OUTPUT + OUTPUT
+// ══════════════════════════════════════
+const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+let recognition = null;
+let isListening = false;
+let speakerOn = localStorage.getItem('bpt_speaker') !== 'off'; // default: on
+let lastSpokenText = '';
+
+// Init speaker button state
+function initSpeaker(){
+  const btn = document.getElementById('speakerBtn');
+  if(btn) btn.className = 'ki-speaker' + (speakerOn ? ' on' : '');
+  if(btn) btn.innerHTML = speakerOn ? '🔊 Ton' : '🔇 Ton';
+}
+function toggleSpeaker(){
+  speakerOn = !speakerOn;
+  localStorage.setItem('bpt_speaker', speakerOn ? 'on' : 'off');
+  initSpeaker();
+  if(!speakerOn) window.speechSynthesis?.cancel();
+}
+
+// SPEECH OUTPUT
+function speak(text){
+  if(!speakerOn || !window.speechSynthesis) return;
+  window.speechSynthesis.cancel();
+  // Strip HTML tags
+  const clean = text.replace(/<[^>]+>/g,'').replace(/&nbsp;/g,' ').trim();
+  if(!clean || clean.length < 3) return;
+  lastSpokenText = clean;
+  const utt = new SpeechSynthesisUtterance(clean);
+  utt.lang = (LANG_CFG[currentLang] || LANG_CFG.de).code;
+  utt.rate = 1.05;
+  utt.pitch = 1.0;
+  // Wait for voices to load, pick German voice
+  const setVoice = () => {
+    const voices = window.speechSynthesis.getVoices();
+    const langCode = (LANG_CFG[currentLang] || LANG_CFG.de).code;
+  const de = voices.find(v=>v.lang===langCode&&v.localService) ||
+               voices.find(v=>v.lang===langCode) ||
+               voices.find(v=>v.lang.startsWith(langCode.split('-')[0]));
+    if(de) utt.voice = de;
+    window.speechSynthesis.speak(utt);
+  };
+  if(window.speechSynthesis.getVoices().length){setVoice();}
+  else{window.speechSynthesis.addEventListener('voiceschanged',setVoice,{once:true});}
+}
+
+// SPEECH INPUT
+function toggleVoice(){
+  if(!SR){
+    alert('Spracherkennung nicht verfügbar.\nBitte Chrome, Edge oder Safari verwenden.');
+    return;
+  }
+  if(isListening){ stopListening(); return; }
+  startListening();
+}
+
+function startListening(){
+  if(isListening) return;
+  recognition = new SR();
+  recognition.lang = (LANG_CFG[currentLang] || LANG_CFG.de).code;
+  recognition.continuous = false;
+  recognition.interimResults = true;
+  recognition.maxAlternatives = 1;
+
+  recognition.onstart = () => {
+    isListening = true;
+    const btn = document.getElementById('kimic');
+    if(btn) btn.classList.add('listening');
+    const inp = document.getElementById('ki-input');
+    if(inp){ inp.placeholder = '🔴 Spreche …'; inp.value=''; }
+  };
+
+  recognition.onresult = (e) => {
+    const transcript = Array.from(e.results).map(r=>r[0].transcript).join('');
+    const inp = document.getElementById('ki-input');
+    if(inp) inp.value = transcript;
+    if(e.results[e.results.length-1].isFinal){
+      stopListening();
+      setTimeout(sendKI, 200);
+    }
+  };
+
+  recognition.onerror = (e) => {
+    console.warn('Voice error:', e.error);
+    stopListening();
+    if(e.error === 'not-allowed'){
+      alert('Mikrofon-Zugriff verweigert.\nBitte in den Browser-Einstellungen erlauben.');
+    }
+  };
+
+  recognition.onend = () => { stopListening(); };
+
+  try{ recognition.start(); }
+  catch(e){ console.warn('Recognition start error:', e); stopListening(); }
+}
+
+function stopListening(){
+  isListening = false;
+  try{ recognition?.stop(); }catch(e){}
+  const btn = document.getElementById('kimic');
+  if(btn) btn.classList.remove('listening');
+  const inp = document.getElementById('ki-input');
+  if(inp && inp.placeholder.includes('Spreche')) inp.placeholder = 'Frag mich etwas…';
+}
+
+// ══════════════════════════════════════
+// INIT
+// ══════════════════════════════════════
+window.addEventListener('resize',()=>{
+  try{if(bptMap)bptMap.invalidateSize()}catch(e){}
+  checkMobileLayout();
+});
+// Boot sequence
+initMap();
+initSpeaker();
+initLang();
+// Show default location marker after map init
+setTimeout(()=>{
+  try{ showUserMarker(51.1534,14.9853); }catch(e){}
+},500);
+checkMobileLayout();
+updateAICard();
+gcalc();
+setTimeout(showCookieBanner, 1200);
+setTimeout(()=>{loadRates();refreshPrices();}, 800);
+setTimeout(()=>{loadWeather();loadTraffic();}, 1200);
+// Stündlich aktualisieren
+setInterval(loadWeather, 60*60*1000);
+setInterval(loadTraffic, 15*60*1000);
+</script>
+</body>
+</html>
