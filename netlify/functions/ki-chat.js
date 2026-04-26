@@ -1,4 +1,4 @@
-// netlify/functions/ki-chat.js
+// netlify/functions/ki-chat.js 
 // Zapfi — Der Spritflüsterer · BestPriceTank.de
 
 exports.handler = async (event) => {
