@@ -1,0 +1,67 @@
+// /.netlify/functions/ocm-stations
+// Proxy für Open Charge Map API — Key bleibt server-side
+// Environment Variable: OCM_API_KEY
+
+exports.handler = async (event) => {
+  const key = process.env.OCM_API_KEY;
+
+  if (!key) {
+    return {
+      statusCode: 500,
+      body: JSON.stringify({ error: 'OCM_API_KEY not configured' }),
+    };
+  }
+
+  // Parameter aus Frontend übernehmen + validieren
+  const { lat, lng, rad = '35' } = event.queryStringParameters || {};
+
+  if (!lat || !lng) {
+    return {
+      statusCode: 400,
+      body: JSON.stringify({ error: 'lat and lng required' }),
+    };
+  }
+
+  // Sicherheit: nur sinnvolle Koordinaten und Radius
+  const latitude  = Math.max(-90,  Math.min(90,  parseFloat(lat)));
+  const longitude = Math.max(-180, Math.min(180, parseFloat(lng)));
+  const radius    = Math.max(5,    Math.min(100, parseInt(rad)));
+
+  const url = `https://api.openchargemap.io/v3/poi/?output=json`
+    + `&latitude=${latitude}&longitude=${longitude}`
+    + `&distance=${radius}&distanceunit=km`
+    + `&maxresults=60&compact=true&verbose=false`
+    + `&countryid=1,98,30`   // DE=1, PL=98, CZ=30
+    + `&key=${key}`;
+
+  try {
+    const res = await fetch(url, {
+      signal: AbortSignal.timeout(9000),
+      headers: { 'Accept': 'application/json' },
+    });
+
+    if (!res.ok) {
+      return {
+        statusCode: res.status,
+        body: JSON.stringify({ error: `OCM API error: ${res.status}` }),
+      };
+    }
+
+    const data = await res.json();
+
+    return {
+      statusCode: 200,
+      headers: {
+        'Content-Type': 'application/json',
+        'Cache-Control': 'public, max-age=900', // 15 Min cachen — OCM-Daten ändern sich selten
+        'Access-Control-Allow-Origin': 'https://bestpricetank.de',
+      },
+      body: JSON.stringify(data),
+    };
+  } catch (e) {
+    return {
+      statusCode: 502,
+      body: JSON.stringify({ error: e.message }),
+    };
+  }
+};
