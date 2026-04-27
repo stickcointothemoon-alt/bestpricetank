@@ -1,6 +1,7 @@
 // /.netlify/functions/ocm-stations
 // Proxy für Open Charge Map API — Key bleibt server-side
 // Environment Variable: OCM_API_KEY
+// Doku: https://openchargemap.org/develop/api
 
 exports.handler = async (event) => {
   const key = process.env.OCM_API_KEY;
@@ -12,7 +13,6 @@ exports.handler = async (event) => {
     };
   }
 
-  // Parameter aus Frontend übernehmen + validieren
   const { lat, lng, rad = '35' } = event.queryStringParameters || {};
 
   if (!lat || !lng) {
@@ -22,22 +22,28 @@ exports.handler = async (event) => {
     };
   }
 
-  // Sicherheit: nur sinnvolle Koordinaten und Radius
+  // Koordinaten und Radius validieren
   const latitude  = Math.max(-90,  Math.min(90,  parseFloat(lat)));
   const longitude = Math.max(-180, Math.min(180, parseFloat(lng)));
   const radius    = Math.max(5,    Math.min(100, parseInt(rad)));
 
+  // WICHTIG: compact=true weglassen — sonst kommen nur IDs statt Objekte
+  // (ConnectionType.Title, OperatorInfo.Title etc. wären undefined)
+  // verbose=false entfernt nur null-Felder, behält aber alle Objekte
   const url = `https://api.openchargemap.io/v3/poi/?output=json`
     + `&latitude=${latitude}&longitude=${longitude}`
     + `&distance=${radius}&distanceunit=km`
-    + `&maxresults=60&compact=true&verbose=false`
-    + `&countryid=1,98,30`   // DE=1, PL=98, CZ=30
-    + `&key=${key}`;
+    + `&maxresults=60&verbose=false`
+    + `&countryid=1,98,30`; // DE=1, PL=98, CZ=30
 
   try {
     const res = await fetch(url, {
       signal: AbortSignal.timeout(9000),
-      headers: { 'Accept': 'application/json' },
+      headers: {
+        'Accept':     'application/json',
+        'X-API-Key':  key,            // Key als Header — sicherer als URL-Param
+        'User-Agent': 'BestPriceTank/1.0 (bestpricetank.de)',
+      },
     });
 
     if (!res.ok) {
@@ -53,7 +59,7 @@ exports.handler = async (event) => {
       statusCode: 200,
       headers: {
         'Content-Type': 'application/json',
-        'Cache-Control': 'public, max-age=900', // 15 Min cachen — OCM-Daten ändern sich selten
+        'Cache-Control': 'public, max-age=900', // 15 Min cachen
         'Access-Control-Allow-Origin': 'https://bestpricetank.de',
       },
       body: JSON.stringify(data),
