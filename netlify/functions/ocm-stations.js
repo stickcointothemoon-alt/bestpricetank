@@ -1,4 +1,4 @@
-// netlify/functions/ocm-stations.js
+// netlify/functions/ocm-stations.js 
 // Open Charge Map API — kostenlos, kein Key nötig für Basis-Abfragen
 // Docs: https://openchargemap.org/site/develop/api
 
