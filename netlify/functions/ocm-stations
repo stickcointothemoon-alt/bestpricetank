@@ -1,73 +1,91 @@
-// /.netlify/functions/ocm-stations
-// Proxy für Open Charge Map API — Key bleibt server-side
-// Environment Variable: OCM_API_KEY
-// Doku: https://openchargemap.org/develop/api
+// netlify/functions/ocm-stations.js
+// Open Charge Map API — kostenlos, kein Key nötig für Basis-Abfragen
+// Docs: https://openchargemap.org/site/develop/api
 
 exports.handler = async (event) => {
-  const key = process.env.OCM_API_KEY;
+  const headers = {
+    'Content-Type': 'application/json',
+    'Access-Control-Allow-Origin': '*',
+  };
 
-  if (!key) {
-    return {
-      statusCode: 500,
-      body: JSON.stringify({ error: 'OCM_API_KEY not configured' }),
-    };
-  }
+  const { lat = 51.1534, lng = 14.9853, rad = 50 } = event.queryStringParameters || {};
 
-  const { lat, lng, rad = '35' } = event.queryStringParameters || {};
+  // Open Charge Map API — kostenlos ohne Key (rate-limited), mit Key besser
+  const OCM_KEY = process.env.OCM_API_KEY || ''; // optional in Netlify Env
+  const keyParam = OCM_KEY ? `&key=${OCM_KEY}` : '';
 
-  if (!lat || !lng) {
-    return {
-      statusCode: 400,
-      body: JSON.stringify({ error: 'lat and lng required' }),
-    };
-  }
-
-  // Koordinaten und Radius validieren
-  const latitude  = Math.max(-90,  Math.min(90,  parseFloat(lat)));
-  const longitude = Math.max(-180, Math.min(180, parseFloat(lng)));
-  const radius    = Math.max(5,    Math.min(100, parseInt(rad)));
-
-  // WICHTIG: compact=true weglassen — sonst kommen nur IDs statt Objekte
-  // (ConnectionType.Title, OperatorInfo.Title etc. wären undefined)
-  // verbose=false entfernt nur null-Felder, behält aber alle Objekte
-  const url = `https://api.openchargemap.io/v3/poi/?output=json`
-    + `&latitude=${latitude}&longitude=${longitude}`
-    + `&distance=${radius}&distanceunit=km`
-    + `&maxresults=60&verbose=false`
-    + `&countryid=1,98,30`; // DE=1, PL=98, CZ=30
+  const url = `https://api.openchargemap.io/v3/poi/?` +
+    `output=json` +
+    `&latitude=${lat}` +
+    `&longitude=${lng}` +
+    `&distance=${Math.min(+rad, 100)}` +
+    `&distanceunit=KM` +
+    `&maxresults=60` +
+    `&countrycode=DE,PL,CZ` +
+    `&statustype=50` +            // 50 = Operational only
+    `&levelid=3` +                // Level 2 + DC Fast only (sinnvoll)
+    `&compact=false` +
+    `&verbose=false` +
+    keyParam;
 
   try {
     const res = await fetch(url, {
-      signal: AbortSignal.timeout(9000),
       headers: {
-        'Accept':     'application/json',
-        'X-API-Key':  key,            // Key als Header — sicherer als URL-Param
         'User-Agent': 'BestPriceTank/1.0 (bestpricetank.de)',
+        'Accept': 'application/json',
       },
+      signal: AbortSignal.timeout(9000),
     });
 
     if (!res.ok) {
-      return {
-        statusCode: res.status,
-        body: JSON.stringify({ error: `OCM API error: ${res.status}` }),
-      };
+      throw new Error(`OCM HTTP ${res.status}`);
     }
 
     const data = await res.json();
 
+    if (!Array.isArray(data)) {
+      throw new Error('Ungültige OCM-Antwort');
+    }
+
+    // Nur relevante Felder zurückgeben (spart Bandbreite)
+    const filtered = data
+      .filter(s => s.AddressInfo?.Latitude && s.AddressInfo?.Longitude)
+      .map(s => ({
+        ID: s.ID,
+        AddressInfo: {
+          Title: s.AddressInfo.Title,
+          Latitude: s.AddressInfo.Latitude,
+          Longitude: s.AddressInfo.Longitude,
+          CountryID: s.AddressInfo.CountryID,
+        },
+        OperatorInfo: {
+          Title: s.OperatorInfo?.Title || 'Unbekannt',
+        },
+        StatusType: {
+          Title: s.StatusType?.Title || 'Unbekannt',
+        },
+        NumberOfPoints: s.NumberOfPoints || 1,
+        Connections: (s.Connections || []).map(c => ({
+          ConnectionType: { Title: c.ConnectionType?.Title || '' },
+          PowerKW: c.PowerKW || 0,
+          Quantity: c.Quantity || 1,
+        })),
+      }));
+
+    console.log(`✅ OCM: ${filtered.length} Ladesäulen geladen (lat:${lat}, rad:${rad}km)`);
+
     return {
       statusCode: 200,
-      headers: {
-        'Content-Type': 'application/json',
-        'Cache-Control': 'public, max-age=900', // 15 Min cachen
-        'Access-Control-Allow-Origin': 'https://bestpricetank.de',
-      },
-      body: JSON.stringify(data),
+      headers,
+      body: JSON.stringify(filtered),
     };
-  } catch (e) {
+
+  } catch (err) {
+    console.error('OCM Fehler:', err.message);
     return {
-      statusCode: 502,
-      body: JSON.stringify({ error: e.message }),
+      statusCode: 500,
+      headers,
+      body: JSON.stringify({ error: err.message }),
     };
   }
 };
