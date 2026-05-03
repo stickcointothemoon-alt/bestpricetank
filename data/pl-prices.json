@@ -1,9 +1,10 @@
 {
-  "updated": "22.04.2026",
-  "source": "Citronex Zgorzelec",
+  "updated": "03.05.2026",
+  "source": "Dyskont Paliwowy / ONO",
   "citronex": {
-    "diesel": 6.69,
-    "e5": 5.95,
+    "diesel": 7.29,
+    "e5": 6.45,
+    "e10": 6.95,
     "lpg": 3.79,
     "adblue": 4.19
   },
@@ -17,8 +18,8 @@
     "ab_tank": 0.01
   },
   "cz": {
-    "e5": 38.90,
-    "diesel": 38.90,
-    "lpg": 19.80
+    "e5": 39.90,
+    "diesel": 40.90,
+    "lpg": 22.50
   }
 }
