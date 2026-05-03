@@ -1,4 +1,4 @@
-// netlify/functions/dp-prices.js
+// netlify/functions/dp-prices.js 
 // Dyskont Paliwowy Live-Preise — mit persistentem Netlify-Blobs-Cache
 // Verbesserungen gegenüber v1:
 //   ✅ Netlify Blobs statt In-Memory-Cache (überlebt Cold Starts)
