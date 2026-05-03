@@ -1078,10 +1078,10 @@ const TK_KEY = '4b799919-31cf-4e2d-baa4-b84f7c4bcae5';
 
 
 const PRICES = {
-  diesel:{de:1.649,pl:1.440,cz:1.477,label:'Diesel'},
-  e5:    {de:1.699,pl:1.479,cz:1.497,label:'Super E5'},
-  e10:   {de:1.669,pl:1.459,cz:1.487,label:'Super E10'},
-  lpg:   {de:0.979,pl:0.937,cz:0.813,label:'LPG'}
+  diesel:{de:1.649,pl:1.440,cz:1.619,label:'Diesel'},
+  e5:    {de:1.699,pl:1.479,cz:1.579,label:'Super E5'},
+  e10:   {de:1.669,pl:1.459,cz:1.659,label:'Super E10'},
+  lpg:   {de:0.979,pl:0.937,cz:0.891,label:'LPG'}
 };
 const TAX = {
   diesel:{de:{p:2.359,net:1.366,eng:.4704,co2:.1458,vat:.3766},pl:{p:1.577,net:1.167,eng:.0753,co2:.040,vat:.2949},cz:{p:1.597,net:1.192,eng:.0780,co2:.050,vat:.2772}},
@@ -1205,11 +1205,11 @@ let STATIONS = [
   // BP Kołbaskowo (258.3km)
   {id:'bp_kolb',  name:'BP Kołbaskowo',                 country:'pl',lat:53.4485,lng:14.3941,dist:258.3,diesel:1.450,e5:1.480,e10:1.460,lpg:0,    logo:'BP',best:false},
   // ── ČESKÁ REPUBLIKA (CZ) ──────────────────────────────────────
-  {id:'mol',      name:'MOL Hrádek n.N.',               country:'cz',lat:50.8543,lng:14.8455,dist:18.5, diesel:1.477,e5:1.497,e10:1.487,lpg:0.813,logo:'M', best:false},
-  {id:'eurooil',  name:'EuroOil Hrádek',                country:'cz',lat:50.8559,lng:14.8464,dist:18.7, diesel:1.497,e5:1.517,e10:1.507,lpg:0.829,logo:'E', best:false},
-  {id:'ono',      name:'ONO Hrádek n.N.',               country:'cz',lat:50.8501,lng:14.8371,dist:18.8, diesel:1.481,e5:1.503,e10:1.491,lpg:0.821,logo:'ON',best:false},
-  {id:'benzina',  name:'Benzina Hrádek',                country:'cz',lat:50.8520,lng:14.8420,dist:18.6, diesel:1.483,e5:1.505,e10:1.493,lpg:0.819,logo:'BZ',best:false},
-  {id:'shell_cz', name:'Shell Žitava / CZ',             country:'cz',lat:50.8968,lng:14.7699,dist:24.1, diesel:1.473,e5:1.495,e10:1.483,lpg:0.818,logo:'🐚',best:false},
+ {id:'mol',      name:'MOL Hrádek n.N.',               country:'cz',lat:50.8543,lng:14.8455,dist:18.5, diesel:1.619,e5:1.579,e10:1.659,lpg:0.891,logo:'M', best:false},
+  {id:'eurooil',  name:'EuroOil Hrádek',                country:'cz',lat:50.8559,lng:14.8464,dist:18.7, diesel:1.639,e5:1.599,e10:1.679,lpg:0.907,logo:'E', best:false},
+  {id:'ono',      name:'ONO Hrádek n.N.',               country:'cz',lat:50.8501,lng:14.8371,dist:18.8, diesel:1.619,e5:1.579,e10:1.659,lpg:0.891,logo:'ON',best:false},
+  {id:'benzina',  name:'Benzina Hrádek',                country:'cz',lat:50.8520,lng:14.8420,dist:18.6, diesel:1.623,e5:1.583,e10:1.663,lpg:0.887,logo:'BZ',best:false},
+  {id:'shell_cz', name:'Shell Žitava / CZ',             country:'cz',lat:50.8968,lng:14.7699,dist:24.1, diesel:1.615,e5:1.575,e10:1.655,lpg:0.887,logo:'🐚',best:false},
   // ── DEUTSCHLAND (DE) — TK-API liefert echte Positionen ───────
   {id:'jet_gr',   name:'JET Görlitz',                   country:'de',lat:51.1543,lng:14.9754,dist:2.1,  diesel:1.639,e5:1.689,e10:1.659,lpg:0.969,logo:'J', best:false,fallback:true},
   {id:'total_gr', name:'TotalEnergies Görlitz',         country:'de',lat:51.1607,lng:14.9720,dist:2.8,  diesel:1.659,e5:1.709,e10:1.679,lpg:0.989,logo:'T', best:false,fallback:true},
