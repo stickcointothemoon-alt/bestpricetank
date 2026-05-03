@@ -1075,7 +1075,7 @@ select option{background:#0a1628}
 // DATA
 // ══════════════════════════════════════
 const TK_KEY = '4b799919-31cf-4e2d-baa4-b84f7c4bcae5';
-const ER_KEY = '3b6be993697eeea74f5db4a0';
+
 
 const PRICES = {
   diesel:{de:1.649,pl:1.440,cz:1.477,label:'Diesel'},
@@ -1408,14 +1408,12 @@ function haversine(a,b){
 
 async function loadRates(){
   try{
-    const r=await fetch(`https://v6.exchangerate-api.com/v6/${ER_KEY}/latest/EUR`);
-    const d=await r.json();
-    if(d.result==='success'){
-      BPT_RATES.PLN=+d.conversion_rates.PLN.toFixed(3);
-      BPT_RATES.CZK=+d.conversion_rates.CZK.toFixed(3);
-      updateStrip();
-      renderMapMarkers(); // refresh PLN/CZK sub-prices
-    }
+    const r = await fetch('/.netlify/functions/dp-prices');
+    const d = await r.json();
+    if(d.pln_eur_rate > 0) BPT_RATES.PLN = d.pln_eur_rate;
+    if(d.czk_eur_rate > 0) BPT_RATES.CZK = d.czk_eur_rate;
+    updateStrip();
+    renderMapMarkers();
   }catch(e){}
 }
 
@@ -1489,7 +1487,7 @@ async function refreshPrices(){
   }catch(e){console.warn('TK Fehler:',e.message)}
   // Load PL stations from Dyskont Paliwowy Live API
   try{
-    const dpurl=`/.netlify/functions/dp-prices?lat=${coords.lat}&lng=${coords.lng}&rad=${rad}`;
+    const dpurl = `/.netlify/functions/dp-prices`;
     const dpres=await fetch(dpurl,{cache:'no-store',signal:AbortSignal.timeout(8000)});
     if(dpres.ok){
       const dpdata=await dpres.json();
@@ -1505,7 +1503,7 @@ async function refreshPrices(){
         dpdata.stations.forEach(s=>{
           // dist: vom User wenn GPS, sonst von Görlitz
           const base = (userLocationCoords?.lat) ? userLocationCoords : GOERLITZ;
-          const km = s.dist_km || +haversine({lat:base.lat,lng:base.lng},{lat:s.lat,lng:s.lng}).toFixed(1);
+          const km = +haversine({lat:base.lat,lng:base.lng},{lat:s.lat,lng:s.lng}).toFixed(1);
           STATIONS.push({
             ...s,
             dist: km,
