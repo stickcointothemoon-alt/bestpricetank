@@ -2,7 +2,7 @@
   "name": "bestpricetank",
   "version": "1.0.0",
   "dependencies": {
-    "@netlify/blobs": "^8.1.0",
+    "@netlify/blobs": "^10.7.4",
     "node-fetch": "^3.3.2"
   }
 }
