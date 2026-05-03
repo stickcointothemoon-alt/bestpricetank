@@ -1,24 +1,15 @@
 // netlify/functions/dp-prices.js
 // Dyskont Paliwowy Live-Preise
-// Caching: Netlify CDN Edge-Cache (s-maxage) — kein Blobs nötig
-// Die Netlify CDN cached diese Function-Antwort 10 Min. am Edge,
-// d.h. die DP-API wird max. 6x/Stunde aufgerufen, egal wie viel Traffic.
+// v4 — CDN-Cache funktioniert jetzt korrekt:
+//   - Kein lat/lng/rad Filter mehr → eine feste URL → ein Cache-Eintrag für alle Nutzer
+//   - Radius-Filter läuft im Frontend per Haversine (war dort sowieso schon vorhanden)
+//   - NBP Nationalbank für EUR/PLN (kostenlos, unlimitiert, kein Key)
 
 const CACHE_SECONDS = 600; // 10 Minuten CDN-Cache
 
 const DP_API_URL  = 'https://api.dyskontpaliwowy.pl/api/v1/station-prices';
 const NBP_API_URL = 'https://api.nbp.pl/api/exchangerates/rates/a/eur/last/1/?format=json';
 
-// Haversine-Distanz in km
-function dist(lat1, lng1, lat2, lng2) {
-  const R = 6371, r = x => x * Math.PI / 180;
-  const dLat = r(lat2 - lat1), dLng = r(lng2 - lng1);
-  const a = Math.sin(dLat/2)**2 + Math.cos(r(lat1)) * Math.cos(r(lat2)) * Math.sin(dLng/2)**2;
-  return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
-}
-
-// EUR/PLN Kurs von der Polnischen Nationalbank
-// Kostenlos, unlimitiert, kein Key — last/1 funktioniert auch am Wochenende
 async function fetchPlnRate() {
   try {
     const res = await fetch(NBP_API_URL, { signal: AbortSignal.timeout(4000) });
@@ -33,19 +24,16 @@ async function fetchPlnRate() {
   }
 }
 
-exports.handler = async (event) => {
-  const params = event.queryStringParameters || {};
-
+exports.handler = async () => {
   const DP_KEY = process.env.DP_API_KEY;
   if (!DP_KEY) {
     return {
       statusCode: 200,
       headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' },
-      body: JSON.stringify({ status: 'no_key', message: 'DP_API_KEY fehlt im Netlify Dashboard', stations: [] }),
+      body: JSON.stringify({ status: 'no_key', stations: [] }),
     };
   }
 
-  // DP-API + NBP parallel — spart ~200ms
   let dpData, plnRate;
   try {
     [dpData, plnRate] = await Promise.all([
@@ -104,30 +92,13 @@ exports.handler = async (event) => {
       pln_eur_rate: plnRate,
     }));
 
-  const lat = parseFloat(params.lat) || null;
-  const lng = parseFloat(params.lng) || null;
-  const rad = parseFloat(params.rad) || 50;
-
-  let result = stations.map(s => ({
-    ...s,
-    dist_km: (lat && lng) ? +dist(lat, lng, s.lat, s.lng).toFixed(1) : null,
-  }));
-
-  if (lat && lng) {
-    result = result
-      .filter(s => s.dist_km <= rad)
-      .sort((a, b) => a.dist_km - b.dist_km);
-  }
-
-  console.log(`✅ DP: ${result.length} Stationen, Kurs: ${plnRate} PLN/EUR`);
+  console.log(`✅ DP: ${stations.length} Stationen, Kurs: ${plnRate} PLN/EUR`);
 
   return {
     statusCode: 200,
     headers: {
       'Content-Type': 'application/json',
       'Access-Control-Allow-Origin': '*',
-      // Netlify CDN cached die Antwort 10 Min. am Edge-Server
-      // Egal wie viele Nutzer gleichzeitig anfragen — Lambda läuft nur 1x alle 10 Min.
       'Cache-Control': `public, s-maxage=${CACHE_SECONDS}, max-age=120, stale-while-revalidate=60`,
       'Netlify-CDN-Cache-Control': `public, s-maxage=${CACHE_SECONDS}, stale-while-revalidate=60`,
     },
@@ -135,8 +106,8 @@ exports.handler = async (event) => {
       status:         'success',
       data_timestamp: dpData.data_timestamp,
       pln_eur_rate:   plnRate,
-      count:          result.length,
-      stations:       result,
+      count:          stations.length,
+      stations,       // alle Stationen, ungefiltert — Filter läuft im Frontend
     }),
   };
 };
