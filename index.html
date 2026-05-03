@@ -2674,6 +2674,32 @@ function setLang(l) {
   console.log('🌐 Sprache:', l, '→', cfg.kiLang);
 }
 
+  async function loadCZPrices(){
+  try{
+    const r = await fetch('/data/pl-prices.json');
+    const d = await r.json();
+    if(!d.cz) return;
+    const rate = BPT_RATES.CZK || 25.20;
+    const czDiesel = +(d.cz.diesel / rate).toFixed(3);
+    const czE5     = +(d.cz.e5     / rate).toFixed(3);
+    const czLpg    = +(d.cz.lpg    / rate).toFixed(3);
+    const czE10    = +((d.cz.diesel + 1.00) / rate).toFixed(3);
+    PRICES.diesel.cz = czDiesel;
+    PRICES.e5.cz     = czE5;
+    PRICES.e10.cz    = czE10;
+    PRICES.lpg.cz    = czLpg;
+    STATIONS.filter(s => s.country === 'cz').forEach(s => {
+      s.diesel = czDiesel;
+      s.e5     = czE5;
+      s.e10    = czE10;
+      s.lpg    = czLpg;
+    });
+    renderMapMarkers();
+    renderStationList();
+    console.log(`✅ CZ Preise: Diesel ${czDiesel}€ · E5 ${czE5}€ · Kurs ${rate} CZK/EUR`);
+  }catch(e){ console.warn('CZ Preise:', e.message); }
+}
+
 function initLang() {
   setLang(currentLang);
 }
@@ -2951,7 +2977,11 @@ setTimeout(()=>{
 checkMobileLayout();
 gcalc();
 setTimeout(showCookieBanner, 1200);
-setTimeout(()=>{loadRates();refreshPrices();}, 800);
+setTimeout(async ()=>{
+  await loadRates();
+  await loadCZPrices();
+  refreshPrices();
+}, 800);
 setTimeout(()=>{loadWeather();loadTraffic();}, 1200);
 // Preisalarm nach Preis-Load prüfen
 setTimeout(()=>{ if(priceAlert) checkPriceAlert(); }, 4000);
