@@ -1,18 +1,13 @@
-// netlify/functions/dp-prices.js 
-// Dyskont Paliwowy Live-Preise — mit persistentem Netlify-Blobs-Cache
-// Verbesserungen gegenüber v1:
-//   ✅ Netlify Blobs statt In-Memory-Cache (überlebt Cold Starts)
-//   ✅ NBP (Polnische Nationalbank) statt ExchangeRate-API (kostenlos, unlimitiert)
-//   ✅ Cache-Alter im Response mitgeben (für Frontend-Anzeige "Preise von vor X Min.")
-//   ✅ Robusteres Error-Handling mit gezielten Fallback-Stufen
+// netlify/functions/dp-prices.js
+// Dyskont Paliwowy Live-Preise
+// Caching: Netlify CDN Edge-Cache (s-maxage) — kein Blobs nötig
+// Die Netlify CDN cached diese Function-Antwort 10 Min. am Edge,
+// d.h. die DP-API wird max. 6x/Stunde aufgerufen, egal wie viel Traffic.
 
-const { getStore } = require('@netlify/blobs');
-
-const CACHE_KEY = 'prices-v1';
-const CACHE_MS  = 10 * 60 * 1000; // 10 Minuten
+const CACHE_SECONDS = 600; // 10 Minuten CDN-Cache
 
 const DP_API_URL  = 'https://api.dyskontpaliwowy.pl/api/v1/station-prices';
-const NBP_API_URL = 'https://api.nbp.pl/api/exchangerates/rates/a/eur/?format=json';
+const NBP_API_URL = 'https://api.nbp.pl/api/exchangerates/rates/a/eur/last/1/?format=json';
 
 // Haversine-Distanz in km
 function dist(lat1, lng1, lat2, lng2) {
@@ -22,61 +17,36 @@ function dist(lat1, lng1, lat2, lng2) {
   return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
 }
 
-// EUR/PLN Kurs von der Polnischen Nationalbank (NBP)
-// Kostenlos, unlimitiert, offizieller Mittelkurs — kein API-Key nötig
+// EUR/PLN Kurs von der Polnischen Nationalbank
+// Kostenlos, unlimitiert, kein Key — last/1 funktioniert auch am Wochenende
 async function fetchPlnRate() {
   try {
     const res = await fetch(NBP_API_URL, { signal: AbortSignal.timeout(4000) });
     if (!res.ok) throw new Error(`NBP ${res.status}`);
     const data = await res.json();
     const rate = data?.rates?.[0]?.mid;
-    if (!rate || isNaN(rate)) throw new Error('NBP: kein Kurs im Response');
+    if (!rate || isNaN(rate)) throw new Error('NBP: kein Kurs');
     return +rate.toFixed(4);
   } catch (err) {
-    console.warn('NBP Kurs-Fehler, Fallback 4.25:', err.message);
-    return 4.25; // Fallback — NBP aktualisiert nur an Werktagen
+    console.warn('NBP Fallback 4.25:', err.message);
+    return 4.25;
   }
 }
 
 exports.handler = async (event) => {
-  const headers = {
-    'Content-Type': 'application/json',
-    'Access-Control-Allow-Origin': '*',
-    'Cache-Control': 'public, max-age=120', // Browser-Cache 2 Min.
-  };
-
   const params = event.queryStringParameters || {};
 
-  // ── 1. Netlify Blobs Cache prüfen ────────────────────────────────────────
-  // Blobs überleben Cold Starts — funktioniert im Gegensatz zu let _cache = null
-  let store;
-  try {
-    store = getStore('dp-prices-cache');
-    const blob = await store.get(CACHE_KEY, { type: 'json' });
-
-    if (blob && (Date.now() - blob.ts) < CACHE_MS) {
-      console.log(`📦 Cache HIT — Alter: ${Math.round((Date.now() - blob.ts) / 1000)}s`);
-      return respond(blob.payload, params, headers, { cached: true, stale: false, cache_age_s: Math.round((Date.now() - blob.ts) / 1000) });
-    }
-  } catch (blobErr) {
-    // Blobs nicht verfügbar (z.B. lokale Entwicklung) — kein Problem, weiter
-    console.warn('Blobs nicht verfügbar:', blobErr.message);
-    store = null;
-  }
-
-  // ── 2. API-Key prüfen ────────────────────────────────────────────────────
   const DP_KEY = process.env.DP_API_KEY;
   if (!DP_KEY) {
     return {
       statusCode: 200,
-      headers,
-      body: JSON.stringify({ status: 'no_key', message: 'DP_API_KEY not set in Netlify Dashboard', stations: [] }),
+      headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' },
+      body: JSON.stringify({ status: 'no_key', message: 'DP_API_KEY fehlt im Netlify Dashboard', stations: [] }),
     };
   }
 
-  // ── 3. Dyskont Paliwowy API + NBP parallel abrufen ───────────────────────
+  // DP-API + NBP parallel — spart ~200ms
   let dpData, plnRate;
-
   try {
     [dpData, plnRate] = await Promise.all([
       fetch(DP_API_URL, {
@@ -90,30 +60,22 @@ exports.handler = async (event) => {
       fetchPlnRate(),
     ]);
   } catch (err) {
-    console.error('API-Fetch Fehler:', err.message);
-
-    // Stale Cache zurückgeben wenn vorhanden
-    if (store) {
-      try {
-        const staleBlob = await store.get(CACHE_KEY, { type: 'json' });
-        if (staleBlob) {
-          console.warn('⚠️ Stale Cache zurückgegeben');
-          return respond(staleBlob.payload, params, headers, { cached: true, stale: true, cache_age_s: Math.round((Date.now() - staleBlob.ts) / 1000) });
-        }
-      } catch (_) {}
-    }
-
-    const status = err.status === 401 ? 401 : 503;
-    return { statusCode: status, headers, body: JSON.stringify({ error: err.message, stations: [] }) };
+    console.error('API-Fehler:', err.message);
+    return {
+      statusCode: err.status === 401 ? 401 : 503,
+      headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' },
+      body: JSON.stringify({ error: err.message, stations: [] }),
+    };
   }
 
-  // ── 4. Response validieren ───────────────────────────────────────────────
   if (dpData.status !== 'success' || !Array.isArray(dpData.stations)) {
-    console.error('Unerwartetes API-Format:', JSON.stringify(dpData).slice(0, 200));
-    return { statusCode: 502, headers, body: JSON.stringify({ error: 'Unerwartetes API-Response-Format', stations: [] }) };
+    return {
+      statusCode: 502,
+      headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' },
+      body: JSON.stringify({ error: 'Unerwartetes API-Format', stations: [] }),
+    };
   }
 
-  // ── 5. Normalisieren ─────────────────────────────────────────────────────
   const stations = dpData.stations
     .filter(s => s.is_active && s.coordinates?.lat && s.coordinates?.lng)
     .map(s => ({
@@ -142,52 +104,39 @@ exports.handler = async (event) => {
       pln_eur_rate: plnRate,
     }));
 
-  const payload = {
-    data_timestamp: dpData.data_timestamp,
-    pln_eur_rate:   plnRate,
-    stations,
-  };
-
-  // ── 6. In Blobs speichern ────────────────────────────────────────────────
-  if (store) {
-    try {
-      await store.set(CACHE_KEY, JSON.stringify({ ts: Date.now(), payload }));
-      console.log(`✅ Cache gesetzt — ${stations.length} Stationen, Kurs: ${plnRate} PLN/EUR`);
-    } catch (blobErr) {
-      console.warn('Cache-Speichern fehlgeschlagen:', blobErr.message);
-    }
-  }
-
-  return respond(payload, params, headers, { cached: false, stale: false, cache_age_s: 0 });
-};
-
-// ── Filtern nach Radius + Antwort bauen ──────────────────────────────────────
-function respond(payload, params, headers, meta) {
   const lat = parseFloat(params.lat) || null;
   const lng = parseFloat(params.lng) || null;
   const rad = parseFloat(params.rad) || 50;
 
-  let stations = payload.stations.map(s => ({
+  let result = stations.map(s => ({
     ...s,
     dist_km: (lat && lng) ? +dist(lat, lng, s.lat, s.lng).toFixed(1) : null,
   }));
 
   if (lat && lng) {
-    stations = stations
+    result = result
       .filter(s => s.dist_km <= rad)
       .sort((a, b) => a.dist_km - b.dist_km);
   }
 
+  console.log(`✅ DP: ${result.length} Stationen, Kurs: ${plnRate} PLN/EUR`);
+
   return {
     statusCode: 200,
-    headers,
+    headers: {
+      'Content-Type': 'application/json',
+      'Access-Control-Allow-Origin': '*',
+      // Netlify CDN cached die Antwort 10 Min. am Edge-Server
+      // Egal wie viele Nutzer gleichzeitig anfragen — Lambda läuft nur 1x alle 10 Min.
+      'Cache-Control': `public, s-maxage=${CACHE_SECONDS}, max-age=120, stale-while-revalidate=60`,
+      'Netlify-CDN-Cache-Control': `public, s-maxage=${CACHE_SECONDS}, stale-while-revalidate=60`,
+    },
     body: JSON.stringify({
       status:         'success',
-      data_timestamp: payload.data_timestamp,
-      pln_eur_rate:   payload.pln_eur_rate,
-      ...meta,               // cached, stale, cache_age_s
-      count:          stations.length,
-      stations,
+      data_timestamp: dpData.data_timestamp,
+      pln_eur_rate:   plnRate,
+      count:          result.length,
+      stations:       result,
     }),
   };
-}
+};
