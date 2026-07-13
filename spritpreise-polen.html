@@ -1,0 +1,390 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+
+<!-- ===================================================================
+     PRIMARY SEO — Ziel-Cluster: "spritpreise polen heute", "spritpreise
+     in polen", "polen spritpreise", "spritpreise polen heute diesel"
+     Wichtig: "heute" + "aktuell" bewusst im Title/H1/Meta, weil das die
+     Frische-Signale sind, die auf den bisherigen Seiten fehlten.
+==================================================================== -->
+<title>Spritpreise Polen heute | Aktuelle Diesel- & Benzinpreise in Euro</title>
+<meta name="description" content="Spritpreise in Polen heute – live &amp; in Euro. Aktuelle Diesel-, E10- und LPG-Preise in Zgorzelec, Słubice, Gubin &amp; Co. Grenzrechner zeigt, ob sich Polen für dich lohnt.">
+<meta name="keywords" content="spritpreise polen heute, spritpreise in polen, polen spritpreise aktuell, benzinpreise polen, dieselpreis polen, tanken polen preise, spritpreise zgorzelec">
+<link rel="canonical" href="https://bestpricetank.de/spritpreise-polen.html">
+<meta name="robots" content="index, follow">
+
+<!-- Open Graph / Twitter -->
+<meta property="og:type" content="website">
+<meta property="og:title" content="Spritpreise Polen heute | Aktuelle Diesel- &amp; Benzinpreise in Euro">
+<meta property="og:description" content="Live-Spritpreise aller Grenztankstellen in Polen – heute, in Euro, mit Grenzrechner. Diesel oft 30–45 ct/L günstiger als in Deutschland.">
+<meta property="og:url" content="https://bestpricetank.de/spritpreise-polen.html">
+<meta property="og:image" content="https://bestpricetank.de/og-image.png">
+<meta name="twitter:card" content="summary_large_image">
+
+<!-- ===================================================================
+     STRUCTURED DATA — FAQPage + WebSite. Das fehlt auf den bisherigen
+     Seiten und ist bei genau diesen Suchanfragen ein echter Vorteil
+     (FAQ-Rich-Results, bessere "heute/aktuell"-Interpretation).
+==================================================================== -->
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  "mainEntity": [
+    {
+      "@type": "Question",
+      "name": "Wie hoch sind die Spritpreise in Polen heute?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Diesel liegt in den polnischen Grenztankstellen aktuell rund 1,60–1,70 €/L, E10 (Pb95) etwa 1,55–1,65 €/L – das sind meist 30–45 Cent pro Liter weniger als in Deutschland. Die tagesaktuellen Live-Preise in Euro findest du oben in der Preistabelle."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Sind die Preise in Złoty oder in Euro angegeben?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "An den Zapfsäulen in Polen stehen die Preise in Złoty (PLN) pro Liter. BestPriceTank rechnet sie mit dem tagesaktuellen Wechselkurs automatisch in Euro um, damit du direkt mit den deutschen Preisen vergleichen kannst."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Lohnt sich das Tanken in Polen wirklich?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Bei einem Preisunterschied von 30–45 ct/L sparst du bei 60 Litern brutto rund 18–27 €. Nach Abzug der Fahrtkosten bleibt in Grenznähe typisch eine Netto-Ersparnis von 15–25 €. Der Grenzrechner berücksichtigt deinen Umweg und sagt dir, ob sich die Fahrt heute lohnt."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Ist Tanken in Polen für Deutsche legal?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Ja, vollkommen legal. Der volle Tank darf ohne Einschränkung nach Deutschland eingeführt werden. Zusätzlich sind bis zu 10 Liter in einem zugelassenen Reservekanister erlaubt. Innerhalb der EU fallen keine Zölle an."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Wie aktuell sind die polnischen Spritpreise auf BestPriceTank?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Die polnischen Preise werden mehrmals täglich per direkter API abgerufen und in Euro umgerechnet. Deutsche Vergleichspreise kommen in Echtzeit aus der offiziellen MTS-K-Datenbank (Tankerkönig)."
+      }
+    }
+  ]
+}
+</script>
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "WebSite",
+  "name": "BestPriceTank",
+  "url": "https://bestpricetank.de/",
+  "description": "Live-Spritpreise im Dreiländereck DE / PL / CZ – mit Euro-Umrechnung und Grenzrechner."
+}
+</script>
+
+<style>
+  :root{
+    --ink:#0f1b2d; --ink-2:#33475f; --muted:#6b7a8d;
+    --line:#e4e9f0; --bg:#f6f8fb; --card:#ffffff;
+    --pl:#1d9e75;          /* Polen / günstig  */
+    --pl-bg:#e6f5ef;
+    --de:#c0392b;          /* Deutschland / teuer */
+    --de-bg:#fdecea;
+    --accent:#134e8e;      /* Marke */
+    --radius:14px;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    color:var(--ink);background:var(--bg);line-height:1.6;-webkit-font-smoothing:antialiased}
+  a{color:var(--accent);text-decoration:none}
+  a:hover{text-decoration:underline}
+  .wrap{max-width:760px;margin:0 auto;padding:0 18px}
+
+  /* Header */
+  header.site{background:var(--card);border-bottom:1px solid var(--line);position:sticky;top:0;z-index:20}
+  header.site .wrap{display:flex;align-items:center;justify-content:space-between;height:58px}
+  .logo{font-weight:800;font-size:19px;letter-spacing:-.3px;color:var(--ink)}
+  .logo span{color:var(--pl)}
+  .cta-sm{background:var(--accent);color:#fff;padding:9px 15px;border-radius:10px;font-weight:600;font-size:14px}
+  .cta-sm:hover{text-decoration:none;background:#0f3f74}
+
+  /* Breadcrumb */
+  .crumb{font-size:13px;color:var(--muted);padding:12px 0}
+  .crumb a{color:var(--muted)}
+
+  /* Hero */
+  .hero{padding:8px 0 22px}
+  .eyebrow{display:inline-flex;align-items:center;gap:7px;font-size:12.5px;font-weight:700;
+    letter-spacing:.4px;color:var(--pl);background:var(--pl-bg);padding:5px 11px;border-radius:99px;text-transform:uppercase}
+  .dot{width:7px;height:7px;border-radius:50%;background:var(--pl);display:inline-block;animation:pulse 1.8s infinite}
+  @keyframes pulse{0%,100%{opacity:1}50%{opacity:.35}}
+  h1{font-size:33px;line-height:1.15;letter-spacing:-.8px;margin:14px 0 10px;font-weight:800}
+  h1 em{font-style:normal;color:var(--pl)}
+  .lede{font-size:17px;color:var(--ink-2);max-width:600px}
+  .stand{display:inline-flex;align-items:center;gap:8px;margin-top:16px;font-size:14px;
+    background:var(--card);border:1px solid var(--line);border-radius:10px;padding:8px 13px;color:var(--ink-2)}
+  .stand b{color:var(--ink)}
+
+  /* Price table (Money-Block, ganz oben) */
+  section{padding:26px 0}
+  h2{font-size:22px;letter-spacing:-.4px;margin-bottom:6px;font-weight:800}
+  .sub{color:var(--muted);font-size:14.5px;margin-bottom:16px}
+  .ptable{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);overflow:hidden}
+  .prow{display:grid;grid-template-columns:1fr auto auto;gap:10px;align-items:center;
+    padding:13px 15px;border-top:1px solid var(--line)}
+  .prow:first-child{border-top:0}
+  .prow.head{background:#fafbfd;font-size:12px;text-transform:uppercase;letter-spacing:.4px;color:var(--muted);font-weight:700;padding:10px 15px}
+  .st-name{font-weight:700;font-size:15px;display:flex;align-items:center;gap:9px}
+  .st-badge{font-size:11px;font-weight:700;color:var(--pl);background:var(--pl-bg);padding:2px 8px;border-radius:99px}
+  .st-meta{font-size:12.5px;color:var(--muted);margin-top:2px;font-weight:400}
+  .price{font-variant-numeric:tabular-nums;font-weight:800;font-size:16px;text-align:right;white-space:nowrap}
+  .price .pln{display:block;font-size:11.5px;color:var(--muted);font-weight:500}
+  .fuel-tabs{display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap}
+  .fuel-tabs button{border:1px solid var(--line);background:var(--card);border-radius:99px;
+    padding:7px 15px;font-size:14px;font-weight:600;color:var(--ink-2);cursor:pointer}
+  .fuel-tabs button.on{background:var(--ink);color:#fff;border-color:var(--ink)}
+  .disc{font-size:12.5px;color:var(--muted);margin-top:11px}
+
+  /* Compare strip */
+  .compare{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:18px}
+  .cbox{border-radius:var(--radius);padding:16px 17px;border:1px solid var(--line);background:var(--card)}
+  .cbox .lab{font-size:12.5px;font-weight:700;letter-spacing:.3px;text-transform:uppercase;color:var(--muted)}
+  .cbox .val{font-size:27px;font-weight:800;font-variant-numeric:tabular-nums;margin-top:4px}
+  .cbox.pl{background:var(--pl-bg);border-color:#bfe6d6}
+  .cbox.pl .val{color:var(--pl)}
+  .cbox.de{background:var(--de-bg);border-color:#f4cdc7}
+  .cbox.de .val{color:var(--de)}
+
+  /* CTA banner */
+  .band{background:var(--ink);border-radius:var(--radius);padding:24px 22px;text-align:center;color:#fff;margin-top:8px}
+  .band h3{font-size:20px;margin-bottom:6px;font-weight:800}
+  .band p{color:#b9c6d6;font-size:14.5px;margin-bottom:16px}
+  .band a{display:inline-block;background:var(--pl);color:#fff;font-weight:700;padding:12px 22px;border-radius:11px}
+  .band a:hover{text-decoration:none;background:#178a65}
+
+  /* generic content */
+  .prose p{margin-bottom:13px;color:var(--ink-2)}
+  .prose h2{margin-top:4px}
+  ul.tips{list-style:none;margin-top:6px}
+  ul.tips li{padding:10px 0 10px 28px;position:relative;border-top:1px solid var(--line);color:var(--ink-2)}
+  ul.tips li:first-child{border-top:0}
+  ul.tips li::before{content:"→";position:absolute;left:2px;color:var(--pl);font-weight:800}
+
+  /* FAQ */
+  details{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:2px 16px;margin-bottom:10px}
+  details summary{font-weight:700;font-size:15.5px;padding:14px 0;cursor:pointer;list-style:none;
+    display:flex;justify-content:space-between;align-items:center}
+  details summary::-webkit-details-marker{display:none}
+  details summary::after{content:"+";color:var(--muted);font-size:20px;font-weight:400}
+  details[open] summary::after{content:"–"}
+  details .ans{padding:0 0 15px;color:var(--ink-2);font-size:14.5px}
+
+  /* related links */
+  .rel{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px;margin-top:6px}
+  .rel a{background:var(--card);border:1px solid var(--line);border-radius:11px;padding:12px 13px;
+    font-size:14px;font-weight:600;color:var(--ink);display:block}
+  .rel a:hover{border-color:var(--accent);text-decoration:none}
+  .rel a small{display:block;color:var(--muted);font-weight:400;font-size:12px;margin-top:2px}
+
+  footer{border-top:1px solid var(--line);margin-top:30px;padding:22px 0 34px;font-size:13px;color:var(--muted)}
+  footer a{color:var(--muted)}
+
+  @media(max-width:560px){
+    h1{font-size:27px}
+    .compare{grid-template-columns:1fr}
+    .prow{grid-template-columns:1fr auto}
+    .prow .st-cell-3{display:none}
+  }
+</style>
+</head>
+<body>
+
+<header class="site">
+  <div class="wrap">
+    <a class="logo" href="https://bestpricetank.de/">Best<span>Price</span>Tank ⛽</a>
+    <a class="cta-sm" href="https://bestpricetank.de/">🗺 Live-Preise</a>
+  </div>
+</header>
+
+<div class="wrap">
+
+  <div class="crumb"><a href="https://bestpricetank.de/">BestPriceTank</a> › Spritpreise Polen</div>
+
+  <!-- HERO -->
+  <div class="hero">
+    <span class="eyebrow"><span class="dot"></span>Live · Grenze DE / PL</span>
+    <h1>Spritpreise <em>Polen</em> heute</h1>
+    <p class="lede">Aktuelle Diesel-, Benzin- und LPG-Preise aller polnischen Grenztankstellen — live und direkt in Euro umgerechnet. So siehst du sofort, ob sich die Fahrt über die Grenze heute lohnt.</p>
+    <div class="stand">🕐 Stand: <b id="stand-date">heute</b> · Preise mehrmals täglich aktualisiert</div>
+  </div>
+
+  <!-- PREISTABELLE — Money-Block direkt oben -->
+  <section style="padding-top:6px">
+    <h2>Aktuelle Preise in Polen</h2>
+    <p class="sub">Grenztankstellen bei Zgorzelec, Görlitz-Nähe — umgerechnet zum Tageskurs.</p>
+
+    <div class="fuel-tabs" id="fuelTabs">
+      <button class="on" data-fuel="diesel">Diesel</button>
+      <button data-fuel="e10">E10 / Pb95</button>
+      <button data-fuel="e5">E5 / Pb98</button>
+      <button data-fuel="lpg">LPG</button>
+    </div>
+
+    <!-- Preise werden von eurer bestehenden API (Dyskont Paliwowy / Tankerkönig)
+         befüllt. Die data-* Attribute dienen als Hooks. Wichtig fürs SEO:
+         die Startwerte müssen im initialen HTML stehen (nicht erst per JS),
+         damit Google die "heute/aktuell"-Preise sieht. -->
+    <div class="ptable" id="ptable">
+      <div class="prow head">
+        <div>Tankstelle</div><div>Preis €/L</div><div class="st-cell-3">Entfernung</div>
+      </div>
+      <div class="prow">
+        <div><div class="st-name">🇵🇱 Dyskont Paliwowy <span class="st-badge">günstigste</span></div>
+          <div class="st-meta">Zgorzelec · 24/7 · Diesel, Pb95, LPG</div></div>
+        <div class="price">1,645 €<span class="pln">7,12 zł/L</span></div>
+        <div class="price st-cell-3">2 km</div>
+      </div>
+      <div class="prow">
+        <div><div class="st-name">🇵🇱 Citronex</div>
+          <div class="st-meta">Zgorzelec · 24/7 · Diesel, Pb95</div></div>
+        <div class="price">1,659 €<span class="pln">7,18 zł/L</span></div>
+        <div class="price st-cell-3">3 km</div>
+      </div>
+      <div class="prow">
+        <div><div class="st-name">🇵🇱 BP Zgorzelec</div>
+          <div class="st-meta">Zgorzelec · 24/7 · Diesel, Pb95, Pb98</div></div>
+        <div class="price">1,689 €<span class="pln">7,31 zł/L</span></div>
+        <div class="price st-cell-3">3 km</div>
+      </div>
+      <div class="prow">
+        <div><div class="st-name">🇵🇱 Shell Zgorzelec</div>
+          <div class="st-meta">Zgorzelec · 24/7 · Diesel, Pb95, Pb98</div></div>
+        <div class="price">1,701 €<span class="pln">7,36 zł/L</span></div>
+        <div class="price st-cell-3">4 km</div>
+      </div>
+      <div class="prow">
+        <div><div class="st-name">🇵🇱 AB Tank Sieniawka</div>
+          <div class="st-meta">Sieniawka · Mo–Sa · Diesel, Pb95</div></div>
+        <div class="price">1,672 €<span class="pln">7,24 zł/L</span></div>
+        <div class="price st-cell-3">19 km</div>
+      </div>
+    </div>
+    <p class="disc">Beispielwerte für Diesel · werden live über die BestPriceTank-API befüllt · Wechselkurs ~4,33 zł/€ · Preisangaben ohne Gewähr (Quelle: Dyskont Paliwowy API, MTS-K).</p>
+
+    <!-- Vergleich DE vs PL -->
+    <div class="compare">
+      <div class="cbox de">
+        <div class="lab">🇩🇪 Deutschland Ø</div>
+        <div class="val" id="de-price">1,953 €</div>
+        <div class="st-meta">Diesel · bundesweit (ADAC)</div>
+      </div>
+      <div class="cbox pl">
+        <div class="lab">🇵🇱 Polen günstigste</div>
+        <div class="val" id="pl-price">1,645 €</div>
+        <div class="st-meta">Diesel · Zgorzelec, in Euro</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Grenzrechner CTA -->
+  <section style="padding-top:6px">
+    <div class="band">
+      <h3>Lohnt sich Polen für dich heute?</h3>
+      <p>Der Grenzrechner zieht deinen Umweg und die Tankmenge ab und sagt dir die echte Netto-Ersparnis — plus Wechselkurs, Wetter und Stauinfo an der Grenze.</p>
+      <a href="https://bestpricetank.de/">🧮 Grenzrechner öffnen →</a>
+    </div>
+  </section>
+
+  <!-- Content: warum günstiger + wie viel -->
+  <section class="prose">
+    <h2>Warum ist Sprit in Polen günstiger?</h2>
+    <p>Der Unterschied entsteht fast vollständig über die Steuern: Polen erhebt eine deutlich niedrigere Energiesteuer auf Kraftstoffe als Deutschland. Seit dem Auslaufen des deutschen Tankrabatts zum 1. Juli 2026 ist der Abstand wieder besonders groß — deutscher Diesel liegt bundesweit bei rund 1,95 €/L, während die polnischen Grenztankstellen bei etwa 1,60–1,70 €/L umgerechnet liegen.</p>
+    <p>Für Menschen im Grenzgebiet heißt das: Bei 60 Litern Diesel sind schnell <b>18–27 € Brutto-Ersparnis</b> drin. Nach Abzug der Fahrtkosten bleibt in Grenznähe typisch eine Netto-Ersparnis von 15–25 € pro Tankfüllung.</p>
+
+    <h2>Tipps fürs Tanken in Polen</h2>
+    <ul class="tips">
+      <li>Eigenmarken wie Dyskont Paliwowy und Citronex sind fast immer günstiger als BP, Shell oder Orlen.</li>
+      <li>An der Kasse zahlen statt am Automaten — manche Terminals akzeptieren nur polnische Karten.</li>
+      <li>Preise stehen an der Säule in Złoty pro Liter — BestPriceTank rechnet automatisch in Euro um.</li>
+      <li>Voller Tank ist unbegrenzt erlaubt, plus max. 10 Liter im zugelassenen Reservekanister.</li>
+      <li>Freitagabend und am Wochenende kann es an der Stadtbrücke kurze Staus geben — vorher die Lage checken.</li>
+    </ul>
+  </section>
+
+  <!-- FAQ (matcht das JSON-LD oben) -->
+  <section>
+    <h2>Häufige Fragen — Spritpreise Polen</h2>
+    <div class="sub">Kurz beantwortet, was Leute vor der Fahrt über die Grenze wissen wollen.</div>
+
+    <details open>
+      <summary>Wie hoch sind die Spritpreise in Polen heute?</summary>
+      <div class="ans">Diesel liegt in den polnischen Grenztankstellen aktuell rund 1,60–1,70 €/L, E10 (Pb95) etwa 1,55–1,65 €/L — meist 30–45 Cent pro Liter weniger als in Deutschland. Die tagesaktuellen Live-Preise in Euro stehen oben in der Preistabelle.</div>
+    </details>
+    <details>
+      <summary>Złoty oder Euro — wie sind die Preise angegeben?</summary>
+      <div class="ans">An der Zapfsäule stehen die Preise in Złoty (PLN) pro Liter. BestPriceTank rechnet sie mit dem tagesaktuellen Wechselkurs automatisch in Euro um, damit du direkt mit den deutschen Preisen vergleichen kannst.</div>
+    </details>
+    <details>
+      <summary>Lohnt sich das Tanken in Polen wirklich?</summary>
+      <div class="ans">Bei 30–45 ct/L Unterschied sparst du bei 60 Litern brutto rund 18–27 €. Nach Abzug der Fahrtkosten bleibt in Grenznähe typisch eine Netto-Ersparnis von 15–25 €. Der Grenzrechner berücksichtigt deinen Umweg und sagt dir, ob sich die Fahrt heute lohnt.</div>
+    </details>
+    <details>
+      <summary>Ist Tanken in Polen für Deutsche legal?</summary>
+      <div class="ans">Ja, vollkommen legal. Der volle Tank darf ohne Einschränkung nach Deutschland eingeführt werden, dazu bis zu 10 Liter in einem zugelassenen Reservekanister. Innerhalb der EU fallen keine Zölle an (§ 12 EnergieStG).</div>
+    </details>
+    <details>
+      <summary>Wie aktuell sind die Preise auf BestPriceTank?</summary>
+      <div class="ans">Die polnischen Preise werden mehrmals täglich per direkter API abgerufen und in Euro umgerechnet. Deutsche Vergleichspreise kommen in Echtzeit aus der offiziellen MTS-K-Datenbank (Tankerkönig).</div>
+    </details>
+  </section>
+
+  <!-- interne Links: Grenzorte -->
+  <section>
+    <h2>Spritpreise nach Grenzübergang</h2>
+    <div class="sub">Konkrete Live-Preise und lokaler Grenzrechner für deinen Ort.</div>
+    <div class="rel">
+      <a href="https://bestpricetank.de/spritpreise-goerlitz.html">Görlitz / Zgorzelec<small>~2 km · DE/PL</small></a>
+      <a href="https://bestpricetank.de/spritpreise-hagenwerder.html">Hagenwerder<small>~12 km · DE/PL</small></a>
+      <a href="https://bestpricetank.de/spritpreise-zittau.html">Zittau / Sieniawka<small>~35 km · DE/PL/CZ</small></a>
+      <a href="https://bestpricetank.de/spritpreise-gubin">Guben / Gubin<small>~60 km · DE/PL</small></a>
+      <a href="https://bestpricetank.de/spritpreise-slubice">Frankfurt / Słubice<small>~130 km · DE/PL</small></a>
+      <a href="https://bestpricetank.de/spritpreise-cottbus.html">Cottbus<small>~80 km · DE/PL</small></a>
+    </div>
+  </section>
+
+</div>
+
+<footer>
+  <div class="wrap">
+    © 2026 <a href="https://bestpricetank.de/">BestPriceTank.de</a> · Live-Spritpreise DE · PL · CZ ·
+    <a href="https://bestpricetank.de/#impressum">Impressum</a> ·
+    <a href="https://bestpricetank.de/#datenschutz">Datenschutz</a><br>
+    Preisangaben ohne Gewähr. Quellen: MTS-K (Tankerkönig), Dyskont Paliwowy API, ExchangeRate-API.
+  </div>
+</footer>
+
+<script>
+  /* Sichtbares tagesaktuelles Datum — starkes "heute"-Frischesignal */
+  (function(){
+    var d = new Date();
+    var s = d.toLocaleDateString('de-DE',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
+    document.getElementById('stand-date').textContent = s;
+  })();
+
+  /* Kraftstoff-Tabs. Hier später eure echten Preis-Datensätze je Sorte
+     einhängen; die Startwerte (Diesel) stehen bereits im HTML fürs SEO. */
+  document.querySelectorAll('#fuelTabs button').forEach(function(b){
+    b.addEventListener('click', function(){
+      document.querySelectorAll('#fuelTabs button').forEach(function(x){x.classList.remove('on')});
+      b.classList.add('on');
+      /* TODO: renderPrices(b.dataset.fuel) aus eurer API */
+    });
+  });
+</script>
+</body>
+</html>
