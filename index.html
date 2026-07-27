@@ -2978,6 +2978,9 @@ setTimeout(()=>{
 },500);
 checkMobileLayout();
 gcalc();
+if(location.hash==='#impressum') setTimeout(()=>openM('imprint'),400);
+if(location.hash==='#datenschutz') setTimeout(()=>openM('privacy'),400);
+if(location.hash==='#cookies') setTimeout(()=>openM('cookies'),400);
 setTimeout(showCookieBanner, 1200);
 setTimeout(async ()=>{
   await loadRates();
