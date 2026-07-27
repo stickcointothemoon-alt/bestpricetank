@@ -34,7 +34,7 @@
     "description": "Von Görlitz in 5 Minuten zu günstigstem Diesel in Zgorzelec (Polen) und Hrádek nad Nisou (Tschechien). Live-Preise, Grenzrechner, alle Tankstellen.",
     "isPartOf": { "@type": "WebSite", "name": "BestPriceTank", "url": "https://bestpricetank.de" },
     "about": { "@type": "City", "name": "Görlitz" },
-    "dateModified": "2026-04-27"
+    "dateModified": "2026-07-28"
   },
   {
     "@context": "https://schema.org",
@@ -230,6 +230,8 @@ h2{font:800 18px var(--sans);margin:30px 0 12px;padding-bottom:8px;border-bottom
 .city-link:hover{color:var(--text);background:rgba(255,255,255,.06);border-color:var(--rim2);text-decoration:none}
 .city-link .flag{font-size:16px}
 .city-link .dist{font:600 10.5px var(--mono);color:var(--faint);display:block;margin-top:2px}
+.city-link.featured{border-color:rgba(0,230,118,.3);background:rgba(0,200,83,.06)}
+.city-link.featured:hover{border-color:rgba(0,230,118,.5)}
 
 /* ═══ Promo Box ═══ */
 .promo{
@@ -378,7 +380,7 @@ footer a:hover{color:var(--muted)}
   </div>
 
   <div class="promo">
-    💡 <strong>Live-Preise & tagesaktueller Grenzrechner</strong> auf <a href="/">BestPriceTank.de</a> — Wechselkurs, Wetter, Stauinfo und KI-Assistent Zapfi inklusive.
+    💡 <strong>Live-Preise & tagesaktueller Grenzrechner</strong> auf <a href="/">BestPriceTank.de</a> — Wechselkurs, Wetter, Stauinfo und KI-Assistent Zapfi inklusive. Alle Grenzübergänge im Überblick: <a href="/spritpreise-polen.html">aktuelle Spritpreise in Polen</a>.
   </div>
 
   <!-- Tipps -->
@@ -401,7 +403,7 @@ footer a:hover{color:var(--muted)}
     </details>
     <details>
       <summary>Wie viel spare ich wirklich beim Tanken in Zgorzelec?</summary>
-      <p>Aktuell (2026) ist Diesel in Polen rund 30–45 Cent pro Liter günstiger als in Görlitz. Bei 60 Litern ergibt das eine Brutto-Ersparnis von 18–27 €. Nach Abzug der Fahrtkosten (ca. 2–3 € für ~5 km Umweg) bleibt typisch eine <strong>Netto-Ersparnis von 15–25 €</strong>. Der <a href="/">Grenzrechner auf BestPriceTank</a> berechnet das tagesaktuell.</p>
+      <p>Aktuell (2026) ist Diesel in Polen rund 30–45 Cent pro Liter günstiger als in Görlitz. Bei 60 Litern ergibt das eine Brutto-Ersparnis von 18–27 €. Nach Abzug der Fahrtkosten (ca. 2–3 € für ~5 km Umweg) bleibt typisch eine <strong>Netto-Ersparnis von 15–25 €</strong>. Der <a href="/">Grenzrechner auf BestPriceTank</a> berechnet das tagesaktuell. Alle <a href="/spritpreise-polen.html">Spritpreise in Polen heute</a> gibt's in der Übersicht.</p>
     </details>
     <details>
       <summary>Welche Zahlungsmittel akzeptieren polnische Tankstellen?</summary>
@@ -432,9 +434,17 @@ footer a:hover{color:var(--muted)}
   <!-- Interne Verlinkung: andere Grenzstädte -->
   <h2>🗺 Weitere Grenzübergänge in der Region</h2>
   <div class="city-grid">
-    <a href="/spritpreise-zittau.html" class="city-link">
+    <a href="/spritpreise-polen.html" class="city-link featured">
+      <span class="flag">🇵🇱</span>
+      <div><span>Spritpreise Polen heute</span><span class="dist">Alle Übergänge · live</span></div>
+    </a>
+    <a href="/spritpreise-zgorzelec.html" class="city-link">
+      <span class="flag">🇵🇱</span>
+      <div><span>Zgorzelec</span><span class="dist">~2 km · DE/PL</span></div>
+    </a>
+    <a href="/spritpreise-hagenwerder.html" class="city-link">
       <span class="flag">🇩🇪</span>
-      <div><span>Zittau</span><span class="dist">~35 km · DE/PL/CZ</span></div>
+      <div><span>Hagenwerder</span><span class="dist">~12 km · DE/PL</span></div>
     </a>
     <a href="/spritpreise-gubin.html" class="city-link">
       <span class="flag">🇩🇪</span>
@@ -443,18 +453,6 @@ footer a:hover{color:var(--muted)}
     <a href="/spritpreise-slubice.html" class="city-link">
       <span class="flag">🇩🇪</span>
       <div><span>Frankfurt / Słubice</span><span class="dist">~130 km · DE/PL</span></div>
-    </a>
-    <a href="/spritpreise-hagenwerder.html" class="city-link">
-      <span class="flag">🇩🇪</span>
-      <div><span>Hagenwerder</span><span class="dist">~12 km · DE/PL</span></div>
-    </a>
-    <a href="/spritpreise-bautzen.html" class="city-link">
-      <span class="flag">🇩🇪</span>
-      <div><span>Bautzen</span><span class="dist">~50 km · DE</span></div>
-    </a>
-    <a href="/spritpreise-cottbus.html" class="city-link">
-      <span class="flag">🇩🇪</span>
-      <div><span>Cottbus</span><span class="dist">~80 km · DE/PL</span></div>
     </a>
   </div>
   <p style="margin-top:10px;font-size:12px;color:var(--faint)">Alle Seiten mit Live-Preisen und lokalem Grenzrechner.</p>
