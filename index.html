@@ -1442,7 +1442,7 @@ async function refreshPrices(){
   updateStaticDistances(userLocationCoords);
   const apiRad=Math.min(rad,25);
   try{
-    const url=`/.netlify/functions/de-prices?lat=${coords.lat}&lng=${coords.lng}&rad=${apiRad}`;
+    const url=`/.netlify/functions/de-prices?lat=${coords.lat.toFixed(2)}&lng=${coords.lng.toFixed(2)}&rad=${apiRad}`;
 const res=await fetch(url);
     const data=await res.json();
     if(!data.ok||!Array.isArray(data.stations)) throw new Error('TK error: '+JSON.stringify(data).slice(0,80));
