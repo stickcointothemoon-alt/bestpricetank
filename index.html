@@ -1076,7 +1076,6 @@ select option{background:#0a1628}
 // ══════════════════════════════════════
 // DATA
 // ══════════════════════════════════════
-const TK_KEY = '4b799919-31cf-4e2d-baa4-b84f7c4bcae5';
 
 
 const PRICES = {
@@ -1443,8 +1442,8 @@ async function refreshPrices(){
   updateStaticDistances(userLocationCoords);
   const apiRad=Math.min(rad,25);
   try{
-    const url=`https://creativecommons.tankerkoenig.de/json/list.php?lat=${coords.lat}&lng=${coords.lng}&rad=${apiRad}&sort=dist&type=all&apikey=${TK_KEY}`;
-    const res=await fetch(url,{cache:'no-store'});
+    const url=`/.netlify/functions/de-prices?lat=${coords.lat}&lng=${coords.lng}&rad=${apiRad}`;
+const res=await fetch(url);
     const data=await res.json();
     if(!data.ok||!Array.isArray(data.stations)) throw new Error('TK error: '+JSON.stringify(data).slice(0,80));
     // Remove old API stations + fallback stations when TK loads
