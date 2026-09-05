@@ -1206,11 +1206,11 @@ let STATIONS = [
   // BP Kołbaskowo (258.3km)
   {id:'bp_kolb',  name:'BP Kołbaskowo',                 country:'pl',lat:53.4485,lng:14.3941,dist:258.3,diesel:1.450,e5:1.480,e10:1.460,lpg:0,    logo:'BP',best:false},
   // ── ČESKÁ REPUBLIKA (CZ) ──────────────────────────────────────
- {id:'mol',      name:'MOL Hrádek n.N.',               country:'cz',lat:50.8543,lng:14.8455,dist:18.5, diesel:1.619,e5:1.579,e10:1.659,lpg:0.891,logo:'M', best:false},
-  {id:'eurooil',  name:'EuroOil Hrádek',                country:'cz',lat:50.8559,lng:14.8464,dist:18.7, diesel:1.639,e5:1.599,e10:1.679,lpg:0.907,logo:'E', best:false},
-  {id:'ono',      name:'ONO Hrádek n.N.',               country:'cz',lat:50.8501,lng:14.8371,dist:18.8, diesel:1.619,e5:1.579,e10:1.659,lpg:0.891,logo:'ON',best:false},
-  {id:'benzina',  name:'Benzina Hrádek',                country:'cz',lat:50.8520,lng:14.8420,dist:18.6, diesel:1.623,e5:1.583,e10:1.663,lpg:0.887,logo:'BZ',best:false},
-  {id:'shell_cz', name:'Shell Žitava / CZ',             country:'cz',lat:50.8968,lng:14.7699,dist:24.1, diesel:1.615,e5:1.575,e10:1.655,lpg:0.887,logo:'🐚',best:false},
+  // CZ-Stationen: Namen und Koordinaten per OpenStreetMap bestaetigt (05.09.2026).
+  // Preise setzt loadCZPrices() aus dem CSU-Landesschnitt plus CZ_OFFSET.
+  {id:'mol',      name:'MOL Hrádek n.N.',               country:'cz',lat:50.85230,lng:14.85969,dist:34.6, diesel:0,e5:0,e10:0,lpg:0,logo:'M', best:false},
+  {id:'eurooil',  name:'EuroOil Hrádek n.N.',           country:'cz',lat:50.85197,lng:14.86164,dist:34.7, diesel:0,e5:0,e10:0,lpg:0,logo:'E', best:false},
+  {id:'sedm',     name:'7 Station Hrádek n.N.',         country:'cz',lat:50.87114,lng:14.82887,dist:33.2, diesel:0,e5:0,e10:0,lpg:0,logo:'7', best:false},
   // ── DEUTSCHLAND (DE) — TK-API liefert echte Positionen ───────
 ];
 
@@ -2701,11 +2701,15 @@ function setLang(l) {
   console.log('🌐 Sprache:', l, '→', cfg.kiLang);
 }
 
-  // Zuschlag je CZ-Station gegenueber dem Landesdurchschnitt, in Kc/Liter.
-  // Grenznahe Stationen sind meist guenstiger als der tschechische Schnitt.
-  // Negative Werte = guenstiger. Aus Ortskenntnis pflegen.
+  // Abstand je CZ-Station zum tschechischen Landesdurchschnitt, in Kc/Liter.
+  // Erhoben am 05.09.2026 gegen den CSU-Schnitt der KW 36 (Nafta 45,92 ·
+  // Natural 95 42,02). Anders als vermutet liegen die Stationen in Hrádek
+  // ueberwiegend UEBER dem Landesschnitt, nicht darunter.
+  // Bei Gelegenheit an der Preistafel nachziehen.
   const CZ_OFFSET = {
-    mol: 0, eurooil: 0, ono: 0, benzina: 0, shell_cz: 0,
+    mol:     { diesel: +1.98, e5: +2.48 },
+    eurooil: { diesel: -0.72, e5: -0.52 },
+    sedm:    { diesel: +1.98, e5: +1.88 },
   };
 
   async function loadCZPrices(){
@@ -2728,12 +2732,12 @@ function setLang(l) {
     PRICES.lpg.cz    = d.prices.lpg ? toEur(d.prices.lpg) : 0;
 
     STATIONS.filter(s => s.country === 'cz').forEach(s => {
-      const off = CZ_OFFSET[s.id] ?? 0;
-      s.diesel   = toEur(d.prices.diesel + off);
-      s.e5       = d.prices.e5  ? toEur(d.prices.e5  + off) : 0;
-      s.e10      = 0;
-      s.lpg      = d.prices.lpg ? toEur(d.prices.lpg) : 0;
-      s.estimate = true;                 // Durchschnitt plus Zuschlag, kein Messwert
+      const off = CZ_OFFSET[s.id] || {};
+      s.diesel   = toEur(d.prices.diesel + (off.diesel ?? 0));
+      s.e5       = d.prices.e5 ? toEur(d.prices.e5 + (off.e5 ?? 0)) : 0;
+      s.e10      = 0;   // Der CSU-Datensatz kennt kein E10
+      s.lpg      = 0;   // Fuer die Stationen in Hrádek liegt kein LPG-Preis vor
+      s.estimate = true;                 // Landesschnitt plus Zuschlag, kein Messwert
       s.priceNote = d.weekLabel;
     });
 
