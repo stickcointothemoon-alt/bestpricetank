@@ -59,12 +59,24 @@ function auswerten(stationen) {
   return { diesel: min('diesel'), e5: min('e5'), e10: min('e10'), count: offen.length };
 }
 
+// Vollstaendige Stationsliste als Notvorrat fuer de-prices ablegen.
+// Netlify Blobs steht nicht auf jeder Seite zur Verfuegung; diese Datei
+// liegt statisch im Deploy und ist damit immer erreichbar.
+function notvorratSchreiben(stationen) {
+  try {
+    fs.mkdirSync(path.dirname(LIVE), { recursive: true });
+    fs.writeFileSync(path.join(ROOT, 'data', 'de-stations.json'),
+      JSON.stringify({ ok: true, fetchedAt: new Date().toISOString(), stations: stationen }, null, 2));
+  } catch (e) { console.warn('   · Notvorrat nicht schreibbar:', e.message); }
+}
+
 async function de() {
   const basis = process.env.URL || 'https://bestpricetank.de';
   try {
     const d = await getJson(`${basis}/.netlify/functions/de-prices?lat=51.15&lng=14.99`);
     if (d.ok && Array.isArray(d.stations)) {
       if (d.stale) console.log(`   · de-prices lieferte den Stand von vor ${d.ageMinutes} Min.`);
+      else notvorratSchreiben(d.stations);
       return auswerten(d.stations);
     }
     throw new Error(d.message || 'unerwartete Antwort');
@@ -80,6 +92,7 @@ async function de() {
     { Accept: 'application/json', Referer: 'https://bestpricetank.de/' }
   );
   if (!d.ok || !Array.isArray(d.stations)) throw new Error('Tankerkönig: unerwartete Antwort');
+  notvorratSchreiben(d.stations);
   return auswerten(d.stations);
 }
 

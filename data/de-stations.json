@@ -1,0 +1,97 @@
+{
+  "ok": true,
+  "fetchedAt": "2026-09-05T13:43:42.722Z",
+  "stations": [
+    {
+      "id": "077cf0c6-f422-4a73-9f03-710294bd24c1",
+      "name": "Aral Tankstelle",
+      "brand": "ARAL",
+      "place": "Görlitz",
+      "lat": 51.16347,
+      "lng": 14.972685,
+      "dist": 1.3,
+      "diesel": 2.419,
+      "e5": 2.449,
+      "e10": 2.389,
+      "isOpen": true
+    },
+    {
+      "id": "bb023dce-fb7b-4e35-ac3a-92dea3c38611",
+      "name": "TotalEnergies Goerlitz",
+      "brand": "TotalEnergies",
+      "place": "Goerlitz",
+      "lat": 51.146099,
+      "lng": 14.983898,
+      "dist": 1.6,
+      "diesel": 2.419,
+      "e5": 2.449,
+      "e10": 2.389,
+      "isOpen": true
+    },
+    {
+      "id": "3b207ac2-4b54-41e8-99ac-70f7f54e7b50",
+      "name": "Tankstelle am Marktkauf",
+      "brand": "TS am Marktkauf",
+      "place": "Görlitz",
+      "lat": 51.168261,
+      "lng": 14.970117,
+      "dist": 2,
+      "diesel": 2.369,
+      "e5": 2.429,
+      "e10": 2.379,
+      "isOpen": true
+    },
+    {
+      "id": "d297ae8b-13a0-4314-b6f3-b697224324c3",
+      "name": "Aral Tankstelle",
+      "brand": "ARAL",
+      "place": "Görlitz",
+      "lat": 51.147522,
+      "lng": 14.941748,
+      "dist": 3.1,
+      "diesel": 2.419,
+      "e5": 2.449,
+      "e10": 2.389,
+      "isOpen": true
+    },
+    {
+      "id": "b31bc185-1298-4656-b48d-a086c9485b8d",
+      "name": "Markersdorf",
+      "brand": "Hoyer",
+      "place": "Markersdorf",
+      "lat": 51.145088,
+      "lng": 14.866642,
+      "dist": 8.3,
+      "diesel": 2.479,
+      "e5": 2.459,
+      "e10": 2.409,
+      "isOpen": true
+    },
+    {
+      "id": "414bded4-f199-4a27-91f3-c1b062a8dd52",
+      "name": "Aral Tankstelle",
+      "brand": "ARAL",
+      "place": "Kodersdorf",
+      "lat": 51.225674,
+      "lng": 14.902096,
+      "dist": 9.9,
+      "diesel": 2.419,
+      "e5": 2.449,
+      "e10": 2.389,
+      "isOpen": true
+    },
+    {
+      "id": "8c88d6b1-0859-469c-9075-a23a221dd0fe",
+      "name": "Gulf Kiesdorf",
+      "brand": "GULF",
+      "place": "Schönau-Berzdorf",
+      "lat": 51.0389,
+      "lng": 14.883,
+      "dist": 14.4,
+      "diesel": 2.389,
+      "e5": 2.399,
+      "e10": 2.379,
+      "isOpen": true
+    }
+  ]
+}

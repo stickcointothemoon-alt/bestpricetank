@@ -15,8 +15,8 @@
 //      der letzte gute Stand mit Altersangabe ausgeliefert, statt gar nichts.
 
 const UPSTREAM_RADIUS = 25;
-const CDN_SECONDS = 900;
-const MAX_STALE_MINUTES = 240;
+const CDN_SECONDS = 3600;   // 1 Stunde. MTS-K-Preise aendern sich einige Male am Tag.
+const MAX_STALE_MINUTES = 720;
 const ATTEMPTS = 2;
 
 async function getBlobStore() {
@@ -104,6 +104,26 @@ exports.handler = async (event) => {
     } catch (e) {
       console.warn('Blob-Lesen fehlgeschlagen:', e.message);
     }
+  }
+
+  // ── Letzter Ausweg: der beim Deploy abgelegte Notvorrat ───────────
+  // Netlify Blobs ist nicht auf jeder Seite verfuegbar. data/de-stations.json
+  // liegt statisch im Deploy und ist deshalb immer erreichbar.
+  try {
+    const basis = process.env.URL || 'https://bestpricetank.de';
+    const res = await fetch(`${basis}/data/de-stations.json`, { signal: AbortSignal.timeout(5000) });
+    if (res.ok) {
+      const vorrat = await res.json();
+      if (Array.isArray(vorrat.stations) && vorrat.stations.length) {
+        const ageMinutes = Math.round((Date.now() - new Date(vorrat.fetchedAt).getTime()) / 60000);
+        console.warn(`TK gestört (${failure}) – liefere Notvorrat von vor ${ageMinutes} Min.`);
+        return json(200, { ...vorrat, stale: true, ageMinutes, upstreamMessage: failure }, {
+          'Cache-Control': 'public, max-age=120, s-maxage=600',
+        });
+      }
+    }
+  } catch (e) {
+    console.warn('Notvorrat nicht lesbar:', e.message);
   }
 
   return json(502, { ok: false, message: failure || 'Tankerkönig nicht erreichbar' });
