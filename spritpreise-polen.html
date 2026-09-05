@@ -33,13 +33,14 @@
 {
   "@context": "https://schema.org",
   "@type": "FAQPage",
+  "dateModified": "{{STAND_ISO}}",
   "mainEntity": [
     {
       "@type": "Question",
       "name": "Wie hoch sind die Spritpreise in Polen heute?",
       "acceptedAnswer": {
         "@type": "Answer",
-        "text": "Diesel liegt in den polnischen Grenztankstellen aktuell rund 1,60–1,70 €/L, E10 (Pb95) etwa 1,55–1,65 €/L – das sind meist 30–45 Cent pro Liter weniger als in Deutschland. Die tagesaktuellen Live-Preise in Euro findest du oben in der Preistabelle."
+        "text": "Diesel liegt in den polnischen Grenztankstellen aktuell rund {{PL_DIESEL_SPANNE}} €/L, E10 (Pb95) etwa {{PL_E10}} €/L – das sind derzeit {{ERSPARNIS_CENT}} Cent pro Liter weniger als in Deutschland. Die tagesaktuellen Live-Preise in Euro findest du oben in der Preistabelle."
       }
     },
     {
@@ -243,49 +244,20 @@
       <div class="prow head">
         <div>Tankstelle</div><div>Preis €/L</div><div class="st-cell-3">Entfernung</div>
       </div>
-      <div class="prow">
-        <div><div class="st-name">🇵🇱 Dyskont Paliwowy <span class="st-badge">günstigste</span></div>
-          <div class="st-meta">Zgorzelec · 24/7 · Diesel, Pb95, LPG</div></div>
-        <div class="price">1,645 €<span class="pln">7,12 zł/L</span></div>
-        <div class="price st-cell-3">2 km</div>
-      </div>
-      <div class="prow">
-        <div><div class="st-name">🇵🇱 Citronex</div>
-          <div class="st-meta">Zgorzelec · 24/7 · Diesel, Pb95</div></div>
-        <div class="price">1,659 €<span class="pln">7,18 zł/L</span></div>
-        <div class="price st-cell-3">3 km</div>
-      </div>
-      <div class="prow">
-        <div><div class="st-name">🇵🇱 BP Zgorzelec</div>
-          <div class="st-meta">Zgorzelec · 24/7 · Diesel, Pb95, Pb98</div></div>
-        <div class="price">1,689 €<span class="pln">7,31 zł/L</span></div>
-        <div class="price st-cell-3">3 km</div>
-      </div>
-      <div class="prow">
-        <div><div class="st-name">🇵🇱 Shell Zgorzelec</div>
-          <div class="st-meta">Zgorzelec · 24/7 · Diesel, Pb95, Pb98</div></div>
-        <div class="price">1,701 €<span class="pln">7,36 zł/L</span></div>
-        <div class="price st-cell-3">4 km</div>
-      </div>
-      <div class="prow">
-        <div><div class="st-name">🇵🇱 AB Tank Sieniawka</div>
-          <div class="st-meta">Sieniawka · Mo–Sa · Diesel, Pb95</div></div>
-        <div class="price">1,672 €<span class="pln">7,24 zł/L</span></div>
-        <div class="price st-cell-3">19 km</div>
-      </div>
+      {{TABELLE_PL}}
     </div>
-    <p class="disc">Beispielwerte für Diesel · werden live über die BestPriceTank-API befüllt · Wechselkurs ~4,33 zł/€ · Preisangaben ohne Gewähr (Quelle: Dyskont Paliwowy API, MTS-K).</p>
+    <p class="disc">Gemessene Stationspreise von Dyskont Paliwowy im Umkreis von 60 km · Stand {{STAND}} · Wechselkurs {{KURS_PLN}} zł/€ (Polnische Nationalbank) · Preisangaben ohne Gewähr.</p>
 
     <!-- Vergleich DE vs PL -->
     <div class="compare">
       <div class="cbox de">
         <div class="lab">🇩🇪 Deutschland Ø</div>
-        <div class="val" id="de-price">1,953 €</div>
+        <div class="val" id="de-price">{{DE_DIESEL}} €</div>
         <div class="st-meta">Diesel · bundesweit (ADAC)</div>
       </div>
       <div class="cbox pl">
         <div class="lab">🇵🇱 Polen günstigste</div>
-        <div class="val" id="pl-price">1,645 €</div>
+        <div class="val" id="pl-price">{{PL_DIESEL}} €</div>
         <div class="st-meta">Diesel · Zgorzelec, in Euro</div>
       </div>
     </div>
@@ -303,7 +275,7 @@
   <!-- Content: warum günstiger + wie viel -->
   <section class="prose">
     <h2>Warum ist Sprit in Polen günstiger?</h2>
-    <p>Der Unterschied entsteht fast vollständig über die Steuern: Polen erhebt eine deutlich niedrigere Energiesteuer auf Kraftstoffe als Deutschland. Seit dem Auslaufen des deutschen Tankrabatts zum 1. Juli 2026 ist der Abstand wieder besonders groß — deutscher Diesel liegt bundesweit bei rund 1,95 €/L, während die polnischen Grenztankstellen bei etwa 1,60–1,70 €/L umgerechnet liegen.</p>
+    <p>Der Unterschied entsteht fast vollständig über die Steuern: Polen erhebt eine deutlich niedrigere Energiesteuer auf Kraftstoffe als Deutschland. Seit dem Auslaufen des deutschen Tankrabatts zum 1. Juli 2026 ist der Abstand wieder besonders groß — deutscher Diesel liegt in Görlitz und Umgebung derzeit bei {{DE_DIESEL}} €/L, während die polnischen Grenztankstellen bei etwa {{PL_DIESEL_SPANNE}} €/L umgerechnet liegen.</p>
     <p>Für Menschen im Grenzgebiet heißt das: Bei 60 Litern Diesel sind schnell <b>18–27 € Brutto-Ersparnis</b> drin. Nach Abzug der Fahrtkosten bleibt in Grenznähe typisch eine Netto-Ersparnis von 15–25 € pro Tankfüllung.</p>
 
     <h2>Tipps fürs Tanken in Polen</h2>
@@ -323,7 +295,7 @@
 
     <details open>
       <summary>Wie hoch sind die Spritpreise in Polen heute?</summary>
-      <div class="ans">Diesel liegt in den polnischen Grenztankstellen aktuell rund 1,60–1,70 €/L, E10 (Pb95) etwa 1,55–1,65 €/L — meist 30–45 Cent pro Liter weniger als in Deutschland. Die tagesaktuellen Live-Preise in Euro stehen oben in der Preistabelle.</div>
+      <div class="ans">Diesel liegt in den polnischen Grenztankstellen aktuell rund {{PL_DIESEL_SPANNE}} €/L, E10 (Pb95) etwa {{PL_E10}} €/L — derzeit {{ERSPARNIS_CENT}} Cent pro Liter weniger als in Deutschland. Die tagesaktuellen Live-Preise in Euro stehen oben in der Preistabelle.</div>
     </details>
     <details>
       <summary>Złoty oder Euro — wie sind die Preise angegeben?</summary>

@@ -30,13 +30,14 @@
 {
   "@context": "https://schema.org",
   "@type": "FAQPage",
+  "dateModified": "{{STAND_ISO}}",
   "mainEntity": [
     {
       "@type": "Question",
       "name": "Wie hoch ist der Dieselpreis in Polen heute?",
       "acceptedAnswer": {
         "@type": "Answer",
-        "text": "Diesel (polnisch: Olej napędowy, kurz ON) kostet an den Grenztankstellen aktuell rund 1,60–1,70 €/L umgerechnet – meist 30–45 Cent pro Liter weniger als in Deutschland. Die tagesaktuellen Live-Preise in Euro stehen oben in der Preistabelle."
+        "text": "Diesel (polnisch: Olej napędowy, kurz ON) kostet an den Grenztankstellen aktuell rund {{PL_DIESEL_SPANNE}} €/L umgerechnet – derzeit {{ERSPARNIS_CENT}} Cent pro Liter weniger als in Deutschland. Die tagesaktuellen Live-Preise in Euro stehen oben in der Preistabelle."
       }
     },
     {
@@ -216,51 +217,22 @@
     <!-- Startwerte im HTML fürs SEO; werden von eurer API live überschrieben -->
     <div class="ptable" id="ptable">
       <div class="prow head">
-        <div>Tankstelle</div><div>Diesel €/L</div><div class="st-cell-3">Entfernung</div>
+        <div>Tankstelle</div><div>Preis €/L</div><div class="st-cell-3">Entfernung</div>
       </div>
-      <div class="prow">
-        <div><div class="st-name">🇵🇱 Dyskont Paliwowy <span class="st-badge">günstigste</span></div>
-          <div class="st-meta">Zgorzelec · 24/7 · ON, Pb95, LPG</div></div>
-        <div class="price">1,645 €<span class="pln">7,12 zł/L</span></div>
-        <div class="price st-cell-3">2 km</div>
-      </div>
-      <div class="prow">
-        <div><div class="st-name">🇵🇱 Citronex</div>
-          <div class="st-meta">Zgorzelec · 24/7 · ON, Pb95</div></div>
-        <div class="price">1,659 €<span class="pln">7,18 zł/L</span></div>
-        <div class="price st-cell-3">3 km</div>
-      </div>
-      <div class="prow">
-        <div><div class="st-name">🇵🇱 BP Zgorzelec</div>
-          <div class="st-meta">Zgorzelec · 24/7 · ON, Ultimate Diesel</div></div>
-        <div class="price">1,689 €<span class="pln">7,31 zł/L</span></div>
-        <div class="price st-cell-3">3 km</div>
-      </div>
-      <div class="prow">
-        <div><div class="st-name">🇵🇱 Shell Zgorzelec</div>
-          <div class="st-meta">Zgorzelec · 24/7 · ON, V-Power Diesel</div></div>
-        <div class="price">1,701 €<span class="pln">7,36 zł/L</span></div>
-        <div class="price st-cell-3">4 km</div>
-      </div>
-      <div class="prow">
-        <div><div class="st-name">🇵🇱 AB Tank Sieniawka</div>
-          <div class="st-meta">Sieniawka · Mo–Sa · ON, Pb95</div></div>
-        <div class="price">1,672 €<span class="pln">7,24 zł/L</span></div>
-        <div class="price st-cell-3">19 km</div>
-      </div>
+      {{TABELLE_PL}}
     </div>
-    <p class="disc">Beispielwerte · werden live über die BestPriceTank-API befüllt · Wechselkurs ~4,33 zł/€ · Preisangaben ohne Gewähr (Quelle: Dyskont Paliwowy API, MTS-K).</p>
+    <p class="disc">Gemessene Stationspreise von Dyskont Paliwowy im Umkreis von 60 km · Stand {{STAND}} · Wechselkurs {{KURS_PLN}} zł/€ (Polnische Nationalbank) · Preisangaben ohne Gewähr.</p>
 
     <!-- Vergleich DE vs PL -->
     <div class="compare">
       <div class="cbox de">
         <div class="lab">🇩🇪 Deutschland Ø</div>
-        <div class="val" id="de-price">1,953 €</div>
+        <div class="val" id="de-price">{{DE_DIESEL}} €</div>
         <div class="st-meta">Diesel · bundesweit (ADAC)</div>
       </div>
       <div class="cbox pl">
         <div class="lab">🇵🇱 Polen günstigste</div>
-        <div class="val" id="pl-price">1,645 €</div>
+        <div class="val" id="pl-price">{{PL_DIESEL}} €</div>
         <div class="st-meta">Diesel · Zgorzelec, in Euro</div>
       </div>
     </div>
@@ -279,7 +251,7 @@
   <section class="prose">
     <h2>Diesel in Polen: Was du wissen solltest</h2>
     <p>Diesel heißt in Polen <b>Olej napędowy</b> — an der Zapfsäule steht meist nur <b>„ON"</b>, schwarz gekennzeichnet wie in Deutschland. Die Qualität ist identisch: Polnischer Diesel muss dieselbe <b>EU-Norm EN 590</b> erfüllen wie deutscher, mit gleicher Cetanzahl, gleichem Schwefelgrenzwert und Winterfestigkeit in der kalten Jahreszeit. Wer Premium tanken will, findet bei Orlen „Verva ON", bei Shell „V-Power Diesel" und bei BP „Ultimate Diesel".</p>
-    <p>Der Preisvorteil entsteht über die Steuern: Polen erhebt eine deutlich niedrigere Energiesteuer und keinen deutschen CO₂-Preis. Seit dem Auslaufen des Tankrabatts zum 1. Juli 2026 liegt deutscher Diesel bundesweit bei rund 1,95 €/L — an der polnischen Grenze zahlst du umgerechnet etwa 1,60–1,70 €/L. Bei 60 Litern sind das <b>18–27 € Brutto-Ersparnis</b> pro Tankfüllung; nach Fahrtkosten bleiben in Grenznähe typisch 15–25 € netto. Alle Kraftstoffsorten im Überblick findest du auf der Seite <a href="https://bestpricetank.de/spritpreise-polen.html">Spritpreise Polen heute</a>.</p>
+    <p>Der Preisvorteil entsteht über die Steuern: Polen erhebt eine deutlich niedrigere Energiesteuer und keinen deutschen CO₂-Preis. Seit dem Auslaufen des Tankrabatts zum 1. Juli 2026 liegt deutscher Diesel in Görlitz und Umgebung derzeit bei {{DE_DIESEL}} €/L — an der polnischen Grenze zahlst du umgerechnet etwa {{PL_DIESEL_SPANNE}} €/L. Bei 60 Litern sind das <b>{{ERSPARNIS_60L}} € Brutto-Ersparnis</b> pro Tankfüllung; nach Fahrtkosten bleiben in Grenznähe typisch 15–25 € netto. Alle Kraftstoffsorten im Überblick findest du auf der Seite <a href="https://bestpricetank.de/spritpreise-polen.html">Spritpreise Polen heute</a>.</p>
 
     <h2>Tipps fürs Diesel-Tanken in Polen</h2>
     <ul class="tips">
@@ -298,7 +270,7 @@
 
     <details open>
       <summary>Wie hoch ist der Dieselpreis in Polen heute?</summary>
-      <div class="ans">Diesel (Olej napędowy, „ON") kostet an den Grenztankstellen aktuell rund 1,60–1,70 €/L umgerechnet — meist 30–45 Cent pro Liter weniger als in Deutschland. Die tagesaktuellen Live-Preise in Euro stehen oben in der Tabelle.</div>
+      <div class="ans">Diesel (Olej napędowy, „ON") kostet an den Grenztankstellen aktuell rund {{PL_DIESEL_SPANNE}} €/L umgerechnet — derzeit {{ERSPARNIS_CENT}} Cent pro Liter weniger als in Deutschland. Die tagesaktuellen Live-Preise in Euro stehen oben in der Tabelle.</div>
     </details>
     <details>
       <summary>Ist polnischer Diesel genauso gut wie deutscher?</summary>

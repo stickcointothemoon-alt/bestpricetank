@@ -1,14 +1,18 @@
 [build]
-  publish = "."
+  publish  = "dist"
   functions = "netlify/functions"
+  # Schreibt die Live-Preise in die statischen Seiten. Ohne diesen Schritt
+  # tragen die Unterseiten die Platzhalter aus dem Quelltext.
+  command  = "node scripts/build-pages.js"
 
-# Live-Preise:
+[build.environment]
+  # Das Build-Skript nutzt fs.cpSync und AbortSignal.timeout.
+  NODE_VERSION = "20"
+
+# Live-Preise zur Laufzeit:
 #   /.netlify/functions/de-prices  → Tankerkönig (DE), mit Zwischenspeicher
 #   /.netlify/functions/dp-prices  → Dyskont Paliwowy (PL) + NBP-Wechselkurse
 #   /.netlify/functions/cz-prices  → ČSÚ-Wochendurchschnitt (CZ)
-#
-# Die früheren /api/pl-prices- und /api/config-Weiterleitungen sind entfallen:
-# sie zeigten auf Functions, die es nicht mehr bzw. nie gab.
 
 [[headers]]
   for = "/*"
