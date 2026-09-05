@@ -125,11 +125,33 @@ async function cz(czkRate) {
   return { dieselCzk, diesel: dieselCzk / czkRate, week: week.replace(/^(\d{4})-W(\d+)$/, 'KW $2/$1') };
 }
 
-async function collect() {
-  const r = await rates();
-  const [d, p, c] = await Promise.all([de(), pl(r.pln), cz(r.czk)]);
+// Jede Quelle einzeln. Klemmt eine, werden die anderen trotzdem
+// aktualisiert und nur der fehlende Teil kommt aus dem letzten Stand.
+async function collect(vorher) {
+  const quellen = {};
+  const hole = async (name, fn, rueckfall) => {
+    try {
+      const v = await fn();
+      quellen[name] = 'frisch';
+      return v;
+    } catch (e) {
+      console.warn(`   ⚠ ${name}: ${e.message}`);
+      if (!rueckfall) throw new Error(`${name} fehlgeschlagen und kein Rückfall vorhanden`);
+      quellen[name] = 'aus dem letzten Stand';
+      return rueckfall;
+    }
+  };
+
+  const r = await hole('Wechselkurse (NBP)', rates, vorher?.kurse);
+  const [d, p, c] = await Promise.all([
+    hole('Tankerkönig (DE)', () => de(), vorher?.de),
+    hole('Dyskont Paliwowy (PL)', () => pl(r.pln), vorher?.pl),
+    hole('ČSÚ (CZ)', () => cz(r.czk), vorher?.cz),
+  ]);
+
   return {
     stand: new Date().toISOString(),
+    quellen,
     kurse: r, de: d, pl: p, cz: c,
     ersparnisProLiter: d.diesel - p.diesel,
   };
@@ -178,21 +200,24 @@ function tabelle(st) {
 const esc = (t) => String(t).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
 
 (async () => {
+  const vorher = fs.existsSync(LIVE) ? JSON.parse(fs.readFileSync(LIVE, 'utf8')) : null;
   let data, frisch = true;
   try {
-    data = await collect();
+    data = await collect(vorher);
     fs.mkdirSync(path.dirname(LIVE), { recursive: true });
     fs.writeFileSync(LIVE, JSON.stringify(data, null, 2));
-    console.log('✅ Live-Preise geholt');
+    const q = Object.entries(data.quellen).map(([k, v]) => `${k}: ${v}`).join(' · ');
+    console.log('✅ Quellen — ' + q);
+    frisch = Object.values(data.quellen).every((v) => v === 'frisch');
   } catch (e) {
     frisch = false;
     console.warn('⚠ Abruf fehlgeschlagen:', e.message);
-    if (!fs.existsSync(LIVE)) {
+    if (!vorher) {
       console.error('❌ Und kein data/live.json als Rückfall vorhanden. Build abgebrochen.');
       process.exit(1);
     }
-    data = JSON.parse(fs.readFileSync(LIVE, 'utf8'));
-    console.warn(`⚠ Verwende den Stand vom ${data.stand}`);
+    data = vorher;
+    console.warn(`⚠ Verwende durchgehend den Stand vom ${data.stand}`);
   }
 
   const t = tokens(data);

@@ -1,5 +1,11 @@
 {
-  "stand": "2026-09-05T13:01:44.188Z",
+  "stand": "2026-09-05T13:34:41.235Z",
+  "quellen": {
+    "Wechselkurse (NBP)": "aus dem letzten Stand",
+    "Tankerkönig (DE)": "aus dem letzten Stand",
+    "Dyskont Paliwowy (PL)": "aus dem letzten Stand",
+    "ČSÚ (CZ)": "aus dem letzten Stand"
+  },
   "kurse": {
     "pln": 4.3179,
     "czk": 24.1899
