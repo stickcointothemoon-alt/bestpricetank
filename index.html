@@ -1458,9 +1458,8 @@ async function refreshPrices(){
   try{ const gc=await geocodeAndCenter(); if(gc) coords=gc; }catch(e){}
   if(!userLocationCoords.lat) userLocationCoords=coords;
   updateStaticDistances(userLocationCoords);
-  const apiRad=Math.min(rad,25);
   try{
-    const url=`/.netlify/functions/de-prices?lat=${coords.lat.toFixed(2)}&lng=${coords.lng.toFixed(2)}&rad=${apiRad}`;
+    const url=`/.netlify/functions/de-prices?lat=${coords.lat.toFixed(2)}&lng=${coords.lng.toFixed(2)}`;
 const res=await fetch(url);
     const data=await res.json();
     if(!data.ok||!Array.isArray(data.stations)) throw new Error('TK error: '+JSON.stringify(data).slice(0,80));
@@ -1502,7 +1501,10 @@ const res=await fetch(url);
     renderStationList();
     gcalc();
     savePriceSnapshot();
-    clearDataWarning('de');
+    if(data.stale){
+      const t=data.fetchedAt?new Date(data.fetchedAt).toLocaleTimeString('de-DE',{hour:'2-digit',minute:'2-digit'}):'?';
+      setDataWarning('de','Deutsche Preise vom '+t+' Uhr - Tankerkoenig ist gerade nicht erreichbar.');
+    } else clearDataWarning('de');
     console.log('✅ TK geladen:',STATIONS.filter(s=>s.country==='de').length,'DE Stationen');
   }catch(e){
     console.warn('TK Fehler:',e.message);
