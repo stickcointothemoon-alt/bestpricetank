@@ -28,7 +28,20 @@ exports.handler = async (event) => {
 
   try {
     const res = await fetch(url);
-    const data = await res.json();
+    const body = await res.text();
+    let data;
+    try {
+      data = JSON.parse(body);
+    } catch (parseErr) {
+      // Tankerkoenig lieferte kein JSON (Sperrseite, Wartung, Rate-Limit o. ae.)
+      console.error('TK-Antwort kein JSON:', res.status, body.slice(0, 400));
+      return json(502, {
+        ok: false,
+        message: `Tankerkoenig antwortete mit HTTP ${res.status}, aber kein JSON`,
+        upstreamStatus: res.status,
+        upstreamSnippet: body.slice(0, 400),
+      });
+    }
 
     if (!data.ok) {
       // Fehler von Tankerkönig NICHT cachen, aber sauber weiterreichen

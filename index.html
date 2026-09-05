@@ -98,7 +98,7 @@ select option{background:#0a1628}
 
 /* HEADER */
 .hdr{
-  position:absolute;top:max(env(safe-area-inset-top),10px);left:50%;transform:translateX(-50%);
+  position:absolute;top:calc(max(env(safe-area-inset-top),10px) + var(--warn-h,0px));left:50%;transform:translateX(-50%);
   display:flex;align-items:center;gap:3px;
   height:48px;padding:0 5px;border-radius:999px;
   border:1px solid var(--rim2);background:var(--glass);
@@ -1431,7 +1431,7 @@ function clearDataWarning(key){ delete DATA_WARNINGS[key]; renderDataWarnings();
 function renderDataWarnings(){
   const msgs = Object.values(DATA_WARNINGS);
   let el = document.getElementById('data-warning');
-  if(!msgs.length){ if(el) el.remove(); return; }
+  if(!msgs.length){ if(el) el.remove(); document.documentElement.style.setProperty('--warn-h','0px'); return; }
   if(!el){
     el = document.createElement('div');
     el.id = 'data-warning';
@@ -1442,6 +1442,7 @@ function renderDataWarnings(){
     document.body.appendChild(el);
   }
   el.textContent = '\u26A0 ' + msgs.join('  \u00B7  ');
+  document.documentElement.style.setProperty('--warn-h', el.offsetHeight + 'px');
 }
 
 async function refreshPrices(){
@@ -1567,19 +1568,20 @@ function updateAICard(){
   const f=currentFuel;
   const plSt=STATIONS.filter(s=>s.country==='pl'&&(s[f]||s.diesel)>0).sort((a,b)=>(a[f]||a.diesel)-(b[f]||b.diesel));
   const deSt=STATIONS.filter(s=>s.country==='de'&&(s[f]||s.diesel)>0).sort((a,b)=>(a[f]||a.diesel)-(b[f]||b.diesel));
-  const plPrice=(plSt[0]?.[f]||plSt[0]?.diesel)||PRICES[f]?.pl||PRICES.diesel.pl;
-  const dePrice=(deSt[0]?.[f]||deSt[0]?.diesel)||PRICES[f]?.de||PRICES.diesel.de;
-  const save=Math.max(0,(dePrice-plPrice)*60);
+  const plPrice=(plSt[0]?.[f]||plSt[0]?.diesel)||0; // kein hartkodierter Ersatzwert
+  const dePrice=(deSt[0]?.[f]||deSt[0]?.diesel)||0;
+  const havePl=plPrice>0, haveDe=dePrice>0;
+  const save=(havePl&&haveDe)?Math.max(0,(dePrice-plPrice)*60):null;
+  const fmtE=v=>v.toFixed(2).replace('.',',')+' €';
+  const fmtL=v=>v.toFixed(3).replace('.',',')+'€/L';
   const el=document.getElementById('ai-save');
-  if(el) el.textContent=save.toFixed(2).replace('.',',')+' €';
+  if(el) el.textContent = save===null ? '–' : fmtE(save);
   const bp=document.getElementById('ai-best-price');
-  if(bp) bp.textContent=plPrice.toFixed(3).replace('.',',')+'€/L';
-  // KI demo values
-  const net=Math.max(0,save-1.2);
+  if(bp) bp.textContent = havePl ? fmtL(plPrice) : '–';
   const ks=document.getElementById('ki-save-demo');
-  if(ks) ks.textContent=net.toFixed(2).replace('.',',')+' €';
+  if(ks) ks.textContent = save===null ? '–' : fmtE(Math.max(0,save-1.2));
   const kp=document.getElementById('ki-pl-demo');
-  if(kp) kp.textContent=plPrice.toFixed(3).replace('.',',')+'€/L';
+  if(kp) kp.textContent = havePl ? fmtL(plPrice) : '–';
 }
 
 // ══════════════════════════════════════
