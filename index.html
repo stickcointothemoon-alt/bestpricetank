@@ -45,6 +45,7 @@ html,body{width:100%;height:100dvh;overflow:hidden;font-family:var(--sans);color
 button{cursor:pointer;border:none;background:none;font:inherit;color:inherit}
 input,select{font:inherit;color:inherit;border:none;outline:none;background:none}
 select option{background:#0a1628}
+.pbub.geschaetzt{opacity:.74;border-style:dashed}
 
 /* MAP */
 #map{position:fixed;inset:0;z-index:0;background:#020d1a}
@@ -1250,6 +1251,8 @@ function adjustPLPricesToBenchmark(dpDiesel, dpE5, dpE10){
     s.diesel = +(dpDiesel + add).toFixed(3);
     s.e5     = +((dpE5  || dpDiesel + 0.037) + add).toFixed(3);
     s.e10    = +((dpE10 || dpDiesel + 0.017) + add).toFixed(3);
+    s.estimate = true;                       // Benchmark plus Aufschlag
+    s.priceNote = 'Basis Dyskont Paliwowy';
   });
   console.log('✅ PL-Preise auf DP-Benchmark angepasst: Diesel', dpDiesel.toFixed(3),'€/L');
 }
@@ -1284,6 +1287,21 @@ function initMap(){
   }
 }
 
+// Wie alt ist der Preis? Gibt null zurueck, wenn unbekannt.
+function preisAlter(s){
+  if(!s.gemessenAm) return null;
+  const min = Math.round((Date.now() - new Date(s.gemessenAm).getTime())/60000);
+  if(!isFinite(min) || min < 0) return null;
+  if(min < 60) return `vor ${min} Min.`;
+  if(min < 48*60) return `vor ${Math.round(min/60)} Std.`;
+  return `vor ${Math.round(min/1440)} Tagen`;
+}
+function quellenText(s){
+  if(s.estimate) return 'Schätzung' + (s.priceNote ? ' · ' + s.priceNote : '');
+  const a = preisAlter(s);
+  return 'gemessen' + (a ? ' · ' + a : '');
+}
+
 function makeMarkerIcon(s){
   if(typeof L === 'undefined') return null;
   const p = +s[currentFuel] || 0;
@@ -1291,10 +1309,11 @@ function makeMarkerIcon(s){
   const sub = s.country==='pl'&&BPT_RATES.PLN>0 ? `<div class="pbub-sub">${(p*BPT_RATES.PLN).toFixed(2).replace('.',',')} PLN</div>` :
               s.country==='cz'&&BPT_RATES.CZK>0 ? `<div class="pbub-sub">${(p*BPT_RATES.CZK).toFixed(1).replace('.',',')} CZK</div>` : '';
   const star = s.best ? '<div class="pbub-star">★</div>' : '';
-  const cls = `pbub ${s.country}${s.best?' best-price':''}`;
+  const cls = `pbub ${s.country}${s.best?' best-price':''}${s.estimate?' geschaetzt':''}`;
+  const tilde = s.estimate ? '≈' : '';
   const html = `<div class="${cls}" style="position:relative;animation-delay:${(Math.random()*2).toFixed(1)}s">
     ${star}
-    <div class="pbub-row"><div class="pbub-logo">${s.logo}</div>${p.toFixed(3).replace('.',',')}°</div>
+    <div class="pbub-row"><div class="pbub-logo">${s.logo}</div>${tilde}${p.toFixed(3).replace('.',',')}°</div>
     ${sub}
   </div>`;
   return L.divIcon({html, className:'', iconSize:null, iconAnchor:[0,20]});
@@ -1484,7 +1503,8 @@ const res=await fetch(url);
           country:'de',lat:+s.lat,lng:+s.lng,dist:+dist.toFixed(1),
           diesel:s.diesel||0,e5:s.e5||0,e10:s.e10||0,lpg:s.lpg||0,
           logo:(s.brand||'DE').substring(0,2).toUpperCase(),
-          best:false,source:'api'
+          best:false,source:'api',
+          estimate:false, gemessenAm:data.fetchedAt||new Date().toISOString()
         });
       }
     });
@@ -1536,6 +1556,8 @@ const res=await fetch(url);
             logo: 'DP',
             group: 'dp',   // Markierung für eigenen Listenbereich
             best: false,
+            estimate: false,
+            gemessenAm: s.last_update || dpdata.data_timestamp || null,
           });
         });
         // Nach Distanz sortieren
@@ -1969,16 +1991,20 @@ function renderStationList(){
     const isFirst=showRank&&i===0;
     return`<div style="display:flex;align-items:center;gap:8px;padding:10px;border-radius:13px;border:1px solid ${isFirst?'rgba(0,230,118,.25)':'var(--rim)'};background:${isFirst?'rgba(0,200,83,.07)':'rgba(255,255,255,.03)'};cursor:pointer" onclick="openStation('${s.id}');cp('stations')">
       <div style="width:24px;height:24px;border-radius:8px;background:${isFirst?'rgba(0,230,118,.2)':'rgba(255,255,255,.06)'};display:grid;place-items:center;font:900 11px var(--mono);color:${isFirst?'var(--green)':'var(--muted)'};">${showRank?i+1:'DP'}</div>
-      <div style="flex:1;min-width:0"><div style="font:800 13px var(--sans);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${s.name}</div><div style="font-size:10.5px;color:var(--muted);margin-top:1px">${flags[s.country]||'🇵🇱'} ${s.dist.toFixed(1)} km${isFirst?' <span style="color:var(--green)">★</span>':''}</div></div>
-      <div style="text-align:right;flex-shrink:0"><div style="font:900 16px var(--mono);color:${cols[s.country]||'#6ee7b7'}">${pr.toFixed(3).replace('.',',')}°</div>${sub}</div>
+      <div style="flex:1;min-width:0"><div style="font:800 13px var(--sans);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${s.name}</div><div style="font-size:10.5px;color:var(--muted);margin-top:1px">${flags[s.country]||'🇵🇱'} ${s.dist.toFixed(1)} km${isFirst?' <span style="color:var(--green)">★</span>':''}</div><div style="font-size:9.5px;color:var(--faint);margin-top:1px">${s.estimate?'≈ ':''}${quellenText(s)}</div></div>
+      <div style="text-align:right;flex-shrink:0"><div style="font:900 16px var(--mono);color:${cols[s.country]||'#6ee7b7'};${s.estimate?'opacity:.72':''}">${s.estimate?'≈':''}${pr.toFixed(3).replace('.',',')}°</div>${sub}</div>
     </div>`;
   };
 
-  let html='';
+  const legende = `<div style="display:flex;gap:12px;flex-wrap:wrap;padding:2px 4px 10px;font-size:10px;color:var(--faint)">
+    <span><b style="color:var(--text)">1,978°</b> gemessener Stationspreis</span>
+    <span><b style="color:var(--text)">≈ 1,978°</b> hochgerechnet aus dem Benchmark</span>
+  </div>`;
+  let html=legende;
   if(!list.length){
-    html='<div style="padding:18px;text-align:center;color:var(--muted);font-size:13px">Keine Stationen im gewählten Umkreis</div>';
+    html+='<div style="padding:18px;text-align:center;color:var(--muted);font-size:13px">Keine Stationen im gewählten Umkreis</div>';
   } else {
-    html=list.map((s,i)=>stationCard(s,i,true)).join('');
+    html+=list.map((s,i)=>stationCard(s,i,true)).join('');
   }
 
   // DP-Netzwerk Block
