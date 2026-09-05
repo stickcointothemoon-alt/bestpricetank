@@ -1,47 +1,112 @@
 // netlify/functions/de-prices.js
-// Proxy für Tankerkönig – Key bleibt serverseitig, Antworten werden 5 Min. gecacht.
-// Der Key kommt aus der Netlify-Umgebungsvariable TK_KEY (Site settings → Environment variables).
+// Proxy für Tankerkönig – Key bleibt serverseitig.
+//
+// Tankerkönig drosselt Abfragen aus Rechenzentren hart und antwortet dann
+// mit HTTP 503 und einer HTML-Seite. Vier Maßnahmen dagegen:
+//
+//   1. Ein erkennbarer User-Agent. Ohne ihn wird die Anfrage als Bot-
+//      Verkehr abgewiesen – das war die eigentliche Ursache.
+//   2. Koordinaten werden auf ein 0,05°-Raster (~5 km) gerundet. Alle
+//      Besucher eines Ortes landen damit auf derselben Abfrage, auch wenn
+//      die Geokodierung leicht abweichende Werte liefert.
+//   3. Immer Radius 25 km. Das Frontend filtert selbst auf den gewählten
+//      Radius, also genügt eine Abfrage für alle Radius-Einstellungen.
+//   4. Jede erfolgreiche Antwort wird gespeichert. Bei einer Störung wird
+//      der letzte gute Stand mit Altersangabe ausgeliefert, statt gar nichts.
+
+const UPSTREAM_RADIUS = 25;
+const CDN_SECONDS = 900;
+const MAX_STALE_MINUTES = 240;
+const ATTEMPTS = 2;
+
+async function getBlobStore() {
+  try {
+    const { getStore } = await import('@netlify/blobs');
+    return getStore('de-prices');
+  } catch (e) {
+    console.warn('Blobs nicht verfügbar:', e.message);
+    return null;
+  }
+}
+
+const snap = (v) => Math.round(v * 20) / 20;   // 0,05°-Raster
 
 exports.handler = async (event) => {
-  const TK_KEY = process.env.TK_KEY;
-  if (!TK_KEY) {
-    return json(500, { ok: false, message: 'TK_KEY nicht konfiguriert' });
-  }
+  const TK_KEY = process.env.TK_KEY || process.env.TK_API_KEY;
+  if (!TK_KEY) return json(500, { ok: false, message: 'TK_KEY nicht konfiguriert' });
 
-  // Parameter vom Frontend übernehmen, mit sicheren Grenzen
   const q = event.queryStringParameters || {};
   let lat = parseFloat(q.lat);
   let lng = parseFloat(q.lng);
-  let rad = parseFloat(q.rad);
+  if (!isFinite(lat) || !isFinite(lng)) { lat = 51.1534; lng = 14.9853; } // Görlitz
+  lat = snap(lat);
+  lng = snap(lng);
 
-  if (!isFinite(lat) || !isFinite(lng)) { lat = 51.1534; lng = 14.9853; } // Fallback: Görlitz
-  if (!isFinite(rad) || rad <= 0) rad = 15;
-  rad = Math.min(rad, 25);
-
-  // Koordinaten runden (~1 km Raster) → gleiche URL für nahe Nutzer → CDN-Cache greift
-  lat = Math.round(lat * 100) / 100;
-  lng = Math.round(lng * 100) / 100;
+  const cacheKey = `tk-${lat}-${lng}`;
+  const store = await getBlobStore();
 
   const url =
     'https://creativecommons.tankerkoenig.de/json/list.php' +
-    `?lat=${lat}&lng=${lng}&rad=${rad}&sort=dist&type=all&apikey=${TK_KEY}`;
+    `?lat=${lat}&lng=${lng}&rad=${UPSTREAM_RADIUS}&sort=dist&type=all&apikey=${TK_KEY}`;
 
-  try {
-    const res = await fetch(url);
-    const data = await res.json();
+  let data = null;
+  let failure;
 
-    if (!data.ok) {
-      // Fehler von Tankerkönig NICHT cachen, aber sauber weiterreichen
-      return json(502, { ok: false, message: data.message || 'Tankerkönig-Fehler' });
+  for (let attempt = 1; attempt <= ATTEMPTS && !data; attempt++) {
+    if (attempt > 1) await new Promise((r) => setTimeout(r, 900));
+    try {
+      const res = await fetch(url, {
+        signal: AbortSignal.timeout(7000),
+        headers: {
+          'User-Agent': 'BestPriceTank/1.0 (+https://bestpricetank.de)',
+          'Accept': 'application/json',
+          'Referer': 'https://bestpricetank.de/',
+        },
+      });
+      const body = await res.text();
+      try {
+        data = JSON.parse(body);
+      } catch {
+        failure = `Tankerkönig antwortete mit HTTP ${res.status} statt JSON`;
+        console.warn(`Versuch ${attempt}: ${failure} – ${body.slice(0, 120)}`);
+      }
+    } catch (e) {
+      failure = 'Abruf fehlgeschlagen: ' + e.message;
+      console.warn(`Versuch ${attempt}: ${failure}`);
     }
-
-    // Erfolg: 5 Minuten im Netlify-CDN cachen.
-    // Alle Besucher in dieser Zeit bekommen die gespeicherte Antwort –
-    // Tankerkönig sieht max. ~1 Anfrage pro 5 Min. und Standort-Raster.
-    return json(200, data, { 'Cache-Control': 'public, max-age=60, s-maxage=300' });
-  } catch (e) {
-    return json(502, { ok: false, message: 'Abruf fehlgeschlagen: ' + e.message });
   }
+
+  if (data && data.ok) {
+    const payload = { ...data, fetchedAt: new Date().toISOString(), stale: false };
+    if (store) {
+      try { await store.setJSON(cacheKey, payload); }
+      catch (e) { console.warn('Blob-Schreiben fehlgeschlagen:', e.message); }
+    }
+    return json(200, payload, {
+      'Cache-Control': `public, max-age=120, s-maxage=${CDN_SECONDS}, stale-while-revalidate=3600`,
+    });
+  }
+  if (data && !data.ok) failure = data.message || 'Tankerkönig-Fehler';
+
+  // ── Störung: letzten guten Stand ausliefern, statt gar nichts ──────
+  if (store) {
+    try {
+      const last = await store.get(cacheKey, { type: 'json' });
+      if (last && Array.isArray(last.stations)) {
+        const ageMinutes = Math.round((Date.now() - new Date(last.fetchedAt).getTime()) / 60000);
+        if (ageMinutes <= MAX_STALE_MINUTES) {
+          console.warn(`TK gestört (${failure}) – liefere Stand von vor ${ageMinutes} Min.`);
+          return json(200, { ...last, stale: true, ageMinutes, upstreamMessage: failure }, {
+            'Cache-Control': 'public, max-age=60, s-maxage=180',
+          });
+        }
+      }
+    } catch (e) {
+      console.warn('Blob-Lesen fehlgeschlagen:', e.message);
+    }
+  }
+
+  return json(502, { ok: false, message: failure || 'Tankerkönig nicht erreichbar' });
 };
 
 function json(statusCode, body, extraHeaders) {

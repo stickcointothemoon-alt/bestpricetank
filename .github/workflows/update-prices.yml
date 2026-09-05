@@ -1,22 +1,32 @@
-name: Update Fuel Prices
+# ─────────────────────────────────────────────────────────────────────
+# ABGESCHALTET am 05.09.2026.
+#
+# Dieser Workflow lief zweimal täglich und hat 295 Commits mit der
+# Meldung "Preisupdate" erzeugt. In keinem einzigen davon stammten die
+# Werte von Fuelo: das Feld "source" stand ausnahmslos auf ["static"],
+# also auf den im Skript hartkodierten Ersatzwerten. Der Fuelo-Abruf ist
+# nie durchgelaufen, und weil das Skript mit Exit-Code 0 endete, meldete
+# GitHub trotzdem jedes Mal Erfolg.
+#
+# Die Anwendung liest die vom Skript erzeugte Datei ohnehin nicht mehr:
+#   DE → Tankerkönig      (netlify/functions/de-prices.js)
+#   PL → Dyskont Paliwowy (netlify/functions/dp-prices.js)
+#   CZ → ČSÚ              (netlify/functions/cz-prices.js)
+#
+# Der Zeitplan ist entfernt; manuell startbar bleibt er für den Fall,
+# dass Fuelo wieder als Quelle in Frage kommt.
+# ─────────────────────────────────────────────────────────────────────
+name: Update Fuel Prices (abgeschaltet)
 
 on:
-  schedule:
-    - cron: '0 6,18 * * *'
   workflow_dispatch:
-
-permissions:
-  contents: write
 
 jobs:
   update-prices:
     runs-on: ubuntu-latest
-    
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v4
-        with:
-          token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
@@ -33,5 +43,5 @@ jobs:
           git config user.name "PriceBot"
           git config user.email "bot@bestpricetank.de"
           git add data/prices.json
-          git diff --staged --quiet || git commit -m "🔄 Preisupdate $(date '+%d.%m.%Y %H:%M')"
+          git diff --staged --quiet || git commit -m "Preisupdate $(date '+%d.%m.%Y %H:%M')"
           git push
