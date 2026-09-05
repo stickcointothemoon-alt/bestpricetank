@@ -260,18 +260,23 @@ const esc = (t) => String(t).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&l
 
   // Ausgabe in dist/. Die Quelldateien behalten ihre Platzhalter, sonst
   // gaebe es beim zweiten Build nichts mehr zu ersetzen.
-  const DIST = path.join(ROOT, 'dist');
-  fs.rmSync(DIST, { recursive: true, force: true });
+  // BPT_DIST erlaubt einen anderen Ausgabeort - nuetzlich zum Pruefen in
+  // Umgebungen, in denen der Projektordner nicht beschreibbar ist.
+  const DIST = process.env.BPT_DIST || path.join(ROOT, 'dist');
+  // Aufraeumen ist Kuer, nicht Pflicht: In manchen Umgebungen darf nicht
+  // geloescht werden. Ueberschreiben genuegt.
+  try { fs.rmSync(DIST, { recursive: true, force: true }); }
+  catch (e) { console.warn('   · dist/ nicht loeschbar, wird ueberschrieben'); }
   fs.mkdirSync(DIST, { recursive: true });
 
-  const UEBERSPRINGEN = new Set(['dist', 'node_modules', '.git', '.github', 'scripts', 'netlify']);
+  const UEBERSPRINGEN = new Set(['dist', 'node_modules', 'scripts', 'netlify']);
   for (const e of fs.readdirSync(ROOT, { withFileTypes: true })) {
-    if (UEBERSPRINGEN.has(e.name)) continue;
-    fs.cpSync(path.join(ROOT, e.name), path.join(DIST, e.name), { recursive: true });
+    if (UEBERSPRINGEN.has(e.name) || e.name.startsWith('.')) continue;
+    fs.cpSync(path.join(ROOT, e.name), path.join(DIST, e.name), { recursive: true, force: true });
   }
 
   let ersetzt = 0;
-  const seiten = fs.readdirSync(DIST).filter((f) => f.endsWith('.html'));
+  const seiten = fs.readdirSync(DIST).filter((f) => f.endsWith('.html') || f === 'sitemap.xml');
   for (const f of seiten) {
     const ziel = path.join(DIST, f);
     let s = fs.readFileSync(ziel, 'utf8');
@@ -284,10 +289,23 @@ const esc = (t) => String(t).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&l
       return `data-aufschlag="${off}">${eur(v)}`;
     });
 
+    // Ortsbezogene Werte: der guenstigste Preis, den DIESE Seite tatsaechlich
+    // auflistet. Sonst verspricht eine Ueberschrift einen Preis, der auf der
+    // Seite nirgends steht - der Benchmark liegt in Zgorzelec, nicht ueberall.
+    const aufschlaege = [...s.matchAll(/data-aufschlag="(-?[\d.]+)"/g)].map((m) => parseFloat(m[1]));
+    const ortDiesel = aufschlaege.length ? data.pl.diesel + Math.min(...aufschlaege) : data.pl.diesel;
+    const ortErsparnis = data.de.diesel - ortDiesel;
+    const tSeite = {
+      ...t,
+      ORT_DIESEL: eur(ortDiesel),
+      ORT_ERSPARNIS_CENT: String(Math.round(ortErsparnis * 100)),
+      ORT_ERSPARNIS_60L: eur2(ortErsparnis * 60),
+    };
+
     s = s.replace(/\{\{([A-Z0-9_]+)\}\}/g, (m, k) => {
-      if (!(k in t)) { console.error(`❌ Unbekannter Platzhalter ${m} in ${f}`); process.exit(1); }
+      if (!(k in tSeite)) { console.error(`❌ Unbekannter Platzhalter ${m} in ${f}`); process.exit(1); }
       ersetzt++;
-      return t[k];
+      return tSeite[k];
     });
     const rest = s.match(/\{\{[A-Z0-9_]+\}\}/g);
     if (rest) { console.error(`❌ Nicht ersetzt in ${f}: ${rest.join(', ')}`); process.exit(1); }

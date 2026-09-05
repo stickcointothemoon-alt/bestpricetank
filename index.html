@@ -386,6 +386,8 @@ select option{background:#0a1628}
 .mstrip b{color:var(--text);font-weight:900}
 .ms-sep{color:var(--rim2)}
 .ms-legal{color:var(--faint);text-decoration:none;transition:color .15s}
+#ortlinks a{color:var(--faint);text-decoration:none}
+#ortlinks a:hover{color:var(--text);text-decoration:underline}
 .ms-legal:hover{color:var(--text)}
 
 /* MODALS */
@@ -439,6 +441,7 @@ select option{background:#0a1628}
   .dbtn{padding:6px 9px;font-size:9.5px}
   .dico{font-size:15px}
   .mstrip{display:none}
+  #ortlinks{display:none}
   .cinn{padding:10px 12px;gap:10px}
   .cacts{width:100%;justify-content:flex-end}
   .mbg{padding:0;align-items:flex-end}
@@ -628,6 +631,18 @@ select option{background:#0a1628}
   </div>
 
   <!-- Market strip -->
+  <!-- Ortsseiten: interne Verlinkung. Ohne sie haengen die Unterseiten
+       ohne einen einzigen Link von der Startseite in der Luft. -->
+  <nav id="ortlinks" aria-label="Spritpreise nach Ort" style="position:fixed;bottom:calc(env(safe-area-inset-bottom,0px) + 96px);left:50%;transform:translateX(-50%);z-index:11;max-width:min(94vw,760px);text-align:center;font:600 10.5px var(--sans);color:var(--faint);line-height:1.7;pointer-events:auto">
+    <a href="/spritpreise-polen.html">Spritpreise Polen</a> ·
+    <a href="/dieselpreis-polen.html">Dieselpreise Polen</a> ·
+    <a href="/spritpreise-zgorzelec.html">Zgorzelec</a> ·
+    <a href="/spritpreise-goerlitz.html">Görlitz</a> ·
+    <a href="/spritpreise-zittau.html">Zittau</a> ·
+    <a href="/spritpreise-hagenwerder.html">Hagenwerder</a> ·
+    <a href="/spritpreise-gubin.html">Guben / Gubin</a> ·
+    <a href="/spritpreise-slubice.html">Frankfurt / Słubice</a>
+  </nav>
   <div class="mstrip">
     <span class="ms-item">EUR/PLN <b id="s-pln">-</b></span>
     <span class="ms-sep">·</span>
