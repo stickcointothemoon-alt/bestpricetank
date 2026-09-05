@@ -46,16 +46,7 @@ exports.handler = async (event) => {
 
   let failure;
   try {
-    // Ohne erkennbaren User-Agent weisen viele Dienste Server-Anfragen ab.
-    // Das frühere, funktionierende fetch-prices.js hat einen mitgeschickt.
-    const res = await fetch(url, {
-      signal: AbortSignal.timeout(8000),
-      headers: {
-        'User-Agent': 'BestPriceTank/1.0 (+https://bestpricetank.de)',
-        'Accept': 'application/json',
-        'Referer': 'https://bestpricetank.de/',
-      },
-    });
+    const res = await fetch(url, { signal: AbortSignal.timeout(8000) });
     const body = await res.text();
 
     let data;
