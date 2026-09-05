@@ -2,7 +2,10 @@
 const fs = require('fs');
 const https = require('https');
 
-const FUELO_KEY = process.env.FUELO_KEY || 'a2cbe79aa1948e0';
+// Kein Klartext-Fallback mehr: der frühere Schlüssel stand in einem
+// öffentlichen Repository und gilt als kompromittiert.
+const FUELO_KEY = process.env.FUELO_KEY;
+if (!FUELO_KEY) { console.error('❌ FUELO_KEY nicht gesetzt'); process.exit(1); }
 
 const FALLBACK = {
   zgorzelec_i:  { e5: 6.12, diesel: 7.58, lpg: 3.89, adblue: 4.19 },
@@ -45,7 +48,7 @@ async function main() {
   console.log('🔄 Preisupdate:', new Date().toISOString());
   
   const prices = JSON.parse(JSON.stringify(FALLBACK));
-  let sources = ['static'];
+  let sources = ['static']; // bleibt 'static', wenn Fuelo nichts liefert
   const today = new Date().toLocaleDateString('de-DE');
   const ts = new Date().toISOString();
 
@@ -106,29 +109,8 @@ async function main() {
     }
   }
 
-  // Function Code generieren
-  const functionCode = `// Auto-generiert: ${ts}
-// Nächstes Update: 06:00 oder 18:00 UTC
-exports.handler = async () => ({
-  statusCode: 200,
-  headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*', 'Cache-Control': 'public, max-age=3600' },
-  body: JSON.stringify({
-    timestamp: "${ts}",
-    source: ${JSON.stringify(sources)},
-    updated: "${today}",
-    zgorzelec_i:  ${JSON.stringify(prices.zgorzelec_i)},
-    zgorzelec_ii: ${JSON.stringify(prices.zgorzelec_ii)},
-    hradek:       ${JSON.stringify(prices.hradek)},
-    regional_pl:  ${JSON.stringify(prices.regional_pl)},
-    regional_cz:  ${JSON.stringify(prices.regional_cz)},
-  }),
-});
-`;
-
-  // Beide Functions updaten!
-  fs.writeFileSync('netlify/functions/fetch-pl-prices.js', functionCode);
-  fs.writeFileSync('netlify/functions/get-pl-prices.js', functionCode);
-  
+  // Die früher hier erzeugten Functions gibt es nicht mehr - sie wurden
+  // vom Workflow ohnehin nie committet und lieferten Aprilpreise aus.
   // Auch prices.json updaten
   fs.mkdirSync('data', { recursive: true });
   fs.writeFileSync('data/prices.json', JSON.stringify({
@@ -146,5 +128,5 @@ exports.handler = async () => ({
 
 main().catch(err => {
   console.error('❌ Fehler:', err.message);
-  process.exit(0);
+  process.exit(1); // Exit 0 liess jeden Ausfall als Erfolg erscheinen.
 });

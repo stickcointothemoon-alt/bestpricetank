@@ -2,29 +2,22 @@
   publish = "."
   functions = "netlify/functions"
 
-[[redirects]]
-  from = "/api/pl-prices"
-  to = "/.netlify/functions/fetch-pl-prices"
-  status = 200
-
-[[redirects]]
-  from = "/api/pl-prices/latest"
-  to = "/.netlify/functions/get-pl-prices"
-  status = 200
-
-[[redirects]]
-  from = "/api/config"
-  to = "/.netlify/functions/config"
-  status = 200
+# Live-Preise:
+#   /.netlify/functions/de-prices  → Tankerkönig (DE), mit Zwischenspeicher
+#   /.netlify/functions/dp-prices  → Dyskont Paliwowy (PL) + NBP-Wechselkurse
+#   /.netlify/functions/cz-prices  → ČSÚ-Wochendurchschnitt (CZ)
+#
+# Die früheren /api/pl-prices- und /api/config-Weiterleitungen sind entfallen:
+# sie zeigten auf Functions, die es nicht mehr bzw. nie gab.
 
 [[headers]]
   for = "/*"
   [headers.values]
     X-Frame-Options = "DENY"
     X-Content-Type-Options = "nosniff"
+    Referrer-Policy = "strict-origin-when-cross-origin"
 
 [[headers]]
-  for = "/api/*"
+  for = "/.netlify/functions/*"
   [headers.values]
     Access-Control-Allow-Origin = "*"
-    Cache-Control = "public, max-age=3600"
