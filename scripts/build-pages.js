@@ -48,7 +48,30 @@ async function rates() {
 }
 
 // ── Deutschland: Tankerkönig ─────────────────────────────────────────
+// Bevorzugt ueber die eigene Function de-prices, weil die einen
+// Zwischenspeicher in Netlify Blobs und eine Wiederholung hat.
+// Tankerkoenig drosselt Direktabrufe aus dem Rechenzentrum mit HTTP 503 -
+// der Build lief deshalb regelmaessig in den Rueckfall.
+function auswerten(stationen) {
+  const offen = stationen.filter((s) => s.isOpen);
+  if (!offen.length) throw new Error('keine geoeffnete Station');
+  const min = (f) => Math.min(...offen.map((s) => s[f]).filter((v) => v > 0.3 && v < 5));
+  return { diesel: min('diesel'), e5: min('e5'), e10: min('e10'), count: offen.length };
+}
+
 async function de() {
+  const basis = process.env.URL || 'https://bestpricetank.de';
+  try {
+    const d = await getJson(`${basis}/.netlify/functions/de-prices?lat=51.15&lng=14.99`);
+    if (d.ok && Array.isArray(d.stations)) {
+      if (d.stale) console.log(`   · de-prices lieferte den Stand von vor ${d.ageMinutes} Min.`);
+      return auswerten(d.stations);
+    }
+    throw new Error(d.message || 'unerwartete Antwort');
+  } catch (e) {
+    console.warn(`   · de-prices nicht nutzbar (${e.message}), versuche Tankerkönig direkt`);
+  }
+
   const key = process.env.TK_KEY || process.env.TK_API_KEY;
   if (!key) throw new Error('TK_KEY nicht gesetzt');
   const d = await getJson(
@@ -57,9 +80,7 @@ async function de() {
     { Accept: 'application/json', Referer: 'https://bestpricetank.de/' }
   );
   if (!d.ok || !Array.isArray(d.stations)) throw new Error('Tankerkönig: unerwartete Antwort');
-  const open = d.stations.filter((s) => s.isOpen);
-  const min = (f) => Math.min(...open.map((s) => s[f]).filter((v) => v > 0.3 && v < 5));
-  return { diesel: min('diesel'), e5: min('e5'), e10: min('e10'), count: open.length };
+  return auswerten(d.stations);
 }
 
 // ── Polen: Dyskont Paliwowy ──────────────────────────────────────────
