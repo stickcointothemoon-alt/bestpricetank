@@ -2701,35 +2701,53 @@ function setLang(l) {
   console.log('🌐 Sprache:', l, '→', cfg.kiLang);
 }
 
+  // Zuschlag je CZ-Station gegenueber dem Landesdurchschnitt, in Kc/Liter.
+  // Grenznahe Stationen sind meist guenstiger als der tschechische Schnitt.
+  // Negative Werte = guenstiger. Aus Ortskenntnis pflegen.
+  const CZ_OFFSET = {
+    mol: 0, eurooil: 0, ono: 0, benzina: 0, shell_cz: 0,
+  };
+
   async function loadCZPrices(){
   try{
-    const r = await fetch('/data/pl-prices.json');
-    const d = await r.json();
-    if(!d.cz) return;
     const rate = BPT_RATES.CZK;
     if(!(rate>0)){ console.warn('CZ: kein Live-Kurs - Umrechnung uebersprungen'); return; }
-    const czDiesel = +(d.cz.diesel / rate).toFixed(3);
-    const czE5     = +(d.cz.e5     / rate).toFixed(3);
-    const czLpg    = +(d.cz.lpg    / rate).toFixed(3);
-    const czE10    = 0; // CZ-Quelle liefert keinen E10-Preis - kein erfundener Wert mehr
-    const czAge = (()=>{ const m=/^(\d{2})\.(\d{2})\.(\d{4})$/.exec(d.updated||'');
-      return m ? (Date.now()-new Date(+m[3],+m[2]-1,+m[1]).getTime())/864e5 : null; })();
-    if(czAge!==null && czAge>7) setDataWarning('cz','Tschechische Preise stammen vom '+d.updated+' und sind '+Math.round(czAge)+' Tage alt.');
-    else clearDataWarning('cz');
-    PRICES.diesel.cz = czDiesel;
-    PRICES.e5.cz     = czE5;
-    PRICES.e10.cz    = czE10;
-    PRICES.lpg.cz    = czLpg;
+
+    const r = await fetch('/.netlify/functions/cz-prices');
+    const d = await r.json();
+    if(!d.ok || !d.prices?.diesel){
+      setDataWarning('cz','Tschechische Preise sind gerade nicht abrufbar.');
+      return;
+    }
+
+    // Landesdurchschnitt in Kc, je Station um den Zuschlag verschoben, dann in Euro.
+    const toEur = kc => +(kc / rate).toFixed(3);
+    PRICES.diesel.cz = toEur(d.prices.diesel);
+    PRICES.e5.cz     = d.prices.e5  ? toEur(d.prices.e5)  : 0;
+    PRICES.e10.cz    = 0;   // Der CSU-Datensatz kennt kein E10
+    PRICES.lpg.cz    = d.prices.lpg ? toEur(d.prices.lpg) : 0;
+
     STATIONS.filter(s => s.country === 'cz').forEach(s => {
-      s.diesel = czDiesel;
-      s.e5     = czE5;
-      s.e10    = czE10;
-      s.lpg    = czLpg;
+      const off = CZ_OFFSET[s.id] ?? 0;
+      s.diesel   = toEur(d.prices.diesel + off);
+      s.e5       = d.prices.e5  ? toEur(d.prices.e5  + off) : 0;
+      s.e10      = 0;
+      s.lpg      = d.prices.lpg ? toEur(d.prices.lpg) : 0;
+      s.estimate = true;                 // Durchschnitt plus Zuschlag, kein Messwert
+      s.priceNote = d.weekLabel;
     });
+
+    if(d.stale) setDataWarning('cz','Tschechische Preise: letzter abrufbarer Stand, '+(d.ageHours||'?')+' Stunden alt.');
+    else setDataWarning('cz','Tschechische Preise sind der Landesdurchschnitt (CSU, '+d.weekLabel+'), keine Stationspreise.');
+
     renderMapMarkers();
     renderStationList();
-    console.log(`✅ CZ Preise: Diesel ${czDiesel}€ · E5 ${czE5}€ · Kurs ${rate} CZK/EUR`);
-  }catch(e){ console.warn('CZ Preise:', e.message); }
+    updateAICard();
+    console.log(`✅ CZ ${d.weekLabel}: Nafta ${d.prices.diesel} Kc = ${PRICES.diesel.cz}€ · Kurs ${rate}`);
+  }catch(e){
+    console.warn('CZ Preise:', e.message);
+    setDataWarning('cz','Tschechische Preise sind gerade nicht abrufbar.');
+  }
 }
 
 function initLang() {
