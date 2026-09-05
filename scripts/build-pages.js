@@ -216,6 +216,15 @@ const esc = (t) => String(t).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&l
   for (const f of seiten) {
     const ziel = path.join(DIST, f);
     let s = fs.readFileSync(ziel, 'utf8');
+
+    // Stationspreise auf den Ortsseiten: Benchmark plus dem im HTML
+    // hinterlegten Aufschlag. Dasselbe Modell wie in der Anwendung.
+    s = s.replace(/data-aufschlag="(-?[\d.]+)">\{\{PL_STATION\}\}/g, (m, off) => {
+      const v = data.pl.diesel + parseFloat(off);
+      ersetzt++;
+      return `data-aufschlag="${off}">${eur(v)}`;
+    });
+
     s = s.replace(/\{\{([A-Z0-9_]+)\}\}/g, (m, k) => {
       if (!(k in t)) { console.error(`❌ Unbekannter Platzhalter ${m} in ${f}`); process.exit(1); }
       ersetzt++;

@@ -289,7 +289,7 @@ footer a:hover{color:var(--muted)}
     <div class="saving-num">~40<span class="saving-sup">ct</span></div>
     <div class="saving-txt">
       <strong>Günstiger pro Liter als Deutschland</strong><br>
-      Bei 60 L Diesel: bis zu <strong>24 € Brutto-Ersparnis</strong><br>
+      Bei 60 L Diesel: bis zu <strong>{{ERSPARNIS_60L}} € Brutto-Ersparnis</strong><br>
       Netto nach Fahrtkosten typisch <strong>15–22 €</strong> · täglich berechnet
     </div>
   </div>
@@ -314,8 +314,8 @@ footer a:hover{color:var(--muted)}
       <div class="st-meta">📍 2 km · 🇵🇱 Polen · 🕐 24/7 · Diesel, E95, LPG</div>
     </div>
     <div class="st-price">
-      <div class="st-pnum">1,645 <span style="font-size:13px;opacity:.7">€/L</span></div>
-      <div class="st-pcur">Diesel · Live-Preis</div>
+      <div class="st-pnum" data-aufschlag="0.000">{{PL_STATION}} <span style="font-size:13px;opacity:.7">€/L</span></div>
+      <div class="st-pcur">Diesel · Schätzung, Basis Dyskont Paliwowy</div>
     </div>
   </div>
 
@@ -326,8 +326,8 @@ footer a:hover{color:var(--muted)}
       <div class="st-meta">📍 3 km · 🇵🇱 Polen · 🕐 24/7 · Diesel, E95</div>
     </div>
     <div class="st-price">
-      <div class="st-pnum">1,659 <span style="font-size:13px;opacity:.7">€/L</span></div>
-      <div class="st-pcur">Diesel · Live-Preis</div>
+      <div class="st-pnum" data-aufschlag="0.014">{{PL_STATION}} <span style="font-size:13px;opacity:.7">€/L</span></div>
+      <div class="st-pcur">Diesel · Schätzung, Basis Dyskont Paliwowy</div>
     </div>
   </div>
 
@@ -338,8 +338,8 @@ footer a:hover{color:var(--muted)}
       <div class="st-meta">📍 3 km · 🇵🇱 Polen · 🕐 24/7 · Diesel, E95, E10</div>
     </div>
     <div class="st-price">
-      <div class="st-pnum">1,689 <span style="font-size:13px;opacity:.7">€/L</span></div>
-      <div class="st-pcur">Diesel · Live-Preis</div>
+      <div class="st-pnum" data-aufschlag="0.044">{{PL_STATION}} <span style="font-size:13px;opacity:.7">€/L</span></div>
+      <div class="st-pcur">Diesel · Schätzung, Basis Dyskont Paliwowy</div>
     </div>
   </div>
 
@@ -350,8 +350,8 @@ footer a:hover{color:var(--muted)}
       <div class="st-meta">📍 4 km · 🇵🇱 Polen · 🕐 24/7 · Diesel, E95, E10</div>
     </div>
     <div class="st-price">
-      <div class="st-pnum">1,701 <span style="font-size:13px;opacity:.7">€/L</span></div>
-      <div class="st-pcur">Diesel · Live-Preis</div>
+      <div class="st-pnum" data-aufschlag="0.056">{{PL_STATION}} <span style="font-size:13px;opacity:.7">€/L</span></div>
+      <div class="st-pcur">Diesel · Schätzung, Basis Dyskont Paliwowy</div>
     </div>
   </div>
 
@@ -362,8 +362,8 @@ footer a:hover{color:var(--muted)}
       <div class="st-meta">📍 19 km · 🇵🇱 Polen · 🕐 Mo–Sa · Diesel, E95</div>
     </div>
     <div class="st-price">
-      <div class="st-pnum">1,672 <span style="font-size:13px;opacity:.7">€/L</span></div>
-      <div class="st-pcur">Diesel · Live-Preis</div>
+      <div class="st-pnum" data-aufschlag="0.027">{{PL_STATION}} <span style="font-size:13px;opacity:.7">€/L</span></div>
+      <div class="st-pcur">Diesel · Schätzung, Basis Dyskont Paliwowy</div>
     </div>
   </div>
 
@@ -374,8 +374,8 @@ footer a:hover{color:var(--muted)}
       <div class="st-meta">📍 18 km · 🇨🇿 Tschechien · 🕐 Mo–Sa · Diesel, Natural</div>
     </div>
     <div class="st-price">
-      <div class="st-pnum">1,477 <span style="font-size:13px;opacity:.7">€/L</span></div>
-      <div class="st-pcur">Diesel · umger. aus CZK</div>
+      <div class="st-pnum">{{CZ_DIESEL}} <span style="font-size:13px;opacity:.7">€/L</span></div>
+      <div class="st-pcur">Diesel · ČSÚ-Landesschnitt {{CZ_WOCHE}}</div>
     </div>
   </div>
 
