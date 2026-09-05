@@ -628,9 +628,9 @@ select option{background:#0a1628}
 
   <!-- Market strip -->
   <div class="mstrip">
-    <span class="ms-item">EUR/PLN <b id="s-pln">4,25</b></span>
+    <span class="ms-item">EUR/PLN <b id="s-pln">-</b></span>
     <span class="ms-sep">·</span>
-    <span class="ms-item">EUR/CZK <b id="s-czk">24,37</b></span>
+    <span class="ms-item">EUR/CZK <b id="s-czk">-</b></span>
     <span class="ms-sep">·</span>
     <span class="ms-item">Brent <b id="s-oil">–</b></span>
     <span class="ms-sep">·</span>
@@ -1212,9 +1212,6 @@ let STATIONS = [
   {id:'benzina',  name:'Benzina Hrádek',                country:'cz',lat:50.8520,lng:14.8420,dist:18.6, diesel:1.623,e5:1.583,e10:1.663,lpg:0.887,logo:'BZ',best:false},
   {id:'shell_cz', name:'Shell Žitava / CZ',             country:'cz',lat:50.8968,lng:14.7699,dist:24.1, diesel:1.615,e5:1.575,e10:1.655,lpg:0.887,logo:'🐚',best:false},
   // ── DEUTSCHLAND (DE) — TK-API liefert echte Positionen ───────
-  {id:'jet_gr',   name:'JET Görlitz',                   country:'de',lat:51.1543,lng:14.9754,dist:2.1,  diesel:1.639,e5:1.689,e10:1.659,lpg:0.969,logo:'J', best:false,fallback:true},
-  {id:'total_gr', name:'TotalEnergies Görlitz',         country:'de',lat:51.1607,lng:14.9720,dist:2.8,  diesel:1.659,e5:1.709,e10:1.679,lpg:0.989,logo:'T', best:false,fallback:true},
-  {id:'hem_gr',   name:'HEM Görlitz',                   country:'de',lat:51.1497,lng:14.9901,dist:1.8,  diesel:1.629,e5:1.679,e10:1.649,lpg:0.959,logo:'H', best:false,fallback:true},
 ];
 
 // Nach DP-API-Load: PL-Preise relativ zum echten DP-Benchmark setzen
@@ -1256,7 +1253,7 @@ function adjustPLPricesToBenchmark(dpDiesel, dpE5, dpE10){
   });
   console.log('✅ PL-Preise auf DP-Benchmark angepasst: Diesel', dpDiesel.toFixed(3),'€/L');
 }
-const BPT_RATES = {PLN:4.25,CZK:24.37,BRENT:0};
+const BPT_RATES = {PLN:0,CZK:0,BRENT:0}; // 0 = kein Live-Kurs bekannt
 let currentFuel = 'diesel';
 let currentCountry = 'all';
 let currentView = 'home';
@@ -1289,7 +1286,8 @@ function initMap(){
 
 function makeMarkerIcon(s){
   if(typeof L === 'undefined') return null;
-  const p = s[currentFuel] || s.diesel || 0;
+  const p = +s[currentFuel] || 0;
+  if(!(p>0)) return null; // kein Ersatz aus einer anderen Kraftstoffart
   const sub = s.country==='pl'&&BPT_RATES.PLN>0 ? `<div class="pbub-sub">${(p*BPT_RATES.PLN).toFixed(2).replace('.',',')} PLN</div>` :
               s.country==='cz'&&BPT_RATES.CZK>0 ? `<div class="pbub-sub">${(p*BPT_RATES.CZK).toFixed(1).replace('.',',')} CZK</div>` : '';
   const star = s.best ? '<div class="pbub-star">★</div>' : '';
@@ -1329,7 +1327,7 @@ function renderMapMarkers(){
   STATIONS
     .filter(s => currentCountry==='all' || s.country===currentCountry)
     .filter(s => s.dist <= rad)
-    .filter(s => s[currentFuel] != null)
+    .filter(s => s[currentFuel] > 0)
     .forEach(s=>{
       const icon = makeMarkerIcon(s);
       if(!icon) return;
@@ -1415,16 +1413,35 @@ async function loadRates(){
     if(d.czk_eur_rate > 0) BPT_RATES.CZK = d.czk_eur_rate;
     updateStrip();
     renderMapMarkers();
-  }catch(e){}
+  }catch(e){ console.warn('Kursabruf fehlgeschlagen:',e.message); updateStrip(); }
 }
 
 function updateStrip(){
   const pln=document.getElementById('s-pln');
   const czk=document.getElementById('s-czk');
   const oil=document.getElementById('s-oil');
-  if(pln) pln.textContent=BPT_RATES.PLN.toFixed(2).replace('.',',');
-  if(czk) czk.textContent=BPT_RATES.CZK.toFixed(2).replace('.',',');
+  if(pln) pln.textContent=BPT_RATES.PLN>0?BPT_RATES.PLN.toFixed(2).replace('.',','):'-';
+  if(czk) czk.textContent=BPT_RATES.CZK>0?BPT_RATES.CZK.toFixed(2).replace('.',','):'-';
   if(oil&&BPT_RATES.BRENT>0) oil.textContent=BPT_RATES.BRENT.toFixed(1)+'$';
+}
+
+const DATA_WARNINGS = {};
+function setDataWarning(key,msg){ DATA_WARNINGS[key]=msg; renderDataWarnings(); }
+function clearDataWarning(key){ delete DATA_WARNINGS[key]; renderDataWarnings(); }
+function renderDataWarnings(){
+  const msgs = Object.values(DATA_WARNINGS);
+  let el = document.getElementById('data-warning');
+  if(!msgs.length){ if(el) el.remove(); return; }
+  if(!el){
+    el = document.createElement('div');
+    el.id = 'data-warning';
+    el.setAttribute('role','status');
+    el.style.cssText = 'position:fixed;top:0;left:0;right:0;z-index:9999;background:#7a2c12;'
+      + 'color:#ffe9df;font:600 12px/1.45 system-ui,-apple-system,sans-serif;padding:8px 14px;'
+      + 'text-align:center;box-shadow:0 2px 12px rgba(0,0,0,.45)';
+    document.body.appendChild(el);
+  }
+  el.textContent = '\u26A0 ' + msgs.join('  \u00B7  ');
 }
 
 async function refreshPrices(){
@@ -1484,8 +1501,13 @@ const res=await fetch(url);
     renderStationList();
     gcalc();
     savePriceSnapshot();
+    clearDataWarning('de');
     console.log('✅ TK geladen:',STATIONS.filter(s=>s.country==='de').length,'DE Stationen');
-  }catch(e){console.warn('TK Fehler:',e.message)}
+  }catch(e){
+    console.warn('TK Fehler:',e.message);
+    STATIONS = STATIONS.filter(s=>s.country!=='de');
+    setDataWarning('de','Deutsche Preise sind gerade nicht abrufbar. Es werden keine DE-Stationen angezeigt.');
+  }
   // Load PL stations from Dyskont Paliwowy Live API
   try{
     const dpurl = `/.netlify/functions/dp-prices`;
@@ -2392,7 +2414,7 @@ async function sendKI(){
           bestPlStation: bestPl?.name||'Dyskont Paliwowy',
           bestDeStation: bestDe?.name||'günstigste DE Station',
           fuel: currentFuel.toUpperCase(),
-          pln: BPT_RATES.PLN.toFixed(2),
+          pln: BPT_RATES.PLN>0?BPT_RATES.PLN.toFixed(2):'unbekannt',
           grenz:buildGrenzContext().replace('\nGrenzrechner (aktuell): ',''),
           wetter:Object.values(wxData).map(w=>`${w.name} ${w.temp}°C ${w.desc}`).join(', ')||'',
           stau:stauData.length?stauData.map(s=>`${s.road}: ${s.items.map(i=>i.title).join(', ')}`).join(' | '):'A4+A15 frei',
@@ -2680,11 +2702,16 @@ function setLang(l) {
     const r = await fetch('/data/pl-prices.json');
     const d = await r.json();
     if(!d.cz) return;
-    const rate = BPT_RATES.CZK || 25.20;
+    const rate = BPT_RATES.CZK;
+    if(!(rate>0)){ console.warn('CZ: kein Live-Kurs - Umrechnung uebersprungen'); return; }
     const czDiesel = +(d.cz.diesel / rate).toFixed(3);
     const czE5     = +(d.cz.e5     / rate).toFixed(3);
     const czLpg    = +(d.cz.lpg    / rate).toFixed(3);
-    const czE10    = +((d.cz.diesel + 1.00) / rate).toFixed(3);
+    const czE10    = 0; // CZ-Quelle liefert keinen E10-Preis - kein erfundener Wert mehr
+    const czAge = (()=>{ const m=/^(\d{2})\.(\d{2})\.(\d{4})$/.exec(d.updated||'');
+      return m ? (Date.now()-new Date(+m[3],+m[2]-1,+m[1]).getTime())/864e5 : null; })();
+    if(czAge!==null && czAge>7) setDataWarning('cz','Tschechische Preise stammen vom '+d.updated+' und sind '+Math.round(czAge)+' Tage alt.');
+    else clearDataWarning('cz');
     PRICES.diesel.cz = czDiesel;
     PRICES.e5.cz     = czE5;
     PRICES.e10.cz    = czE10;
