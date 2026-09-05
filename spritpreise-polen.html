@@ -10,8 +10,8 @@
      Wichtig: "heute" + "aktuell" bewusst im Title/H1/Meta, weil das die
      Frische-Signale sind, die auf den bisherigen Seiten fehlten.
 ==================================================================== -->
-<title>Spritpreise Polen heute | Aktuelle Diesel- & Benzinpreise in Euro</title>
-<meta name="description" content="Spritpreise in Polen heute – live &amp; in Euro. Aktuelle Diesel-, E10- und LPG-Preise in Zgorzelec, Słubice, Gubin &amp; Co. Grenzrechner zeigt, ob sich Polen für dich lohnt.">
+<title>Tanken in Polen: Lohnt es sich? Diesel ab {{PL_DIESEL}} € | Ratgeber</title>
+<meta name="description" content="Tanken in Polen 2026: Was es kostet, wie viel du sparst, womit du zahlst und wie viel du im Kanister mitnehmen darfst. Diesel ab {{PL_DIESEL}} €/L, {{ERSPARNIS_CENT}} ct unter Deutschland.">
 <meta name="keywords" content="spritpreise polen heute, spritpreise in polen, polen spritpreise aktuell, benzinpreise polen, dieselpreis polen, tanken polen preise, spritpreise zgorzelec">
 <link rel="canonical" href="https://bestpricetank.de/spritpreise-polen.html">
 <meta name="robots" content="index, follow">
@@ -19,7 +19,7 @@
 <!-- Open Graph / Twitter -->
 <meta property="og:type" content="website">
 <meta property="og:title" content="Spritpreise Polen heute | Aktuelle Diesel- &amp; Benzinpreise in Euro">
-<meta property="og:description" content="Live-Spritpreise aller Grenztankstellen in Polen – heute, in Euro, mit Grenzrechner. Diesel oft 30–45 ct/L günstiger als in Deutschland.">
+<meta property="og:description" content="Tanken in Polen 2026: Kosten, Ersparnis, Zahlungsmittel und Kanister-Regeln. Diesel ab {{PL_DIESEL}} €/L.">
 <meta property="og:url" content="https://bestpricetank.de/spritpreise-polen.html">
 <meta property="og:image" content="https://bestpricetank.de/og-image.png">
 <meta name="twitter:card" content="summary_large_image">
@@ -64,7 +64,7 @@
       "name": "Ist Tanken in Polen für Deutsche legal?",
       "acceptedAnswer": {
         "@type": "Answer",
-        "text": "Ja, vollkommen legal. Der volle Tank darf ohne Einschränkung nach Deutschland eingeführt werden. Zusätzlich sind bis zu 10 Liter in einem zugelassenen Reservekanister erlaubt. Innerhalb der EU fallen keine Zölle an."
+        "text": "Ja, vollkommen legal. Der volle Tank darf ohne Einschränkung nach Deutschland eingeführt werden. Zusätzlich sind bis zu 20 Liter in einem zugelassenen Reservekanister erlaubt. Innerhalb der EU fallen keine Zölle an."
       }
     },
     {
@@ -219,7 +219,7 @@
   <!-- HERO -->
   <div class="hero">
     <span class="eyebrow"><span class="dot"></span>Live · Grenze DE / PL</span>
-    <h1>Spritpreise <em>Polen</em> heute</h1>
+    <h1>Tanken in <em>Polen</em> — lohnt es sich?</h1>
     <p class="lede">Aktuelle Diesel-, Benzin- und LPG-Preise aller polnischen Grenztankstellen — live und direkt in Euro umgerechnet. So siehst du sofort, ob sich die Fahrt über die Grenze heute lohnt.</p>
     <div class="stand">🕐 Stand: <b id="stand-date">heute</b> · Preise mehrmals täglich aktualisiert</div>
   </div>
@@ -283,14 +283,34 @@
       <li>Eigenmarken wie Dyskont Paliwowy und Citronex sind fast immer günstiger als BP, Shell oder Orlen.</li>
       <li>An der Kasse zahlen statt am Automaten — manche Terminals akzeptieren nur polnische Karten.</li>
       <li>Preise stehen an der Säule in Złoty pro Liter — BestPriceTank rechnet automatisch in Euro um.</li>
-      <li>Voller Tank ist unbegrenzt erlaubt, plus max. 10 Liter im zugelassenen Reservekanister.</li>
+      <li>Voller Tank ist unbegrenzt erlaubt, plus max. 20 Liter im zugelassenen Reservekanister.</li>
       <li>Freitagabend und am Wochenende kann es an der Stadtbrücke kurze Staus geben — vorher die Lage checken.</li>
     </ul>
   </section>
 
   <!-- FAQ (matcht das JSON-LD oben) -->
   <section>
-    <h2>Häufige Fragen — Spritpreise Polen</h2>
+    <h2>Kraftstoffe: was heißt was an der polnischen Zapfsäule</h2>
+  <div class="ptable" style="margin-bottom:8px">
+    <div class="prow head"><div>Polnisch</div><div>Entspricht</div><div class="st-cell-3">Hinweis</div></div>
+    <div class="prow"><div><div class="st-name">ON · Olej napędowy</div></div><div class="price">Diesel</div><div class="price st-cell-3">Standard</div></div>
+    <div class="prow"><div><div class="st-name">Pb95 · Benzyna 95</div></div><div class="price">Super 95</div><div class="price st-cell-3">seit 2024 meist E10</div></div>
+    <div class="prow"><div><div class="st-name">Pb98 · Benzyna 98</div></div><div class="price">Super Plus</div><div class="price st-cell-3">in der Regel E5</div></div>
+    <div class="prow"><div><div class="st-name">LPG · Autogaz</div></div><div class="price">Autogas</div><div class="price st-cell-3">weit verbreitet</div></div>
+  </div>
+  <p class="sub" style="margin-top:0">Wichtig für ältere Fahrzeuge: Polnisches Pb95 wird seit 2024 schrittweise als E10 ausgeliefert. Verträgt dein Motor kein E10, nimm Pb98 — das ist dort in der Regel noch E5.</p>
+
+  <h2>Womit bezahle ich?</h2>
+  <p>An allen Grenztankstellen werden EC-Karte, Visa und Mastercard akzeptiert, meist auch Apple und Google Pay. Złoty-Bargeld brauchst du nicht.</p>
+  <p>Wenn du trotzdem wechselst: Der Kurs am Kantor liegt üblicherweise rund zwei Prozent unter dem Mittelkurs der Polnischen Nationalbank, mit dem diese Seite rechnet ({{KURS_PLN}} zł/€). Bei einer Tankfüllung sind das etwa ein bis zwei Euro Unterschied. Mit Karte zahlst du meist näher am Mittelkurs, viele Banken erheben aber ein Auslandsentgelt von ein bis zwei Prozent.</p>
+  <p>Ein praktischer Hinweis: An der Kasse zahlen ist zuverlässiger als am Automaten — manche Zapfsäulenautomaten nehmen nur polnische Karten.</p>
+
+  <h2>Wie viel darf ich mitnehmen?</h2>
+  <p>Der <strong>volle Fahrzeugtank</strong> ist unbegrenzt und steuerfrei — Kraftstoff, der im Hauptbehälter über die Grenze kommt, wird nicht beanstandet.</p>
+  <p>Dazu kommen <strong>bis zu 20 Liter in Reservebehältern</strong>. Der deutsche Zoll formuliert es so: eine Kraftstoffmenge von bis zu 20 Litern in den Reservebehältern wird nicht beanstandet. Voraussetzung ist, dass du den Kraftstoff selbst transportierst, ihn an einer normalen Tankstelle gekauft hast und er für deinen Motor geeignet ist.</p>
+  <p>Darüber hinaus wird es zollrechtlich heikel. Und unabhängig vom Zoll gilt: Der Kanister muss zugelassen sein, und manche polnischen Tankstellen befüllen Kanister nur eingeschränkt.</p>
+
+  <h2>Häufige Fragen zum Tanken in Polen</h2>
     <div class="sub">Kurz beantwortet, was Leute vor der Fahrt über die Grenze wissen wollen.</div>
 
     <details open>
@@ -307,7 +327,7 @@
     </details>
     <details>
       <summary>Ist Tanken in Polen für Deutsche legal?</summary>
-      <div class="ans">Ja, vollkommen legal. Der volle Tank darf ohne Einschränkung nach Deutschland eingeführt werden, dazu bis zu 10 Liter in einem zugelassenen Reservekanister. Innerhalb der EU fallen keine Zölle an (§ 12 EnergieStG).</div>
+      <div class="ans">Ja, vollkommen legal. Der volle Tank darf ohne Einschränkung nach Deutschland eingeführt werden, dazu bis zu 20 Liter in einem zugelassenen Reservekanister. Innerhalb der EU fallen keine Zölle an.</div>
     </details>
     <details>
       <summary>Wie aktuell sind die Preise auf BestPriceTank?</summary>
