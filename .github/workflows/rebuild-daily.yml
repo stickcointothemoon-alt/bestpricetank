@@ -1,0 +1,39 @@
+# Stösst den Netlify-Build an, damit die statischen Seiten frische Preise
+# bekommen. Der Build-Befehl selbst laeuft bei Netlify (scripts/build-pages.js);
+# hier wird er nur zeitgesteuert ausgeloest.
+#
+# Einrichtung, einmalig:
+#   1. Netlify → Site configuration → Build & deploy → Build hooks
+#      → "Add build hook", Name z. B. "Taegliche Preise", Branch main.
+#      Netlify zeigt eine URL wie https://api.netlify.com/build_hooks/xxxx
+#   2. GitHub → Settings → Secrets and variables → Actions → New secret
+#      Name: NETLIFY_BUILD_HOOK, Wert: diese URL
+#
+# Ohne das Secret meldet der Lauf einen Fehler statt still nichts zu tun.
+
+name: Tägliche Preisaktualisierung
+
+on:
+  schedule:
+    - cron: '10 5 * * *'    # 07:10 deutscher Sommerzeit
+    - cron: '10 15 * * *'   # 17:10 deutscher Sommerzeit
+  workflow_dispatch:
+
+jobs:
+  rebuild:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Netlify-Build auslösen
+        env:
+          HOOK: ${{ secrets.NETLIFY_BUILD_HOOK }}
+        run: |
+          if [ -z "$HOOK" ]; then
+            echo "::error::NETLIFY_BUILD_HOOK ist nicht gesetzt. Siehe Kommentar oben in dieser Datei."
+            exit 1
+          fi
+          code=$(curl -sS -o /dev/null -w '%{http_code}' -X POST -d '{}' "$HOOK")
+          echo "Netlify antwortete mit HTTP $code"
+          case "$code" in
+            200|201|204) echo "✅ Build angestossen" ;;
+            *) echo "::error::Netlify lehnte den Aufruf ab (HTTP $code)"; exit 1 ;;
+          esac
