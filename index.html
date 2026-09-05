@@ -1478,7 +1478,12 @@ async function refreshPrices(){
   if(!userLocationCoords.lat) userLocationCoords=coords;
   updateStaticDistances(userLocationCoords);
   try{
-    const url=`/.netlify/functions/de-prices?lat=${coords.lat.toFixed(2)}&lng=${coords.lng.toFixed(2)}`;
+    // Auf dasselbe 0,05-Grad-Raster runden wie der Server. Sonst erzeugen
+    // 51.15 und 51.16 zwei verschiedene URLs und damit zwei getrennte
+    // CDN-Eintraege - der Server fasst sie zwar zusammen, das CDN aber nicht,
+    // und Tankerkoenig wird doppelt so oft angefragt.
+    const raster=v=>(Math.round(v*20)/20).toFixed(2);
+    const url=`/.netlify/functions/de-prices?lat=${raster(coords.lat)}&lng=${raster(coords.lng)}`;
 const res=await fetch(url);
     const data=await res.json();
     if(!data.ok||!Array.isArray(data.stations)) throw new Error('TK error: '+JSON.stringify(data).slice(0,80));

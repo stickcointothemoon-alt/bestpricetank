@@ -17,7 +17,10 @@
 const UPSTREAM_RADIUS = 25;
 const CDN_SECONDS = 3600;   // 1 Stunde. MTS-K-Preise aendern sich einige Male am Tag.
 const MAX_STALE_MINUTES = 720;
-const ATTEMPTS = 2;
+const ATTEMPTS = 1;   // Tankerkönig erlaubt 1 Abruf/Minute.
+                      // Eine Wiederholung nach Sekunden verstößt garantiert dagegen
+                      // und vertieft eine bestehende Drosselung nur.
+const FEHLER_CACHE_SEKUNDEN = 300;
 
 async function getBlobStore() {
   try {
@@ -53,7 +56,6 @@ exports.handler = async (event) => {
   let failure;
 
   for (let attempt = 1; attempt <= ATTEMPTS && !data; attempt++) {
-    if (attempt > 1) await new Promise((r) => setTimeout(r, 900));
     try {
       const res = await fetch(url, {
         signal: AbortSignal.timeout(7000),
@@ -126,7 +128,12 @@ exports.handler = async (event) => {
     console.warn('Notvorrat nicht lesbar:', e.message);
   }
 
-  return json(502, { ok: false, message: failure || 'Tankerkönig nicht erreichbar' });
+  // Auch den Fehlschlag zwischenspeichern. Sonst stoesst jeder Besucher
+  // waehrend einer Stoerung einen neuen Abruf an - und die Drosselung
+  // kann sich nie erholen.
+  return json(502, { ok: false, message: failure || 'Tankerkönig nicht erreichbar' }, {
+    'Cache-Control': `public, max-age=60, s-maxage=${FEHLER_CACHE_SEKUNDEN}`,
+  });
 };
 
 function json(statusCode, body, extraHeaders) {
