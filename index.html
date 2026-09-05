@@ -1568,10 +1568,16 @@ const res=await fetch(url);
 
 function updateAICard(){
   const f=currentFuel;
-  const plSt=STATIONS.filter(s=>s.country==='pl'&&(s[f]||s.diesel)>0).sort((a,b)=>(a[f]||a.diesel)-(b[f]||b.diesel));
-  const deSt=STATIONS.filter(s=>s.country==='de'&&(s[f]||s.diesel)>0).sort((a,b)=>(a[f]||a.diesel)-(b[f]||b.diesel));
-  const plPrice=(plSt[0]?.[f]||plSt[0]?.diesel)||0; // kein hartkodierter Ersatzwert
-  const dePrice=(deSt[0]?.[f]||deSt[0]?.diesel)||0;
+  // Nur Stationen im gewaehlten Umkreis. Ohne diese Grenze gewann hier die
+  // landesweit guenstigste Station - zuletzt eine 278 km entfernte - und die
+  // ausgewiesene Ersparnis war fuer eine Grenzfahrt nicht erreichbar.
+  const rad = +document.getElementById('locRadius')?.value || 15;
+  const nah = s => s.dist == null || s.dist <= rad + 0.5;
+  const preis = s => s[f] || 0;
+  const plSt=STATIONS.filter(s=>s.country==='pl'&&nah(s)&&preis(s)>0).sort((a,b)=>preis(a)-preis(b));
+  const deSt=STATIONS.filter(s=>s.country==='de'&&nah(s)&&preis(s)>0).sort((a,b)=>preis(a)-preis(b));
+  const plPrice=preis(plSt[0]||{});   // kein Ersatz aus einer anderen Kraftstoffart
+  const dePrice=preis(deSt[0]||{});
   const havePl=plPrice>0, haveDe=dePrice>0;
   const save=(havePl&&haveDe)?Math.max(0,(dePrice-plPrice)*60):null;
   const fmtE=v=>v.toFixed(2).replace('.',',')+' €';

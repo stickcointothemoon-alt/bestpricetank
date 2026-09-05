@@ -1,0 +1,62 @@
+{
+  "stand": "2026-09-05T13:01:44.188Z",
+  "kurse": {
+    "pln": 4.3179,
+    "czk": 24.1899
+  },
+  "de": {
+    "diesel": 2.388,
+    "e5": 2.398,
+    "e10": 2.349,
+    "count": 15
+  },
+  "pl": {
+    "dieselPln": 8.54,
+    "dieselPlnMax": 8.79,
+    "e10Pln": 7.79,
+    "diesel": 1.9778132888672733,
+    "dieselMax": 2.0357118043493365,
+    "e10": 1.8041177424210844,
+    "count": 4,
+    "stationen": [
+      {
+        "name": "Dyskont Paliwowy Zgorzelec",
+        "city": "Zgorzelec",
+        "onPln": 8.54,
+        "pbPln": 7.79,
+        "entfernung": 3,
+        "eur": 1.9778132888672733
+      },
+      {
+        "name": "Dyskont Paliwowy Zgorzelec DP2",
+        "city": "Zgorzelec",
+        "onPln": 8.64,
+        "pbPln": 7.84,
+        "entfernung": 3.2,
+        "eur": 2.000972695060099
+      },
+      {
+        "name": "Dyskont Paliwowy Iłowa",
+        "city": "Iłowa",
+        "onPln": 8.69,
+        "pbPln": 7.79,
+        "entfernung": 44.3,
+        "eur": 2.012552398156511
+      },
+      {
+        "name": "Dyskont Paliwowy Lipiany",
+        "city": "Lipiany",
+        "onPln": 8.79,
+        "pbPln": 7.89,
+        "entfernung": 49.4,
+        "eur": 2.0357118043493365
+      }
+    ]
+  },
+  "cz": {
+    "dieselCzk": 45.92,
+    "diesel": 1.898312932256851,
+    "week": "KW 36/2026"
+  },
+  "ersparnisProLiter": 0.41018671113272664
+}
