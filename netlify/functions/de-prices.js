@@ -20,7 +20,25 @@ const MAX_STALE_MINUTES = 720;
 const ATTEMPTS = 1;   // Tankerkönig erlaubt 1 Abruf/Minute.
                       // Eine Wiederholung nach Sekunden verstößt garantiert dagegen
                       // und vertieft eine bestehende Drosselung nur.
-const FEHLER_CACHE_SEKUNDEN = 300;
+
+// Wie lange eine Stoerungs-Antwort im CDN liegen bleibt.
+//
+// Das ist die entscheidende Zahl. Waehrend einer Stoerung fragt jeder
+// Ort nach Ablauf dieser Zeit erneut bei Tankerkoenig an. Bei N Orten
+// sind das N/(T/60) Anfragen pro Minute - erlaubt ist eine.
+//
+// Mit den frueheren 180 Sekunden reichten schon vier Orte (Goerlitz,
+// Zittau, Zgorzelec, Slubice), um dauerhaft ueber dem Limit zu liegen:
+// 4 / 3 min = 1,3 Anfragen pro Minute. Die Drosselung hielt sich damit
+// selbst am Leben, und der letzte gute Stand blieb stundenlang stehen.
+//
+// 900 Sekunden tragen bis zu 15 verschiedene Orte, ohne das Limit zu
+// reissen. Preis dafuer: Nach einer Stoerung kann es eine Viertelstunde
+// dauern, bis frische Preise durchkommen. Das ist der bessere Handel -
+// MTS-K-Preise aendern sich ohnehin nur einige Male am Tag, und die
+// Seite weist den Stand offen aus.
+const STOERUNG_CDN_SEKUNDEN = 900;
+const FEHLER_CACHE_SEKUNDEN = 900;
 
 async function getBlobStore() {
   try {
@@ -99,7 +117,7 @@ exports.handler = async (event) => {
         if (ageMinutes <= MAX_STALE_MINUTES) {
           console.warn(`TK gestört (${failure}) – liefere Stand von vor ${ageMinutes} Min.`);
           return json(200, { ...last, stale: true, ageMinutes, upstreamMessage: failure }, {
-            'Cache-Control': 'public, max-age=60, s-maxage=180',
+            'Cache-Control': `public, max-age=60, s-maxage=${STOERUNG_CDN_SEKUNDEN}`,
           });
         }
       }
@@ -120,7 +138,7 @@ exports.handler = async (event) => {
         const ageMinutes = Math.round((Date.now() - new Date(vorrat.fetchedAt).getTime()) / 60000);
         console.warn(`TK gestört (${failure}) – liefere Notvorrat von vor ${ageMinutes} Min.`);
         return json(200, { ...vorrat, stale: true, ageMinutes, upstreamMessage: failure }, {
-          'Cache-Control': 'public, max-age=120, s-maxage=600',
+          'Cache-Control': `public, max-age=120, s-maxage=${STOERUNG_CDN_SEKUNDEN}`,
         });
       }
     }
