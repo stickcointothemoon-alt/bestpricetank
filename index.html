@@ -528,6 +528,58 @@ select option{background:#0a1628}
   .wx-home{top:calc(max(env(safe-area-inset-top),10px) + 152px)}
 }
 
+
+/* ===== Anzeige: Tageszulassungen (eigenständig, eigener Namensraum) ===== */
+.amtz{display:block;text-decoration:none;font-family:inherit;background:#101828;
+  border:1px solid rgba(255,255,255,.09);border-radius:16px;padding:11px 13px;margin-top:6px;
+  color:#eef3ff;transition:border-color .15s,transform .15s}
+.amtz:hover{border-color:rgba(224,11,16,.55);transform:translateY(-1px)}
+.amtz__kopf{display:flex;align-items:center;gap:9px;margin-bottom:9px}
+:root{--amtz-logo:url(data:image/png;base64,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)}
+.amtz__logo{display:block;flex:none;height:23px;width:90px;background:var(--amtz-logo) center/contain no-repeat}
+.amtz__anz{margin-left:auto;flex:none;font:800 9px/1 var(--sans,sans-serif);letter-spacing:1.1px;
+  color:#7d8cab;border:1px solid rgba(255,255,255,.16);border-radius:5px;padding:3px 5px}
+.amtz__reihe{display:flex;align-items:center;gap:11px}
+.amtz__text{flex:1 1 auto;min-width:0}
+.amtz__titel{display:block;font:800 15px/1.15 var(--sans,sans-serif);letter-spacing:-.02em;color:#eef3ff}
+.amtz__zeile{display:flex;align-items:center;gap:7px;margin-top:3px;white-space:nowrap}
+.amtz__marke{font:700 11.5px var(--sans,sans-serif);color:#b9c6e0}
+.amtz__pill{font:800 10.5px var(--sans,sans-serif);color:#0b2b1d;background:#4ade80;border-radius:999px;padding:2px 8px}
+.amtz__btn{flex:0 0 auto;display:flex;align-items:center;gap:6px;padding:10px 14px;border-radius:999px;
+  background:#e00b10;color:#fff;font:700 12px var(--sans,sans-serif);white-space:nowrap}
+.amtz__fuss{display:block;margin-top:9px;font:500 10px/1.4 var(--sans,sans-serif);color:#74839f}
+@media(max-width:360px){.amtz__btn span{display:none}.amtz__btn{padding:10px 11px}}
+
+/* ===== Anzeige auf der Startseite: schmale Leiste, eigener Namensraum ===== */
+.amst{position:absolute;left:16px;width:min(292px,calc(50vw - 24px));z-index:12;
+  pointer-events:auto;display:flex;align-items:center;gap:8px;padding:8px 10px;
+  text-decoration:none;font-family:inherit;color:#eef3ff;
+  background:rgba(16,24,40,.84);backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);
+  border:1px solid rgba(255,255,255,.10);border-radius:14px;
+  box-shadow:0 12px 34px rgba(0,0,0,.42);
+  transition:border-color .15s,transform .15s,opacity .25s;
+  animation:sil .7s .45s var(--spring) both}
+.amst:hover{border-color:rgba(224,11,16,.55);transform:translateY(-1px)}
+.amst.aus{opacity:0!important;pointer-events:none!important}
+.amst__logo{flex:none;height:19px;width:76px;background:var(--amtz-logo) center/contain no-repeat}
+.amst__txt{flex:1 1 auto;min-width:0}
+.amst__anz{display:block;font:800 8px/1 var(--sans,sans-serif);letter-spacing:1.2px;color:#7d8cab}
+.amst__tit{display:block;margin-top:2.5px;font:800 11.5px/1.2 var(--sans,sans-serif);letter-spacing:-.01em;
+  color:#eef3ff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.amst__marke{display:none;color:#93a3c0;font-weight:700}
+.amst__pill{flex:none;font:800 10px/1 var(--sans,sans-serif);color:#0b2b1d;background:#4ade80;
+  border-radius:999px;padding:4px 7px}
+.amst__pf{flex:none;color:#e00b10}
+@media(max-width:900px){
+  .amst{top:auto!important;left:50%;transform:translateX(-50%);
+    bottom:calc(env(safe-area-inset-bottom,0px) + 70px);
+    width:calc(100vw - 28px);max-width:420px;
+    animation:mob-amst .7s .5s var(--spring) both}
+  @keyframes mob-amst{from{opacity:0;transform:translateX(-50%) translateY(14px)}
+                      to{opacity:1;transform:translateX(-50%) translateY(0)}}
+  .amst:hover{transform:translateX(-50%)}
+}
+@media(min-width:431px) and (max-width:900px){.amst__marke{display:inline}}
 </style>
 </head>
 <body>
@@ -612,6 +664,22 @@ select option{background:#0a1628}
       <button class="ai-cta" onclick="sv('rechner')">🚗 Fahrt berechnen →</button>
     </div>
   </div>
+
+  <!-- ===== Anzeige: Tageszulassungen Autohaus Mühlmann (Startseite) ===== -->
+  <a class="amst" id="amst" href="https://autohaus-muehlmann.de/tageszulassungen.html?ref=bpt-start"
+     target="_blank" rel="noopener sponsored">
+    <span class="amst__logo" role="img" aria-label="Autohaus Mühlmann"></span>
+    <span class="amst__txt">
+      <span class="amst__anz">ANZEIGE</span>
+      <span class="amst__tit">Tageszulassungen <span class="amst__marke">&middot; Toyota &amp; Lexus</span></span>
+    </span>
+    <span class="amst__pill">&minus;25&nbsp;%</span>
+    <svg class="amst__pf" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+         stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+      <path d="M5 12h13"></path><path d="m12.5 6 6 6-6 6"></path>
+    </svg>
+  </a>
+  <!-- ===== Ende Anzeige ===== -->
 
   <!-- Country Filter -->
   <div class="cfilter">
@@ -707,6 +775,28 @@ select option{background:#0a1628}
       <div style="flex:1;height:5px;border-radius:3px;background:linear-gradient(90deg,#00e676,#ffab00,#ff5252)"></div>
       <span style="color:var(--muted)">hoch</span>
     </div>
+
+    <!-- ===== Anzeige: Tageszulassungen Autohaus Mühlmann ===== -->
+    <a class="amtz" href="https://autohaus-muehlmann.de/tageszulassungen.html?ref=bpt" target="_blank" rel="noopener sponsored">
+      <span class="amtz__kopf">
+        <span class="amtz__logo" role="img" aria-label="Autohaus Mühlmann"></span>
+        <span class="amtz__anz">ANZEIGE</span>
+      </span>
+      <span class="amtz__reihe">
+        <span class="amtz__text">
+          <span class="amtz__titel">Tageszulassungen</span>
+          <span class="amtz__zeile">
+            <span class="amtz__marke">Toyota &amp; Lexus</span>
+            <span class="amtz__pill">bis &minus;25&nbsp;%</span>
+          </span>
+        </span>
+        <span class="amtz__btn"><span>Ansehen</span>
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h13"></path><path d="m12.5 6 6 6-6 6"></path></svg>
+        </span>
+      </span>
+      <span class="amtz__fuss">1.194 Fahrzeuge kurzfristig lieferbar &middot; Autohaus Mühlmann, Görlitz</span>
+    </a>
+    <!-- ===== Ende Anzeige ===== -->
   </div>
 </div>
 
@@ -988,7 +1078,7 @@ select option{background:#0a1628}
 <!-- COOKIE BANNER -->
 <div class="cbanner" id="cbanner">
   <div class="cinn">
-    <div class="ctxt"><span style="font-size:26px;flex-shrink:0">🍪</span><div><strong>Cookies & Datenspeicherung</strong><p>Wir speichern deine Einstellungen lokal auf deinem Gerät (localStorage) und nutzen Tankerkönig, Dyskont Paliwowy, das Tschechische Statistikamt, die Polnische Nationalbank sowie OpenAI für Live-Daten. Keine Tracking-Cookies, keine Werbung.</p></div></div>
+    <div class="ctxt"><span style="font-size:26px;flex-shrink:0">🍪</span><div><strong>Cookies & Datenspeicherung</strong><p>Wir speichern deine Einstellungen lokal auf deinem Gerät (localStorage) und nutzen Tankerkönig, Dyskont Paliwowy, das Tschechische Statistikamt, die Polnische Nationalbank sowie OpenAI für Live-Daten. Keine Tracking-Cookies und kein Werbenetzwerk. Die als ANZEIGE gekennzeichnete Fläche ist Werbung in eigener Sache; sie lädt nichts nach und erhebt hier keine Daten.</p></div></div>
     <div class="cacts">
       <button class="c-more" onclick="openM('cookies')">Details</button>
       <button class="c-dec" onclick="decCookies()">Ablehnen</button>
@@ -998,11 +1088,11 @@ select option{background:#0a1628}
 </div>
 
 <!-- MODALS -->
-<div class="mbg" id="m-imprint" onclick="if(event.target===this)closeM('imprint')"><div class="mbox"><div class="mhead"><h2>Impressum</h2><button class="mx" onclick="closeM('imprint')">×</button></div><div class="mbody"><h3>Angaben gemäß § 5 DDG</h3>AH Mühlmann<br>Gottlieb-Daimler-Str. 9<br>02828 Görlitz<br><br><h3>Kontakt</h3>info [at] bestpricetank [dot] de<br><br><h3>Verantwortlich</h3>K. Mühlmann, Gottlieb-Daimler-Str. 9, 02828 Görlitz<br><br><h3>Haftung</h3>Preisangaben ohne Gewähr. Bitte vor Ort prüfen. Nicht alle angezeigten Preise sind gemessen: Für Polen liefert Dyskont Paliwowy Stationspreise, die übrigen polnischen Stationen werden daraus zuzüglich eines Aufschlags hochgerechnet. Für Tschechien wird der amtliche Landesdurchschnitt zuzüglich eines je Station erhobenen Abstands verwendet, keine Stationspreise.<br><br><h3>Datenquellen</h3>🇩🇪 Tankerkönig / MTS-K (CC BY 4.0)<br>🇵🇱 Dyskont Paliwowy<br>🇨🇿 Tschechisches Statistikamt ČSÚ, Datensatz CENPHMT (wöchentliche Durchschnittspreise)<br>Wechselkurse: Polnische Nationalbank (NBP), Tabelle A<br>Karte: OpenStreetMap / CARTO · Ladesäulen: OpenChargeMap · Wetter: Open-Meteo · Verkehr: Autobahn GmbH<br><br><h3>Streitschlichtung</h3>Wir nehmen nicht an Verfahren vor Verbraucherschlichtungsstellen teil.</div></div></div>
+<div class="mbg" id="m-imprint" onclick="if(event.target===this)closeM('imprint')"><div class="mbox"><div class="mhead"><h2>Impressum</h2><button class="mx" onclick="closeM('imprint')">×</button></div><div class="mbody"><h3>Angaben gemäß § 5 DDG</h3>AH Mühlmann<br>Gottlieb-Daimler-Str. 9<br>02828 Görlitz<br><br><h3>Kontakt</h3>info [at] bestpricetank [dot] de<br><br><h3>Verantwortlich</h3>K. Mühlmann, Gottlieb-Daimler-Str. 9, 02828 Görlitz<br><br><h3>Haftung</h3>Preisangaben ohne Gewähr. Bitte vor Ort prüfen. Nicht alle angezeigten Preise sind gemessen: Für Polen liefert Dyskont Paliwowy Stationspreise, die übrigen polnischen Stationen werden daraus zuzüglich eines Aufschlags hochgerechnet. Für Tschechien wird der amtliche Landesdurchschnitt zuzüglich eines je Station erhobenen Abstands verwendet, keine Stationspreise.<br><br><h3>Datenquellen</h3>🇩🇪 Tankerkönig / MTS-K (CC BY 4.0)<br>🇵🇱 Dyskont Paliwowy<br>🇨🇿 Tschechisches Statistikamt ČSÚ, Datensatz CENPHMT (wöchentliche Durchschnittspreise)<br>Wechselkurse: Polnische Nationalbank (NBP), Tabelle A<br>Karte: OpenStreetMap / CARTO · Ladesäulen: OpenChargeMap · Wetter: Open-Meteo · Verkehr: Autobahn GmbH<br><br><h3>Werbung</h3>Flächen, die auf dieser Seite mit <strong>ANZEIGE</strong> gekennzeichnet sind, sind Werbung in eigener Sache für das Autohaus Mühlmann, Gottlieb-Daimler-Str. 9, 02828 Görlitz. Werbung Dritter wird hier nicht geschaltet.<br><br><h3>Streitschlichtung</h3>Wir nehmen nicht an Verfahren vor Verbraucherschlichtungsstellen teil.</div></div></div>
 
-<div class="mbg" id="m-privacy" onclick="if(event.target===this)closeM('privacy')"><div class="mbox"><div class="mhead"><h2>Datenschutzerklärung</h2><button class="mx" onclick="closeM('privacy')">×</button></div><div class="mbody"><h3>1. Verantwortlicher</h3>AH Mühlmann, Gottlieb-Daimler-Str. 9, 02828 Görlitz · info [at] bestpricetank [dot] de<h3>2. Hosting</h3>Netlify Inc., San Francisco, USA. Server-Logfiles möglich. Netlify EU-US DPF-zertifiziert. Rechtsgrundlage: Art. 6 Abs. 1 lit. f DSGVO.<h3>3. Lokale Speicherung</h3>Keine Tracking-Cookies. Im localStorage deines Geräts speichern wir: <strong>bpt_userName</strong> (Name für den KI-Assistenten), <strong>bpt_car</strong> (Fahrzeug, Tankgröße, Verbrauch für den Sparrechner), <strong>bpt_alert</strong> (dein Preisalarm), <strong>bpt_lang</strong> (Sprache), <strong>bpt_speaker</strong> (Sprachausgabe an/aus), <strong>bpt_price_history</strong> (Preisverlauf für die Grafik) und <strong>cookieOk</strong> (Cookie-Entscheidung). Diese Angaben verbleiben auf deinem Gerät und werden nicht an uns oder Dritte übertragen. Du kannst sie jederzeit über die Website-Einstellungen deines Browsers löschen.<h3>4. Externe Dienste</h3>Beim Aufruf dieser Dienste wird technisch bedingt deine IP-Adresse übertragen.<br><br><u>Über unseren Server, ohne Kontakt zu deinem Gerät:</u><br>· Tankerkönig / MTS-K – deutsche Preise<br>· Dyskont Paliwowy – polnische Preise<br>· Polnische Nationalbank (NBP) – Wechselkurse<br>· Tschechisches Statistikamt (ČSÚ) – tschechische Preise<br><br><u>Direkt aus deinem Browser:</u><br>· OpenStreetMap / CARTO – Kartendarstellung<br>· Nominatim (OpenStreetMap) – Ortssuche; der eingegebene Ort wird übertragen<br>· Open-Meteo – Wetter, mit Koordinaten des gewählten Orts<br>· Autobahn GmbH – Verkehrsmeldungen<br>· OpenChargeMap – Ladesäulen<br>· OpenAI API (über unseren Server) – deine Frage an den KI-Assistenten wird verarbeitet<br><br><u>Preismeldungen:</u> Nutzt du das Meldeformular, werden die eingegebenen Angaben über Netlify Forms (Netlify Inc.) gespeichert. Wir fragen keinen Namen und keine Kontaktdaten ab.<br><br>· Keine Google Fonts, kein Google Analytics, keine Werbenetzwerke.<h3>5. Ihre Rechte (Art. 15–22 DSGVO)</h3>Auskunft, Berichtigung, Löschung: info [at] bestpricetank [dot] de · Stand: September 2026</div></div></div>
+<div class="mbg" id="m-privacy" onclick="if(event.target===this)closeM('privacy')"><div class="mbox"><div class="mhead"><h2>Datenschutzerklärung</h2><button class="mx" onclick="closeM('privacy')">×</button></div><div class="mbody"><h3>1. Verantwortlicher</h3>AH Mühlmann, Gottlieb-Daimler-Str. 9, 02828 Görlitz · info [at] bestpricetank [dot] de<h3>2. Hosting</h3>Netlify Inc., San Francisco, USA. Server-Logfiles möglich. Netlify EU-US DPF-zertifiziert. Rechtsgrundlage: Art. 6 Abs. 1 lit. f DSGVO.<h3>3. Lokale Speicherung</h3>Keine Tracking-Cookies. Im localStorage deines Geräts speichern wir: <strong>bpt_userName</strong> (Name für den KI-Assistenten), <strong>bpt_car</strong> (Fahrzeug, Tankgröße, Verbrauch für den Sparrechner), <strong>bpt_alert</strong> (dein Preisalarm), <strong>bpt_lang</strong> (Sprache), <strong>bpt_speaker</strong> (Sprachausgabe an/aus), <strong>bpt_price_history</strong> (Preisverlauf für die Grafik) und <strong>cookieOk</strong> (Cookie-Entscheidung). Diese Angaben verbleiben auf deinem Gerät und werden nicht an uns oder Dritte übertragen. Du kannst sie jederzeit über die Website-Einstellungen deines Browsers löschen.<h3>4. Externe Dienste</h3>Beim Aufruf dieser Dienste wird technisch bedingt deine IP-Adresse übertragen.<br><br><u>Über unseren Server, ohne Kontakt zu deinem Gerät:</u><br>· Tankerkönig / MTS-K – deutsche Preise<br>· Dyskont Paliwowy – polnische Preise<br>· Polnische Nationalbank (NBP) – Wechselkurse<br>· Tschechisches Statistikamt (ČSÚ) – tschechische Preise<br><br><u>Direkt aus deinem Browser:</u><br>· OpenStreetMap / CARTO – Kartendarstellung<br>· Nominatim (OpenStreetMap) – Ortssuche; der eingegebene Ort wird übertragen<br>· Open-Meteo – Wetter, mit Koordinaten des gewählten Orts<br>· Autobahn GmbH – Verkehrsmeldungen<br>· OpenChargeMap – Ladesäulen<br>· OpenAI API (über unseren Server) – deine Frage an den KI-Assistenten wird verarbeitet<br><br><u>Preismeldungen:</u> Nutzt du das Meldeformular, werden die eingegebenen Angaben über Netlify Forms (Netlify Inc.) gespeichert. Wir fragen keinen Namen und keine Kontaktdaten ab.<br><br>· Keine Google Fonts, kein Google Analytics, keine Werbenetzwerke.<h3>5. Werbung in eigener Sache</h3>Auf der Startseite und am Ende der Stationenliste steht eine mit <strong>ANZEIGE</strong> gekennzeichnete Fläche, die auf die Tageszulassungen des Autohauses Mühlmann verweist. Diese Website und das Autohaus haben denselben Betreiber – es handelt sich also um Werbung in eigener Sache und nicht um ein fremdes Werbenetzwerk.<br><br>Die Fläche ist Bestandteil dieser Seite. Es wird nichts von einem anderen Server nachgeladen, auch das Logo nicht. Es werden keine Cookies gesetzt, keine Kennungen vergeben und keine Profile gebildet. Solange du die Anzeige nur siehst, werden <u>keine</u> Daten erhoben, und sie wird auch nicht gezählt.<br><br>Erst wenn du sie anklickst, rufst du autohaus-muehlmann.de auf. Dabei wird – wie bei jedem Seitenaufruf – technisch bedingt deine IP-Adresse an diesen Server übertragen. Der Link enthält einen Herkunftsvermerk (<em>ref=bpt-start</em> bzw. <em>ref=bpt</em>), damit dort erkennbar ist, wie viele Aufrufe von hier kommen. Gezählt wird nur der Aufruf; die IP-Adresse wird dort nicht gespeichert. Ab dem Klick gilt die Datenschutzerklärung von autohaus-muehlmann.de. Rechtsgrundlage für die Anzeige: Art. 6 Abs. 1 lit. f DSGVO (Eigenwerbung als berechtigtes Interesse).<h3>6. Ihre Rechte (Art. 15–22 DSGVO)</h3>Auskunft, Berichtigung, Löschung: info [at] bestpricetank [dot] de · Stand: September 2026</div></div></div>
 
-<div class="mbg" id="m-cookies" onclick="if(event.target===this)closeM('cookies')"><div class="mbox"><div class="mhead"><h2>Cookies & Speicherung</h2><button class="mx" onclick="closeM('cookies')">×</button></div><div class="mbody"><h3>Keine Tracking-Cookies</h3>Kein Google Analytics, keine Werbecookies.<h3>Technisch notwendig</h3><strong>bpt_userName</strong> – dein Name für den KI-Assistenten<br><strong>bpt_car</strong> – Fahrzeug, Tankgröße, Verbrauch<br><strong>bpt_alert</strong> – dein Preisalarm<br><strong>bpt_lang</strong> · <strong>bpt_speaker</strong> – Sprache und Sprachausgabe<br><strong>bpt_price_history</strong> – Preisverlauf für die Grafik<br><strong>cookieOk</strong> – deine Cookie-Entscheidung<br><br>Verbleiben auf deinem Gerät, kein Transfer.<h3>Externe Dienste</h3>Für Karten, Preise und KI werden externe Dienste geladen. Details in der Datenschutzerklärung.</div></div></div>
+<div class="mbg" id="m-cookies" onclick="if(event.target===this)closeM('cookies')"><div class="mbox"><div class="mhead"><h2>Cookies & Speicherung</h2><button class="mx" onclick="closeM('cookies')">×</button></div><div class="mbody"><h3>Keine Tracking-Cookies</h3>Kein Google Analytics, keine Werbecookies.<h3>Technisch notwendig</h3><strong>bpt_userName</strong> – dein Name für den KI-Assistenten<br><strong>bpt_car</strong> – Fahrzeug, Tankgröße, Verbrauch<br><strong>bpt_alert</strong> – dein Preisalarm<br><strong>bpt_lang</strong> · <strong>bpt_speaker</strong> – Sprache und Sprachausgabe<br><strong>bpt_price_history</strong> – Preisverlauf für die Grafik<br><strong>cookieOk</strong> – deine Cookie-Entscheidung<br><br>Verbleiben auf deinem Gerät, kein Transfer.<h3>Externe Dienste</h3>Für Karten, Preise und KI werden externe Dienste geladen. Details in der Datenschutzerklärung.<h3>Anzeige</h3>Die mit <strong>ANZEIGE</strong> gekennzeichnete Fläche ist Werbung in eigener Sache für das Autohaus Mühlmann. Sie setzt keine Cookies, lädt nichts von einem fremden Server und wird nicht gezählt. Erst beim Klick verlässt du diese Seite.</div></div></div>
 
 <!-- COMMUNITY PANEL -->
 <div class="spanel" id="panel-community">
@@ -1479,6 +1569,30 @@ function renderDataWarnings(){
   document.documentElement.style.setProperty('--warn-h', el.offsetHeight + 'px');
 }
 
+// Polnische Preise: Zustand der Live-Quelle.
+// Fällt Dyskont Paliwowy aus, blieben bisher die im Code hinterlegten
+// Startwerte stehen und sahen aus wie gemessene Preise. Dann fährt jemand
+// wegen einer Ersparnis los, die es so nicht gibt. Deshalb: als Schätzung
+// kennzeichnen, warnen, und keine Ersparnis mehr versprechen.
+let PL_STALE = false;
+function markPLStale(grund){
+  PL_STALE = true;
+  STATIONS = STATIONS.filter(s => s.source !== 'dyskont_paliwowy');
+  STATIONS.forEach(s => {
+    if(s.country !== 'pl') return;
+    s.estimate   = true;
+    s.priceNote  = 'Stand unbekannt';
+    s.gemessenAm = null;
+    s.best       = false;
+  });
+  setDataWarning('pl', grund + ' Die angezeigten PL-Preise sind nur Schätzwerte.');
+  try{ updateAICard(); renderMapMarkers(); renderStationList(); gcalc(); }catch(e){}
+}
+function clearPLStale(){
+  PL_STALE = false;
+  clearDataWarning('pl');
+}
+
 async function refreshPrices(){
   const btn=document.getElementById('locBtn');
   if(btn){btn.classList.add('spin');btn.textContent='⏳'}
@@ -1595,6 +1709,7 @@ const res=await fetch(url);
         const cheap=pl.sort((a,b)=>a[currentFuel]-b[currentFuel])[0];
         STATIONS.forEach(s=>s.best=false);
         if(cheap) cheap.best=true;
+        clearPLStale();
         updateAICard();
         renderMapMarkers();
         renderStationList();
@@ -1602,9 +1717,17 @@ const res=await fetch(url);
         savePriceSnapshot();
       } else if(dpdata.status==='no_key'){
         console.info('DP API: Key noch nicht konfiguriert (Netlify Dashboard)');
+        markPLStale('Die polnische Preisquelle ist nicht angebunden.');
+      } else {
+        markPLStale('Die polnische Preisquelle liefert gerade keine Daten.');
       }
+    } else {
+      markPLStale('Die polnische Preisquelle ist gerade nicht erreichbar (Fehler ' + dpres.status + ').');
     }
-  }catch(e){console.warn('DP Fehler:',e.message)}
+  }catch(e){
+    console.warn('DP Fehler:',e.message);
+    markPLStale('Die polnischen Preise konnten nicht geladen werden.');
+  }
   if(btn){btn.classList.remove('spin');btn.textContent='🔄'}
 }
 
@@ -1621,17 +1744,19 @@ function updateAICard(){
   const plPrice=preis(plSt[0]||{});   // kein Ersatz aus einer anderen Kraftstoffart
   const dePrice=preis(deSt[0]||{});
   const havePl=plPrice>0, haveDe=dePrice>0;
-  const save=(havePl&&haveDe)?Math.max(0,(dePrice-plPrice)*60):null;
+  // Ohne belastbare PL-Preise keine Ersparnis ausweisen.
+  const save=(havePl&&haveDe&&!PL_STALE)?Math.max(0,(dePrice-plPrice)*60):null;
   const fmtE=v=>v.toFixed(2).replace('.',',')+' €';
   const fmtL=v=>v.toFixed(3).replace('.',',')+'€/L';
   const el=document.getElementById('ai-save');
   if(el) el.textContent = save===null ? '–' : fmtE(save);
   const bp=document.getElementById('ai-best-price');
-  if(bp) bp.textContent = havePl ? fmtL(plPrice) : '–';
+  // Bei ausgefallener PL-Quelle als Schätzung kennzeichnen, wie in Liste und Karte.
+  if(bp) bp.textContent = havePl ? (PL_STALE?'≈':'') + fmtL(plPrice) : '–';
   const ks=document.getElementById('ki-save-demo');
   if(ks) ks.textContent = save===null ? '–' : fmtE(Math.max(0,save-1.2));
   const kp=document.getElementById('ki-pl-demo');
-  if(kp) kp.textContent = havePl ? fmtL(plPrice) : '–';
+  if(kp) kp.textContent = havePl ? (PL_STALE?'≈':'') + fmtL(plPrice) : '–';
 }
 
 // ══════════════════════════════════════
@@ -1661,6 +1786,30 @@ function openPanel(name){
   if(name==='stations'){renderStationList();}
   if(name==='rechner'){gcalc();tcalc();evcalc();}
 }
+/* Startseiten-Anzeige: im Desktop-Layout unter der KI-Karte ausrichten und
+   ihre Sichtbarkeit mitnehmen. Im Mobil-Layout sitzt sie fest zwischen
+   KI-Karte und Dock, dort macht CSS die Arbeit. */
+function posAd(){
+  const ad=document.getElementById('amst'), aic=document.getElementById('aic');
+  if(!ad||!aic) return;
+  if(window.matchMedia('(max-width:900px)').matches){ ad.style.top=''; return; }
+  const r=aic.getBoundingClientRect();
+  if(r.height) ad.style.top=Math.round(r.bottom+12)+'px';
+}
+function syncAd(){
+  const ad=document.getElementById('amst'), aic=document.getElementById('aic');
+  if(!ad||!aic) return;
+  const weg = aic.style.opacity==='0' || aic.style.display==='none';
+  ad.classList.toggle('aus', weg);
+  if(!weg) posAd();
+}
+addEventListener('resize',()=>{posAd();});
+try{
+  new MutationObserver(syncAd).observe(document.getElementById('aic'),
+    {attributes:true,attributeFilter:['style']});
+}catch(e){}
+[100,600,1500].forEach(t=>setTimeout(posAd,t));
+
 function cp(name){
   const p=document.getElementById('panel-'+name);
   if(p) p.classList.remove('open');

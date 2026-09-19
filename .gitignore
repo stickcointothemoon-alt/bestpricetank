@@ -1,2 +1,5 @@
 dist/
 node_modules/
+
+# lokale Sicherungskopien
+index.html.backup-*
