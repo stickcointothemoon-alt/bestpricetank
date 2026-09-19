@@ -73,11 +73,18 @@ async function deutschland() {
   return { diesel: min('diesel'), e5: min('e5'), anzahl: offen.length, stand: d.fetchedAt };
 }
 
-// ── Polen: die NAECHSTGELEGENE Dyskont-Paliwowy-Station ─────────────────
-// Bewusst nicht die guenstigste im ganzen Land. Am 19.09.2026 war das
-// Nowa Ruda, rund 120 km von Zgorzelec entfernt und 10 Groschen billiger -
-// als Bezugsgroesse fuer das Grenzgebiet ist das schlicht die falsche
-// Station. Gemessen wird hier, nicht irgendwo.
+// ── Polen: die guenstigste Dyskont-Paliwowy-Station IN DER NAEHE ────────
+//
+// Nicht die guenstigste im ganzen Land: Am 19.09.2026 war das Nowa Ruda,
+// rund 120 km von Zgorzelec entfernt und 10 Groschen billiger - als
+// Bezugsgroesse fuers Grenzgebiet die falsche Station.
+//
+// Aber auch nicht schlicht die naechste: In Zgorzelec stehen zwei
+// DP-Stationen, die sich im Preis unterscheiden koennen (am 05.09.2026
+// 8,54 und 8,64 PLN). Die guenstigere von beiden ist der Bezugspunkt,
+// weil die Seite genau diesen Preis als erreichbar ausweist.
+const NAH_KM = 25;
+
 async function polen() {
   const d = await holen('/.netlify/functions/dp-prices');
   if (d.status !== 'success' || !Array.isArray(d.stations)) {
@@ -85,11 +92,13 @@ async function polen() {
   }
   const mitOrt = d.stations
     .filter((s) => gueltig(s.diesel) && isFinite(s.lat) && isFinite(s.lng))
-    .map((s) => ({ s, entfernung: km(GOERLITZ, { lat: +s.lat, lng: +s.lng }) }))
-    .sort((a, b) => a.entfernung - b.entfernung);
+    .map((s) => ({ s, entfernung: km(GOERLITZ, { lat: +s.lat, lng: +s.lng }) }));
 
   if (!mitOrt.length) throw new Error('dp-prices: keine brauchbare Station');
-  const { s, entfernung } = mitOrt[0];
+  const nah = mitOrt.filter((x) => x.entfernung <= NAH_KM);
+  const { s, entfernung } = nah.length
+    ? nah.sort((a, b) => a.s.diesel - b.s.diesel)[0]
+    : mitOrt.sort((a, b) => a.entfernung - b.entfernung)[0];
   return {
     diesel: s.diesel,
     e5: gueltig(s.e5) ? s.e5 : null,

@@ -1700,17 +1700,26 @@ const res=await fetch(url);
           return a.dist-b.dist;
         });
         console.log('✅ Dyskont Paliwowy:',dpdata.stations.length,'Stationen, Kurs:',dpdata.pln_eur_rate,'PLN/EUR');
-        // DP-Bezugsstation: die NAECHSTGELEGENE, nicht die landesweit
-        // guenstigste. Am 19.09.2026 war das Nowa Ruda - rund 120 km von
-        // Zgorzelec entfernt und 10 Groschen billiger. Alle geschaetzten
-        // PL-Preise im Grenzgebiet lagen dadurch rund 2,3 Cent zu niedrig,
-        // und die Seite zeigte eine BP guenstiger an als den Diskonter.
+        // DP-Bezugsstation: die guenstigste Dyskont-Paliwowy-Station IN DER
+        // NAEHE - fuer Goerlitz also die billigere der beiden in Zgorzelec.
+        //
+        // Vorher wurde die landesweit guenstigste genommen. Am 19.09.2026 war
+        // das Nowa Ruda, rund 120 km entfernt und 10 Groschen unter Zgorzelec.
+        // Alle geschaetzten PL-Preise im Grenzgebiet lagen dadurch etwa 2,3
+        // Cent zu niedrig, und die Karte wies eine BP guenstiger aus als den
+        // Diskonter. Die blosse Naehe genuegt aber auch nicht: In Zgorzelec
+        // stehen zwei DP-Stationen, die sich im Preis unterscheiden koennen
+        // (05.09.: 8,54 und 8,64 PLN). Massgeblich ist die guenstigere.
+        const DP_NAH_KM = 25;
         const dpRef = (userLocationCoords?.lat) ? userLocationCoords : GOERLITZ;
-        const dpBest = dpdata.stations
+        const dpMitKm = dpdata.stations
           .filter(s=>s.diesel>0 && isFinite(s.lat) && isFinite(s.lng))
-          .map(s=>({s, km: haversine(dpRef, {lat:+s.lat, lng:+s.lng})}))
-          .sort((a,b)=>a.km-b.km)
-          .map(x=>x.s)[0];
+          .map(s=>({s, km: haversine(dpRef, {lat:+s.lat, lng:+s.lng})}));
+        const dpNah = dpMitKm.filter(x=>x.km <= DP_NAH_KM);
+        const dpBest = (dpNah.length
+          ? dpNah.sort((a,b)=>a.s.diesel-b.s.diesel)      // in der Naehe: die guenstigste
+          : dpMitKm.sort((a,b)=>a.km-b.km)                // sonst: wenigstens die naechste
+        ).map(x=>x.s)[0];
         if(dpBest) adjustPLPricesToBenchmark(dpBest.diesel, dpBest.e5, dpBest.e10);
         // Beste PL-Station neu berechnen
         const pl=STATIONS.filter(s=>s.country==='pl'&&s[currentFuel]>0);
