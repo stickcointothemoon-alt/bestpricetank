@@ -1,6 +1,9 @@
-# Stösst den Netlify-Build an, damit die statischen Seiten frische Preise
-# bekommen. Der Build-Befehl selbst laeuft bei Netlify (scripts/build-pages.js);
-# hier wird er nur zeitgesteuert ausgeloest.
+# Schreibt zweimal taeglich den Preisverlauf fort und laesst Netlify neu bauen,
+# damit auch die statischen Ortsseiten frische Preise bekommen.
+#
+# Der Commit auf main loest den Netlify-Build von selbst aus - der Build-Hook
+# wird nur noch gebraucht, wenn es nichts zu committen gab (etwa weil eine
+# Preisquelle gerade ausgefallen ist). So bleibt es bei zwei Builds am Tag.
 #
 # Einrichtung, einmalig:
 #   1. Netlify → Site configuration → Build & deploy → Build hooks
@@ -9,9 +12,10 @@
 #   2. GitHub → Settings → Secrets and variables → Actions → New secret
 #      Name: NETLIFY_BUILD_HOOK, Wert: diese URL
 #
-# Ohne das Secret meldet der Lauf einen Fehler statt still nichts zu tun.
+# Der Verlauf selbst braucht kein Secret: scripts/verlauf.js liest die
+# oeffentlichen Funktionen der eigenen Seite.
 
-name: Tägliche Preisaktualisierung
+name: Preisverlauf und täglicher Build
 
 on:
   schedule:
@@ -20,16 +24,54 @@ on:
   workflow_dispatch:
 
 jobs:
-  rebuild:
+  verlauf:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write        # noetig, damit der Lauf data/history.json pushen darf
+
     steps:
-      - name: Netlify-Build auslösen
+      - name: Quelltext holen
+        uses: actions/checkout@v4
+
+      - name: Node einrichten
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      # Faellt eine Preisquelle aus, endet das Skript mit Code 2 und schreibt
+      # nichts. Das ist gewollt: eine Luecke in der Kurve ist ehrlicher als ein
+      # geschaetzter Punkt. Der Lauf soll deswegen aber nicht rot werden.
+      - name: Preisverlauf fortschreiben
+        id: verlauf
+        continue-on-error: true
+        run: node scripts/verlauf.js
+
+      - name: Neuen Punkt committen
+        id: commit
+        run: |
+          git config user.name  "PriceBot"
+          git config user.email "bot@bestpricetank.de"
+          git add data/history.json
+          if git diff --staged --quiet; then
+            echo "Kein neuer Punkt - es gab nichts zu committen."
+            echo "committed=nein" >> "$GITHUB_OUTPUT"
+          else
+            git commit -m "Preisverlauf $(date '+%d.%m.%Y %H:%M')"
+            git push
+            echo "✅ Neuer Punkt gepusht, Netlify baut gleich."
+            echo "committed=ja" >> "$GITHUB_OUTPUT"
+          fi
+
+      # Nur noch als Rueckfall: ohne Commit baut Netlify sonst gar nicht, und
+      # die Ortsseiten trugen dann weiter die Preise von gestern.
+      - name: Build anstoßen, falls nichts committet wurde
+        if: steps.commit.outputs.committed == 'nein'
         env:
           HOOK: ${{ secrets.NETLIFY_BUILD_HOOK }}
         run: |
           if [ -z "$HOOK" ]; then
-            echo "::error::NETLIFY_BUILD_HOOK ist nicht gesetzt. Siehe Kommentar oben in dieser Datei."
-            exit 1
+            echo "::warning::NETLIFY_BUILD_HOOK ist nicht gesetzt, es wurde kein Build angestossen."
+            exit 0
           fi
           code=$(curl -sS -o /dev/null -w '%{http_code}' -X POST -d '{}' "$HOOK")
           echo "Netlify antwortete mit HTTP $code"
