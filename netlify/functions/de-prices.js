@@ -13,6 +13,13 @@
 //      Radius, also genügt eine Abfrage für alle Radius-Einstellungen.
 //   4. Jede erfolgreiche Antwort wird gespeichert. Bei einer Störung wird
 //      der letzte gute Stand mit Altersangabe ausgeliefert, statt gar nichts.
+//   5. Netlify-CDN-Cache-Control mit "durable". OHNE diesen Header speichert
+//      Netlify Function-Antworten UEBERHAUPT NICHT zwischen - ein normales
+//      Cache-Control mit s-maxage reicht dafuer nicht. Genau daran lag es:
+//      Jeder einzelne Seitenaufruf lief bis zu Tankerkoenig durch, bei rund
+//      1300 Anfragen pro Stunde gegen ein Limit von 60. "durable" sorgt
+//      zusaetzlich dafuer, dass sich alle Netlify-Knoten EINEN Speicher
+//      teilen, statt jeder seinen eigenen zu fuellen.
 
 const UPSTREAM_RADIUS = 25;
 const CDN_SECONDS = 3600;   // 1 Stunde. MTS-K-Preise aendern sich einige Male am Tag.
@@ -40,11 +47,19 @@ const ATTEMPTS = 1;   // Tankerkönig erlaubt 1 Abruf/Minute.
 const STOERUNG_CDN_SEKUNDEN = 900;
 const FEHLER_CACHE_SEKUNDEN = 900;
 
+// Zustand des Zwischenspeichers. Wird in der Antwort mitgeschickt, weil der
+// Fehler sonst nur im Server-Log steht - und dort hat monatelang niemand
+// hingesehen, waehrend der Speicher gar nicht existierte.
+let speicherZustand = 'unbekannt';
+
 async function getBlobStore() {
   try {
     const { getStore } = await import('@netlify/blobs');
-    return getStore('de-prices');
+    const store = getStore('de-prices');
+    speicherZustand = 'erreichbar';
+    return store;
   } catch (e) {
+    speicherZustand = 'nicht ladbar: ' + e.message;
     console.warn('Blobs nicht verfügbar:', e.message);
     return null;
   }
@@ -99,11 +114,16 @@ exports.handler = async (event) => {
   if (data && data.ok) {
     const payload = { ...data, fetchedAt: new Date().toISOString(), stale: false };
     if (store) {
-      try { await store.setJSON(cacheKey, payload); }
-      catch (e) { console.warn('Blob-Schreiben fehlgeschlagen:', e.message); }
+      try { await store.setJSON(cacheKey, payload); speicherZustand = 'geschrieben'; }
+      catch (e) {
+        speicherZustand = 'Schreiben fehlgeschlagen: ' + e.message;
+        console.warn('Blob-Schreiben fehlgeschlagen:', e.message);
+      }
     }
-    return json(200, payload, {
-      'Cache-Control': `public, max-age=120, s-maxage=${CDN_SECONDS}, stale-while-revalidate=3600`,
+    return json(200, { ...payload, quelle: 'live', speicher: speicherZustand }, {
+      'Netlify-CDN-Cache-Control':
+        `public, durable, s-maxage=${CDN_SECONDS}, stale-while-revalidate=86400`,
+      'Cache-Control': 'public, max-age=120',
     });
   }
   if (data && !data.ok) failure = data.message || 'Tankerkönig-Fehler';
@@ -116,12 +136,16 @@ exports.handler = async (event) => {
         const ageMinutes = Math.round((Date.now() - new Date(last.fetchedAt).getTime()) / 60000);
         if (ageMinutes <= MAX_STALE_MINUTES) {
           console.warn(`TK gestört (${failure}) – liefere Stand von vor ${ageMinutes} Min.`);
-          return json(200, { ...last, stale: true, ageMinutes, upstreamMessage: failure }, {
-            'Cache-Control': `public, max-age=60, s-maxage=${STOERUNG_CDN_SEKUNDEN}`,
+          return json(200, { ...last, stale: true, ageMinutes, upstreamMessage: failure,
+                             quelle: 'speicher', speicher: speicherZustand }, {
+            'Netlify-CDN-Cache-Control':
+              `public, durable, s-maxage=${STOERUNG_CDN_SEKUNDEN}, stale-while-revalidate=86400`,
+            'Cache-Control': 'public, max-age=60',
           });
         }
       }
     } catch (e) {
+      speicherZustand = 'Lesen fehlgeschlagen: ' + e.message;
       console.warn('Blob-Lesen fehlgeschlagen:', e.message);
     }
   }
@@ -137,8 +161,11 @@ exports.handler = async (event) => {
       if (Array.isArray(vorrat.stations) && vorrat.stations.length) {
         const ageMinutes = Math.round((Date.now() - new Date(vorrat.fetchedAt).getTime()) / 60000);
         console.warn(`TK gestört (${failure}) – liefere Notvorrat von vor ${ageMinutes} Min.`);
-        return json(200, { ...vorrat, stale: true, ageMinutes, upstreamMessage: failure }, {
-          'Cache-Control': `public, max-age=120, s-maxage=${STOERUNG_CDN_SEKUNDEN}`,
+        return json(200, { ...vorrat, stale: true, ageMinutes, upstreamMessage: failure,
+                           quelle: 'notvorrat', speicher: speicherZustand }, {
+          'Netlify-CDN-Cache-Control':
+            `public, durable, s-maxage=${STOERUNG_CDN_SEKUNDEN}, stale-while-revalidate=86400`,
+          'Cache-Control': 'public, max-age=120',
         });
       }
     }
@@ -149,8 +176,10 @@ exports.handler = async (event) => {
   // Auch den Fehlschlag zwischenspeichern. Sonst stoesst jeder Besucher
   // waehrend einer Stoerung einen neuen Abruf an - und die Drosselung
   // kann sich nie erholen.
-  return json(502, { ok: false, message: failure || 'Tankerkönig nicht erreichbar' }, {
-    'Cache-Control': `public, max-age=60, s-maxage=${FEHLER_CACHE_SEKUNDEN}`,
+  return json(502, { ok: false, message: failure || 'Tankerkönig nicht erreichbar',
+                     quelle: 'nichts', speicher: speicherZustand }, {
+    'Netlify-CDN-Cache-Control': `public, durable, s-maxage=${FEHLER_CACHE_SEKUNDEN}`,
+    'Cache-Control': 'public, max-age=60',
   });
 };
 

@@ -110,8 +110,12 @@ exports.handler = async () => {
     headers: {
       'Content-Type': 'application/json',
       'Access-Control-Allow-Origin': '*',
-      'Cache-Control': `public, s-maxage=${CACHE_SECONDS}, max-age=120, stale-while-revalidate=60`,
-      'Netlify-CDN-Cache-Control': `public, s-maxage=${CACHE_SECONDS}, stale-while-revalidate=60`,
+      // "durable": ein gemeinsamer Speicher fuer alle Netlify-Knoten statt
+      // einer eigenen Kopie je Standort. Sonst fragt jeder Knoten selbst bei
+      // Dyskont Paliwowy nach.
+      'Netlify-CDN-Cache-Control':
+        `public, durable, s-maxage=${CACHE_SECONDS}, stale-while-revalidate=86400`,
+      'Cache-Control': 'public, max-age=120',
     },
     body: JSON.stringify({
       status:         'success',

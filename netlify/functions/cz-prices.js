@@ -127,7 +127,12 @@ function json(statusCode, body, extra) {
       {
         'Content-Type': 'application/json',
         'Access-Control-Allow-Origin': '*',
-        'Cache-Control': `public, max-age=1800, s-maxage=${CDN_SECONDS}, stale-while-revalidate=86400`,
+        // Ohne Netlify-CDN-Cache-Control speichert Netlify Function-Antworten
+        // gar nicht zwischen; ein blosses s-maxage bleibt wirkungslos.
+        // "durable" gibt allen Knoten einen gemeinsamen Speicher.
+        'Netlify-CDN-Cache-Control':
+          `public, durable, s-maxage=${CDN_SECONDS}, stale-while-revalidate=86400`,
+        'Cache-Control': 'public, max-age=1800',
       },
       extra || {}
     ),
