@@ -1,1 +1,13 @@
-[]
+[
+ {
+  "ts": "2026-09-19T17:57:52.372Z",
+  "de_diesel": 2.359,
+  "de_e5": 2.279,
+  "pl_diesel": 2.06,
+  "pl_e5": 1.831,
+  "cz_diesel": null,
+  "pl_station": "Dyskont Paliwowy Zgorzelec",
+  "pl_km": 3,
+  "de_anzahl": 14
+ }
+]
