@@ -191,13 +191,49 @@ async function collect(vorher) {
   };
 }
 
+// Datum und Uhrzeit in deutscher Zeit.
+//
+// Zwei Gruende fuer die Umstellung auf Europe/Berlin:
+// Erstens lief die Datumsanzeige bisher ueber getDate() des Build-Servers,
+// und der steht auf UTC - rund um Mitternacht stand also das falsche Datum
+// auf den Seiten.
+// Zweitens, und wichtiger: Deutscher Diesel schwankt im Tagesverlauf um 15
+// bis 20 Cent. Am 20.09.2026 standen um 09:44 Uhr 2,329 EUR und um 12:16 Uhr
+// 2,518 EUR - dazwischen liegen fast 19 Cent. Die Ortsseiten werden aber nur
+// zweimal taeglich gebaut und frieren damit einen Messpunkt ein. Ohne
+// Uhrzeit liest sich dieser Messpunkt wie ein Tageswert, und wer abends
+// kommt, findet einen ganz anderen Preis vor. Mit Uhrzeit ist es das, was es
+// ist: eine Momentaufnahme.
+function zeitTeile(d) {
+  try {
+    const teile = new Intl.DateTimeFormat('de-DE', {
+      timeZone: 'Europe/Berlin', day: '2-digit', month: '2-digit', year: 'numeric',
+      hour: '2-digit', minute: '2-digit', hour12: false,
+    }).formatToParts(d);
+    const hol = (t) => teile.find((p) => p.type === t)?.value;
+    if (hol('day') && hol('hour')) {
+      return { tag: hol('day'), monat: hol('month'), jahr: hol('year'),
+               std: hol('hour'), min: hol('minute') };
+    }
+  } catch (e) {
+    console.warn('   · Zeitzone nicht verfuegbar, nutze UTC:', e.message);
+  }
+  // Ohne Zeitzonendaten lieber UTC als eine erfundene Ortszeit.
+  return { tag: String(d.getUTCDate()).padStart(2, '0'),
+           monat: String(d.getUTCMonth() + 1).padStart(2, '0'),
+           jahr: String(d.getUTCFullYear()),
+           std: String(d.getUTCHours()).padStart(2, '0'),
+           min: String(d.getUTCMinutes()).padStart(2, '0') };
+}
+
 function tokens(x) {
-  const stand = new Date(x.stand);
-  const dd = String(stand.getDate()).padStart(2, '0');
-  const mm = String(stand.getMonth() + 1).padStart(2, '0');
+  const z = zeitTeile(new Date(x.stand));
+  const dd = z.tag;
+  const mm = z.monat;
   return {
-    STAND: `${dd}.${mm}.${stand.getFullYear()}`,
+    STAND: `${dd}.${mm}.${z.jahr}`,
     STAND_KURZ: `${dd}.${mm}.`,
+    STAND_UHR: `${z.std}:${z.min}`,
     STAND_ISO: x.stand.slice(0, 10),
     KURS_PLN: loc(x.kurse.pln),
     KURS_CZK: loc(x.kurse.czk),
