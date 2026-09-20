@@ -7,6 +7,10 @@
 <meta name="description" content="Diesel ab {{ORT_DIESEL}} €/L in Słubice, {{ORT_ERSPARNIS_CENT}} ct unter Deutschland — {{ORT_ERSPARNIS_60L}} € bei 60 L. Fünf Minuten über die Oderbrücke. Stand {{STAND}}."/>
 <meta name="keywords" content="tanken slubice, spritpreise frankfurt oder, diesel günstig frankfurt oder, tankstelle słubice, tanken Polen frankfurt oder"/>
 <meta name="robots" content="index, follow"/>
+<!-- Koordinaten des Ortes. scripts/build-pages.js sucht dazu die
+     naechste GEMESSENE Dyskont-Paliwowy-Station und rechnet die
+     Aufschlaege darauf - nicht mehr pauschal auf Zgorzelec. -->
+<meta name="bpt-ort" content="52.3506,14.5606"/>
 <link rel="canonical" href="https://bestpricetank.de/spritpreise-slubice.html"/>
 <meta property="og:type" content="website"/>
 <meta property="og:url" content="https://bestpricetank.de/spritpreise-slubice.html"/>
@@ -210,7 +214,7 @@ footer a:hover{color:var(--muted)}
       <div class="st-meta">2 km · 🇵🇱 Polen · 🕐 24/7 · Diesel, E95, E10, LPG</div>
     </div>
     <div class="st-price">
-      <div class="st-pnum" data-aufschlag="0.000">{{PL_STATION}} <span style="font-size:13px;opacity:.7">€/L</span></div>
+      <div class="st-pnum" data-aufschlag="0.010">{{PL_STATION}} <span style="font-size:13px;opacity:.7">€/L</span></div>
       <div class="st-pcur">Diesel · Schätzung, Basis Dyskont Paliwowy</div>
     </div>
   </div>
@@ -236,24 +240,19 @@ footer a:hover{color:var(--muted)}
       <div class="st-pcur">Diesel · Schätzung, Basis Dyskont Paliwowy</div>
     </div>
   </div>
-  <div class="station">
-    <div class="st-logo">LO</div>
-    <div class="st-info">
-      <div class="st-name">Lotos Słubice </div>
-      <div class="st-meta">4 km · 🇵🇱 Polen · 🕐 24/7 · Diesel, E95</div>
-    </div>
-    <div class="st-price">
-      <div class="st-pnum" data-aufschlag="0.043">{{PL_STATION}} <span style="font-size:13px;opacity:.7">€/L</span></div>
-      <div class="st-pcur">Diesel · Schätzung, Basis Dyskont Paliwowy</div>
-    </div>
-  </div>
+  <p style="margin:10px 0 0;font-size:12px;color:var(--faint);line-height:1.6">
+    <strong>Woher die Zahlen kommen:</strong> {{ORT_BASIS_SATZ}}
+    Die oben gelisteten Stationen melden uns keine Preise; ihre Werte sind aus dieser
+    Messung hochgerechnet und als Schätzung gekennzeichnet. Vor Ort können sie abweichen.
+  </p>
+
   <div class="promo">
     💡 <strong>Live-Preise & tagesaktueller Grenzrechner</strong> auf <a href="/">BestPriceTank.de</a> — Wechselkurs, Wetter, Stauinfo und KI-Assistent Zapfi inklusive.
   </div>
   <h2>💡 Tipps fürs Tanken</h2>
   <ul class="tips">
     <li>Słubice liegt direkt an der Oder-Brücke – 5 Minuten von Frankfurt (Oder)</li>
-    <li>Orlen und Shell bieten die beste Preis-Qualitäts-Kombination in Słubice</li>
+    <li>Preise der einzelnen Marken vor Ort vergleichen – uns melden sie keine</li>
     <li>LPG in Polen ca. 50% günstiger – besonders lohnend für Gasfahrer</li>
     <li>Keine Wartezeiten an der Stadtbrücke – offene EU-Binnengrenze</li>
     <li>PLN-Wechselkurs beachten: BestPriceTank rechnet automatisch in € um</li>

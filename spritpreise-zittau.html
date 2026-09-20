@@ -7,6 +7,10 @@
 <meta name="description" content="Von Zittau in 5 Min. nach Sieniawka (PL) oder 10 Min. nach Hrádek (CZ). Diesel ab {{ORT_DIESEL}} €/L, {{ORT_ERSPARNIS_CENT}} ct unter Deutschland. Alle Tankstellen mit Entfernung."/>
 <meta name="keywords" content="spritpreise zittau, tanken zittau, diesel zittau, tanken sieniawka, tankstelle hrádek, dreiländereck tanken, tanken polen zittau"/>
 <meta name="robots" content="index, follow"/>
+<!-- Koordinaten des Ortes. scripts/build-pages.js sucht dazu die
+     naechste GEMESSENE Dyskont-Paliwowy-Station und rechnet die
+     Aufschlaege darauf - nicht mehr pauschal auf Zgorzelec. -->
+<meta name="bpt-ort" content="50.8973,14.8079"/>
 <link rel="canonical" href="https://bestpricetank.de/spritpreise-zittau.html"/>
 <meta property="og:type" content="website"/>
 <meta property="og:url" content="https://bestpricetank.de/spritpreise-zittau.html"/>
@@ -282,6 +286,13 @@ footer a:hover{color:var(--muted)}
       <p>Die polnischen Werte sind aus den gemessenen Preisen von Dyskont Paliwowy hochgerechnet, die tschechischen aus dem amtlichen Wochendurchschnitt des Tschechischen Statistikamts. Beides ist als Schätzung gekennzeichnet.</p>
     </details>
   </div>
+
+  <p style="margin:10px 0 0;font-size:12px;color:var(--faint);line-height:1.6">
+    <strong>Woher die Zahlen kommen:</strong> {{ORT_BASIS_SATZ}}
+    Stationen ohne eigene Preismeldung sind daraus hochgerechnet und als Schätzung
+    gekennzeichnet. Vor Ort können sie abweichen.
+  </p>
+
   <h2>🗺 Weitere Grenzübergänge in der Region</h2>
   <div class="city-grid">
     <a href="/spritpreise-goerlitz.html" class="city-link">

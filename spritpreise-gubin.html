@@ -7,6 +7,10 @@
 <meta name="description" content="Diesel ab {{ORT_DIESEL}} €/L in Gubin, {{ORT_ERSPARNIS_CENT}} ct unter Deutschland — {{ORT_ERSPARNIS_60L}} € bei 60 L. Vier Tankstellen, 2 km über die Stadtbrücke. Stand {{STAND}}."/>
 <meta name="keywords" content="tanken guben, spritpreise guben, diesel günstig guben, tankstelle gubin, tanken Polen guben, orlen gubin"/>
 <meta name="robots" content="index, follow"/>
+<!-- Koordinaten des Ortes. scripts/build-pages.js sucht dazu die
+     naechste GEMESSENE Dyskont-Paliwowy-Station und rechnet die
+     Aufschlaege darauf - nicht mehr pauschal auf Zgorzelec. -->
+<meta name="bpt-ort" content="51.9494,14.7156"/>
 <link rel="canonical" href="https://bestpricetank.de/spritpreise-gubin.html"/>
 <meta property="og:type" content="website"/>
 <meta property="og:url" content="https://bestpricetank.de/spritpreise-gubin.html"/>
@@ -77,14 +81,6 @@
       "acceptedAnswer": {
         "@type": "Answer",
         "text": "EC-Karte, Visa, Mastercard, Apple/Google Pay. PLN-Bargeld möglich. Tipp: An der Kasse zahlen – manche Automaten nur polnische Karten."
-      }
-    },
-    {
-      "@type": "Question",
-      "name": "Gibt es einen Unterschied zwischen Orlen und Bliska?",
-      "acceptedAnswer": {
-        "@type": "Answer",
-        "text": "Orlen ist Polens größter Konzern – oft leicht teurer als Eigenmarke Bliska, dafür mehr Komfort und bekanntes Qualitätsniveau. Bliska ist die günstigere Eigenmarken-Alternative."
       }
     }
   ]
@@ -210,18 +206,7 @@ footer a:hover{color:var(--muted)}
       <div class="st-meta">2 km · 🇵🇱 Polen · 🕐 24/7 · Diesel, E95, E10, LPG</div>
     </div>
     <div class="st-price">
-      <div class="st-pnum" data-aufschlag="0.000">{{PL_STATION}} <span style="font-size:13px;opacity:.7">€/L</span></div>
-      <div class="st-pcur">Diesel · Schätzung, Basis Dyskont Paliwowy</div>
-    </div>
-  </div>
-  <div class="station">
-    <div class="st-logo">BL</div>
-    <div class="st-info">
-      <div class="st-name">Bliska Gubin </div>
-      <div class="st-meta">2 km · 🇵🇱 Polen · 🕐 24/7 · Diesel, E95</div>
-    </div>
-    <div class="st-price">
-      <div class="st-pnum" data-aufschlag="0.017">{{PL_STATION}} <span style="font-size:13px;opacity:.7">€/L</span></div>
+      <div class="st-pnum" data-aufschlag="0.010">{{PL_STATION}} <span style="font-size:13px;opacity:.7">€/L</span></div>
       <div class="st-pcur">Diesel · Schätzung, Basis Dyskont Paliwowy</div>
     </div>
   </div>
@@ -247,13 +232,18 @@ footer a:hover{color:var(--muted)}
       <div class="st-pcur">Diesel · Schätzung, Basis Dyskont Paliwowy</div>
     </div>
   </div>
+  <p style="margin:10px 0 0;font-size:12px;color:var(--faint);line-height:1.6">
+    <strong>Woher die Zahlen kommen:</strong> {{ORT_BASIS_SATZ}}
+    Die oben gelisteten Stationen melden uns keine Preise; ihre Werte sind aus dieser
+    Messung hochgerechnet und als Schätzung gekennzeichnet. Vor Ort können sie abweichen.
+  </p>
+
   <div class="promo">
     💡 <strong>Live-Preise & tagesaktueller Grenzrechner</strong> auf <a href="/">BestPriceTank.de</a> — Wechselkurs, Wetter, Stauinfo und KI-Assistent Zapfi inklusive.
   </div>
   <h2>💡 Tipps fürs Tanken</h2>
   <ul class="tips">
     <li>Gubin liegt direkt gegenüber – Fußweg über die Stadtbrücke möglich</li>
-    <li>Orlen und Bliska haben die günstigsten Eigenmarken-Preise in Gubin</li>
     <li>LPG in Polen ca. 50% günstiger als in Deutschland – lohnt sich für Gasfahrer</li>
     <li>Keine Wartezeiten an der Neiße-Brücke – offene EU-Binnengrenze</li>
     <li>PLN-Wechselkurs beachten: BestPriceTank rechnet automatisch in € um</li>
@@ -280,10 +270,6 @@ footer a:hover{color:var(--muted)}
     <details>
       <summary>Welche Zahlungsmittel werden akzeptiert?</summary>
       <p>EC-Karte, Visa, Mastercard, Apple/Google Pay. PLN-Bargeld möglich. Tipp: An der Kasse zahlen – manche Automaten nur polnische Karten.</p>
-    </details>
-    <details>
-      <summary>Gibt es einen Unterschied zwischen Orlen und Bliska?</summary>
-      <p>Orlen ist Polens größter Konzern – oft leicht teurer als Eigenmarke Bliska, dafür mehr Komfort und bekanntes Qualitätsniveau. Bliska ist die günstigere Eigenmarken-Alternative.</p>
     </details>
   </div>
   <h2>🗺 Weitere Grenzübergänge in der Region</h2>

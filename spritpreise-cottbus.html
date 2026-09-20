@@ -7,6 +7,10 @@
 <meta name="description" content="Von Cottbus in 30 Minuten nach Polen tanken: Diesel rund {{ORT_ERSPARNIS_CENT}} ct/L günstiger, {{ORT_ERSPARNIS_60L}} € bei 60 L. Die drei nächsten Grenzübergänge im Vergleich. Stand {{STAND}}."/>
 <meta name="keywords" content="tanken polen cottbus, spritpreise cottbus, diesel polen forst, tanken forst lausitz, grenzübergang zasieki, tanken bad muskau"/>
 <meta name="robots" content="index, follow"/>
+<!-- Koordinaten des Ortes. scripts/build-pages.js sucht dazu die
+     naechste GEMESSENE Dyskont-Paliwowy-Station und rechnet die
+     Aufschlaege darauf - nicht mehr pauschal auf Zgorzelec. -->
+<meta name="bpt-ort" content="51.7563,14.3329"/>
 <!-- Strecke hin und zurueck ab Cottbus zum naechsten Uebergang (Guben/Forst).
      Daraus rechnet scripts/build-pages.js die Fahrtkosten und die
      Netto-Ersparnis - keine festen Eurobetraege mehr im Text. -->
@@ -269,6 +273,12 @@ footer a:hover{color:var(--muted)}
     die angenommenen {{ORT_VERBRAUCH}} Liter, rechne die Strecke also eher am oberen Ende.<br><br>
     Die polnischen Preise der Marken-Tankstellen an den Übergängen schätzen wir auf Basis der
     gemessenen Dyskont-Paliwowy-Preise. Auf der Karte ist jede Schätzung mit ≈ gekennzeichnet.
+  </p>
+
+  <p style="margin:10px 0 0;font-size:12px;color:var(--faint);line-height:1.6">
+    <strong>Woher die Zahlen kommen:</strong> {{ORT_BASIS_SATZ}}
+    Stationen ohne eigene Preismeldung sind daraus hochgerechnet und als Schätzung
+    gekennzeichnet. Vor Ort können sie abweichen.
   </p>
 
   <div class="promo">

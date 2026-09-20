@@ -161,7 +161,23 @@ async function pl(plnRate) {
   const on = nah.map((s) => s.onPln);
   const pb = nah.map((s) => s.pbPln).filter(Boolean);
 
+  // Alle aktiven Stationen mit Koordinaten. Die Ortsseiten suchen sich
+  // daraus ihre naechstgelegene gemessene Station - Slubice mit einem
+  // Preis aus Zgorzelec zu bestuecken war Unsinn, das sind 138 km.
+  const alle = d.stations
+    .filter((x) => x.is_active && x.coordinates?.lat && x.prices?.ON > 3 && x.prices.ON < 15)
+    .map((x) => {
+      const preise = {};
+      for (const [sorte, feld] of Object.entries(SORTEN)) {
+        preise[sorte] = plausibel(x.prices[feld])
+          ? { pln: x.prices[feld], eur: x.prices[feld] / plnRate } : null;
+      }
+      return { name: x.name, city: x.city, preise,
+               lat: x.coordinates.lat, lng: x.coordinates.lng };
+    });
+
   return {
+    alle,
     dieselPln: Math.min(...on), dieselPlnMax: Math.max(...on),
     e10Pln: pb.length ? Math.min(...pb) : null,
     diesel: Math.min(...on) / plnRate,
@@ -382,27 +398,56 @@ const esc = (t) => String(t).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&l
   const seiten = fs.readdirSync(DIST).filter((f) => f.endsWith('.html') || f === 'sitemap.xml');
   for (const f of seiten) {
     const ziel = path.join(DIST, f);
+    // Welche gemessene Station ist die Grundlage DIESER Seite?
+    //
+    // Bis zum 20.09.2026 war es fuer jede Seite dieselbe: die guenstigste
+    // im 60-km-Umkreis von Goerlitz. Auf der Slubice-Seite standen damit
+    // Preise, die aus einer Station 138 km suedlich hochgerechnet waren,
+    // und niemand konnte das der Seite ansehen.
+    //
+    // Jetzt nennt jede Ortsseite ihre Koordinaten, und der Build sucht die
+    // naechste gemessene Dyskont-Paliwowy-Station dazu. Fuer Gubin ist das
+    // Gubinek - direkt am Ort, wirklich gemessen. Fuer Slubice ist die
+    // naechste weit weg; dann sagt die Seite das ueber ORT_BASIS_KM.
     let s = fs.readFileSync(ziel, 'utf8');
 
-    // Stationspreise auf den Ortsseiten: Benchmark plus dem im HTML
+    const mOrt = s.match(/<meta\s+name="bpt-ort"\s+content="([\d.]+)\s*,\s*([\d.]+)"/i);
+    let basis = null;
+    if (mOrt && Array.isArray(data.pl.alle) && data.pl.alle.length) {
+      const hier = { lat: parseFloat(mOrt[1]), lng: parseFloat(mOrt[2]) };
+      basis = data.pl.alle
+        .filter((st) => st.preise?.diesel)
+        .map((st) => ({ st, km: km(hier, { lat: st.lat, lng: st.lng }) }))
+        .sort((a, b) => a.km - b.km)[0] || null;
+    }
+    const basisEur = basis ? basis.st.preise.diesel.eur : data.pl.diesel;
+
+    // Stationspreise auf den Ortsseiten: gemessene Basis plus dem im HTML
     // hinterlegten Aufschlag. Dasselbe Modell wie in der Anwendung.
     s = s.replace(/data-aufschlag="(-?[\d.]+)">\{\{PL_STATION\}\}/g, (m, off) => {
-      const v = data.pl.diesel + parseFloat(off);
+      const v = basisEur + parseFloat(off);
       ersetzt++;
       return `data-aufschlag="${off}">${eur(v)}`;
     });
 
-    // Ortsbezogene Werte: der guenstigste Preis, den DIESE Seite tatsaechlich
-    // auflistet. Sonst verspricht eine Ueberschrift einen Preis, der auf der
-    // Seite nirgends steht - der Benchmark liegt in Zgorzelec, nicht ueberall.
     const aufschlaege = [...s.matchAll(/data-aufschlag="(-?[\d.]+)"/g)].map((m) => parseFloat(m[1]));
-    const ortDiesel = aufschlaege.length ? data.pl.diesel + Math.min(...aufschlaege) : data.pl.diesel;
+    const ortDiesel = aufschlaege.length ? basisEur + Math.min(...aufschlaege) : basisEur;
     const ortErsparnis = data.de.diesel - ortDiesel;
     const tSeite = {
       ...t,
       ORT_DIESEL: eur(ortDiesel),
       ORT_ERSPARNIS_CENT: String(Math.round(ortErsparnis * 100)),
       ORT_ERSPARNIS_60L: eur2(ortErsparnis * 60),
+      // Als fertiger Satz, nicht als Einzelwerte: ohne data.pl.alle - also
+      // wenn der Build auf ein altes live.json zurueckfaellt - kennen wir
+      // die Entfernung nicht, und "? km von hier" gehoert auf keine Seite.
+      ORT_BASIS_SATZ: basis
+        ? `Gemessen wird <strong>${esc(basis.st.name)}</strong>`
+          + (basis.st.city ? ` (${esc(basis.st.city)})` : '')
+          + ` mit ${eur(basisEur)} €/L – das sind `
+          + `${loc(basis.km, basis.km < 10 ? 1 : 0)} km von hier.`
+        : `Gemessen wird die günstigste Dyskont-Paliwowy-Station im Grenzgebiet `
+          + `mit ${eur(basisEur)} €/L.`,
     };
 
     // Fahrtkosten und Netto-Ersparnis.
