@@ -129,7 +129,7 @@ select option{background:#0a1628}
 
 /* LIVE BADGE */
 .live{
-  position:absolute;top:calc(max(env(safe-area-inset-top),10px) + 58px);left:50%;transform:translateX(-50%);
+  position:absolute;top:calc(max(env(safe-area-inset-top),10px) + var(--warn-h,0px) + 58px);left:50%;transform:translateX(-50%);
   display:flex;align-items:center;gap:6px;height:22px;padding:0 9px;
   border-radius:999px;border:1px solid rgba(0,230,118,.22);background:rgba(0,230,118,.07);
   backdrop-filter:blur(12px);font:800 9px var(--mono);color:var(--green);letter-spacing:1.5px;
@@ -140,7 +140,7 @@ select option{background:#0a1628}
 
 /* LOCATION + FUEL BAR */
 .locfuel{
-  position:absolute;top:calc(max(env(safe-area-inset-top),10px) + 90px);left:50%;transform:translateX(-50%);
+  position:absolute;top:calc(max(env(safe-area-inset-top),10px) + var(--warn-h,0px) + 90px);left:50%;transform:translateX(-50%);
   display:flex;flex-direction:column;gap:6px;align-items:center;
   animation:drop .8s .15s var(--spring) both;
 }
@@ -160,6 +160,19 @@ select option{background:#0a1628}
   background:rgba(255,255,255,.08);color:var(--text);padding:0 8px;
   font-size:12px;font-weight:700;cursor:pointer;-webkit-appearance:none;
 }
+/* Standort-Knopf. Vorher stand hier ein reines Pin-Symbol ohne Funktion. */
+.geo-btn{
+  width:30px;height:30px;border-radius:50%;flex:none;
+  border:1px solid var(--rim);background:rgba(255,255,255,.06);
+  color:var(--muted);display:grid;place-items:center;font-size:14px;line-height:1;
+  cursor:pointer;transition:background .18s,border-color .18s,color .18s;
+}
+.geo-btn:hover{background:rgba(255,255,255,.12);color:var(--text)}
+.geo-btn.an{background:rgba(0,230,118,.18);border-color:rgba(0,230,118,.45);color:#6ee7b7}
+.geo-btn.sucht{animation:geopuls 1s ease-in-out infinite}
+.geo-btn.aus{opacity:.45}
+@keyframes geopuls{0%,100%{opacity:1}50%{opacity:.35}}
+
 .loc-btn{width:30px;height:30px;border-radius:50%;background:linear-gradient(135deg,var(--purple),var(--blue));color:#fff;display:grid;place-items:center;font-size:13px;transition:transform .3s}
 .loc-btn:hover{transform:rotate(180deg)}
 .loc-btn.spin{animation:spin .8s linear infinite}
@@ -178,7 +191,7 @@ select option{background:#0a1628}
 
 /* AI CARD */
 .aic{
-  position:absolute;top:calc(max(env(safe-area-inset-top),10px) + 86px);left:16px;
+  position:absolute;top:calc(max(env(safe-area-inset-top),10px) + var(--warn-h,0px) + 86px);left:16px;
   width:min(292px,calc(50vw - 24px));border-radius:20px;
   border:1px solid rgba(124,77,255,.28);background:var(--glass);
   backdrop-filter:blur(28px);-webkit-backdrop-filter:blur(28px);
@@ -218,7 +231,7 @@ select option{background:#0a1628}
 
 /* COUNTRY FILTER */
 .cfilter{
-  position:absolute;top:calc(max(env(safe-area-inset-top),10px) + 90px);right:14px;
+  position:absolute;top:calc(max(env(safe-area-inset-top),10px) + var(--warn-h,0px) + 90px);right:14px;
   display:flex;flex-direction:column;gap:5px;
   animation:sil .8s .4s var(--spring) both;
 }
@@ -423,17 +436,17 @@ select option{background:#0a1628}
 /* RESPONSIVE */
 @media(max-width:900px){
   #legalBtn{display:grid!important}
-  .cfilter{top:calc(max(env(safe-area-inset-top),10px) + 60px)}
+  .cfilter{top:calc(max(env(safe-area-inset-top),10px) + var(--warn-h,0px) + 60px)}
   .hnav,.hdiv:first-of-type{display:none}
   .hdr{width:calc(100vw - 20px);justify-content:space-between}
   .logo{margin-right:0}
   .aic{width:calc(60vw - 20px);max-width:260px}
   .aic-top{padding:10px 12px 8px}.ai-hl{font-size:13px}
   .aic-body{padding:7px 12px 9px;gap:4px}.ai-row{font-size:10.5px}
-  .locfuel{top:calc(max(env(safe-area-inset-top),10px) + 58px)}
+  .locfuel{top:calc(max(env(safe-area-inset-top),10px) + var(--warn-h,0px) + 58px)}
   .live{display:none}
   .loc-input{width:110px}
-  .cfilter{top:calc(max(env(safe-area-inset-top),10px) + 148px);right:10px}
+  .cfilter{top:calc(max(env(safe-area-inset-top),10px) + var(--warn-h,0px) + 148px);right:10px}
   .cfbtn{height:28px;font-size:10.5px;padding:0 9px}
   .spanel{width:100vw;border-left:none;border-top:1px solid var(--rim2);border-radius:20px 20px 0 0;top:auto;bottom:0;height:88dvh;transform:translateY(100%)}
   .spanel.open{transform:none}
@@ -505,7 +518,7 @@ select option{background:#0a1628}
 /* HOME Wetter Pill (unter Live Badge) */
 .wx-home{
   position:absolute;
-  top:calc(max(env(safe-area-inset-top),10px) + 178px);
+  top:calc(max(env(safe-area-inset-top),10px) + var(--warn-h,0px) + 178px);
   left:50%;transform:translateX(-50%);
   display:flex;align-items:center;gap:8px;
   height:24px;padding:0 11px;
@@ -519,13 +532,13 @@ select option{background:#0a1628}
 .wx-home .wx-dot{width:5px;height:5px;border-radius:50%;background:var(--green);margin-right:2px}
 @media(max-width:900px){
   .wx-home{
-    top:calc(max(env(safe-area-inset-top),10px) + 162px);
+    top:calc(max(env(safe-area-inset-top),10px) + var(--warn-h,0px) + 162px);
     font-size:10px;
     max-width:calc(100vw - 120px);
   }
 }
 @media(max-width:480px){
-  .wx-home{top:calc(max(env(safe-area-inset-top),10px) + 152px)}
+  .wx-home{top:calc(max(env(safe-area-inset-top),10px) + var(--warn-h,0px) + 152px)}
 }
 
 
@@ -631,8 +644,10 @@ select option{background:#0a1628}
   <!-- Location + Fuel bar -->
   <div class="locfuel" id="locfuel">
     <div class="locrow">
-      <span style="font-size:15px;padding:0 3px">📍</span>
-      <input type="text" id="locInput" class="loc-input" placeholder="Görlitz / PLZ..." value="Görlitz"/>
+      <button class="geo-btn" id="geoBtn" onclick="geoStandort(false)"
+              title="Meinen Standort verwenden" aria-label="Meinen Standort verwenden">📍</button>
+      <input type="text" id="locInput" class="loc-input" placeholder="Görlitz / PLZ..." value="Görlitz"
+             oninput="geoAus()"/>
       <select id="locRadius" class="loc-sel" onchange="refreshPrices()">
         <option value="10">10 km</option>
         <option value="15" selected>15 km</option>
@@ -1090,9 +1105,9 @@ select option{background:#0a1628}
 <!-- MODALS -->
 <div class="mbg" id="m-imprint" onclick="if(event.target===this)closeM('imprint')"><div class="mbox"><div class="mhead"><h2>Impressum</h2><button class="mx" onclick="closeM('imprint')">×</button></div><div class="mbody"><h3>Angaben gemäß § 5 DDG</h3>AH Mühlmann<br>Gottlieb-Daimler-Str. 9<br>02828 Görlitz<br><br><h3>Kontakt</h3>info [at] bestpricetank [dot] de<br><br><h3>Verantwortlich</h3>K. Mühlmann, Gottlieb-Daimler-Str. 9, 02828 Görlitz<br><br><h3>Haftung</h3>Preisangaben ohne Gewähr. Bitte vor Ort prüfen. Nicht alle angezeigten Preise sind gemessen: Für Polen liefert Dyskont Paliwowy Stationspreise, die übrigen polnischen Stationen werden daraus zuzüglich eines Aufschlags hochgerechnet. Für Tschechien wird der amtliche Landesdurchschnitt zuzüglich eines je Station erhobenen Abstands verwendet, keine Stationspreise.<br><br><h3>Datenquellen</h3>🇩🇪 Tankerkönig / MTS-K (CC BY 4.0)<br>🇵🇱 Dyskont Paliwowy<br>🇨🇿 Tschechisches Statistikamt ČSÚ, Datensatz CENPHMT (wöchentliche Durchschnittspreise)<br>Wechselkurse: Polnische Nationalbank (NBP), Tabelle A<br>Karte: OpenStreetMap / CARTO · Ladesäulen: OpenChargeMap · Wetter: Open-Meteo · Verkehr: Autobahn GmbH<br><br><h3>Werbung</h3>Flächen, die auf dieser Seite mit <strong>ANZEIGE</strong> gekennzeichnet sind, sind Werbung in eigener Sache für das Autohaus Mühlmann, Gottlieb-Daimler-Str. 9, 02828 Görlitz. Werbung Dritter wird hier nicht geschaltet.<br><br><h3>Streitschlichtung</h3>Wir nehmen nicht an Verfahren vor Verbraucherschlichtungsstellen teil.</div></div></div>
 
-<div class="mbg" id="m-privacy" onclick="if(event.target===this)closeM('privacy')"><div class="mbox"><div class="mhead"><h2>Datenschutzerklärung</h2><button class="mx" onclick="closeM('privacy')">×</button></div><div class="mbody"><h3>1. Verantwortlicher</h3>AH Mühlmann, Gottlieb-Daimler-Str. 9, 02828 Görlitz · info [at] bestpricetank [dot] de<h3>2. Hosting</h3>Netlify Inc., San Francisco, USA. Server-Logfiles möglich. Netlify EU-US DPF-zertifiziert. Rechtsgrundlage: Art. 6 Abs. 1 lit. f DSGVO.<h3>3. Lokale Speicherung</h3>Keine Tracking-Cookies. Im localStorage deines Geräts speichern wir: <strong>bpt_userName</strong> (Name für den KI-Assistenten), <strong>bpt_car</strong> (Fahrzeug, Tankgröße, Verbrauch für den Sparrechner), <strong>bpt_alert</strong> (dein Preisalarm), <strong>bpt_lang</strong> (Sprache), <strong>bpt_speaker</strong> (Sprachausgabe an/aus), <strong>cookieOk</strong> (Cookie-Entscheidung). Diese Angaben verbleiben auf deinem Gerät und werden nicht an uns oder Dritte übertragen. Du kannst sie jederzeit über die Website-Einstellungen deines Browsers löschen.<h3>4. Externe Dienste</h3>Beim Aufruf dieser Dienste wird technisch bedingt deine IP-Adresse übertragen.<br><br><u>Über unseren Server, ohne Kontakt zu deinem Gerät:</u><br>· Tankerkönig / MTS-K – deutsche Preise<br>· Dyskont Paliwowy – polnische Preise<br>· Polnische Nationalbank (NBP) – Wechselkurse<br>· Tschechisches Statistikamt (ČSÚ) – tschechische Preise<br><br><u>Direkt aus deinem Browser:</u><br>· OpenStreetMap / CARTO – Kartendarstellung<br>· Nominatim (OpenStreetMap) – Ortssuche; der eingegebene Ort wird übertragen<br>· Open-Meteo – Wetter, mit Koordinaten des gewählten Orts<br>· Autobahn GmbH – Verkehrsmeldungen<br>· OpenChargeMap – Ladesäulen<br>· OpenAI API (über unseren Server) – deine Frage an den KI-Assistenten wird verarbeitet<br><br><u>Preismeldungen:</u> Nutzt du das Meldeformular, werden die eingegebenen Angaben über Netlify Forms (Netlify Inc.) gespeichert. Wir fragen keinen Namen und keine Kontaktdaten ab.<br><br>· Keine Google Fonts, kein Google Analytics, keine Werbenetzwerke.<h3>5. Werbung in eigener Sache</h3>Auf der Startseite und am Ende der Stationenliste steht eine mit <strong>ANZEIGE</strong> gekennzeichnete Fläche, die auf die Tageszulassungen des Autohauses Mühlmann verweist. Diese Website und das Autohaus haben denselben Betreiber – es handelt sich also um Werbung in eigener Sache und nicht um ein fremdes Werbenetzwerk.<br><br>Die Fläche ist Bestandteil dieser Seite. Es wird nichts von einem anderen Server nachgeladen, auch das Logo nicht. Es werden keine Cookies gesetzt, keine Kennungen vergeben und keine Profile gebildet. Solange du die Anzeige nur siehst, werden <u>keine</u> Daten erhoben, und sie wird auch nicht gezählt.<br><br>Erst wenn du sie anklickst, rufst du autohaus-muehlmann.de auf. Dabei wird – wie bei jedem Seitenaufruf – technisch bedingt deine IP-Adresse an diesen Server übertragen. Der Link enthält einen Herkunftsvermerk (<em>ref=bpt-start</em> bzw. <em>ref=bpt</em>), damit dort erkennbar ist, wie viele Aufrufe von hier kommen. Gezählt wird nur der Aufruf; die IP-Adresse wird dort nicht gespeichert. Ab dem Klick gilt die Datenschutzerklärung von autohaus-muehlmann.de. Rechtsgrundlage für die Anzeige: Art. 6 Abs. 1 lit. f DSGVO (Eigenwerbung als berechtigtes Interesse).<h3>6. Ihre Rechte (Art. 15–22 DSGVO)</h3>Auskunft, Berichtigung, Löschung: info [at] bestpricetank [dot] de · Stand: September 2026</div></div></div>
+<div class="mbg" id="m-privacy" onclick="if(event.target===this)closeM('privacy')"><div class="mbox"><div class="mhead"><h2>Datenschutzerklärung</h2><button class="mx" onclick="closeM('privacy')">×</button></div><div class="mbody"><h3>1. Verantwortlicher</h3>AH Mühlmann, Gottlieb-Daimler-Str. 9, 02828 Görlitz · info [at] bestpricetank [dot] de<h3>2. Hosting</h3>Netlify Inc., San Francisco, USA. Server-Logfiles möglich. Netlify EU-US DPF-zertifiziert. Rechtsgrundlage: Art. 6 Abs. 1 lit. f DSGVO.<h3>3. Lokale Speicherung</h3>Keine Tracking-Cookies. Im localStorage deines Geräts speichern wir: <strong>bpt_userName</strong> (Name für den KI-Assistenten), <strong>bpt_car</strong> (Fahrzeug, Tankgröße, Verbrauch für den Sparrechner), <strong>bpt_alert</strong> (dein Preisalarm), <strong>bpt_lang</strong> (Sprache), <strong>bpt_speaker</strong> (Sprachausgabe an/aus), <strong>bpt_geo</strong> (ob du der Standortermittlung zugestimmt hast &ndash; gespeichert wird nur ja oder nein, keine Koordinaten) und <strong>cookieOk</strong> (Cookie-Entscheidung). Diese Angaben verbleiben auf deinem Gerät und werden nicht an uns oder Dritte übertragen. Du kannst sie jederzeit über die Website-Einstellungen deines Browsers löschen.<h3>4. Externe Dienste</h3>Beim Aufruf dieser Dienste wird technisch bedingt deine IP-Adresse übertragen.<br><br><u>Über unseren Server, ohne Kontakt zu deinem Gerät:</u><br>· Tankerkönig / MTS-K – deutsche Preise<br>· Dyskont Paliwowy – polnische Preise<br>· Polnische Nationalbank (NBP) – Wechselkurse<br>· Tschechisches Statistikamt (ČSÚ) – tschechische Preise<br><br><u>Direkt aus deinem Browser:</u><br>· OpenStreetMap / CARTO – Kartendarstellung<br>· Nominatim (OpenStreetMap) – Ortssuche; der eingegebene Ort wird übertragen<br>· Open-Meteo – Wetter, mit Koordinaten des gewählten Orts<br>· Autobahn GmbH – Verkehrsmeldungen<br>· OpenChargeMap – Ladesäulen<br>· OpenAI API (über unseren Server) – deine Frage an den KI-Assistenten wird verarbeitet<br><br><u>Preismeldungen:</u> Nutzt du das Meldeformular, werden die eingegebenen Angaben über Netlify Forms (Netlify Inc.) gespeichert. Wir fragen keinen Namen und keine Kontaktdaten ab.<br><br><u>Standort:</u> Nur wenn du den Standort-Knopf neben dem Ortsfeld antippst, fragt dein Browser dich um Erlaubnis und ermittelt deine Position. Ohne dein Antippen passiert nichts. Die Koordinaten bleiben auf deinem Gerät: An unseren Server werden sie nur auf ein Raster von 0,05 Grad gerundet übertragen &ndash; das sind rund fünf Kilometer, wir erfahren also nicht, wo genau du stehst. Ein Ortsname wird daraus nicht ermittelt, im Feld steht schlicht „Standort“. Wir speichern lediglich, <em>dass</em> du zugestimmt hast, damit du beim nächsten Besuch nicht erneut gefragt wirst. Du kannst die Freigabe jederzeit in den Einstellungen deines Browsers zurücknehmen.<br><br>· Keine Google Fonts, kein Google Analytics, keine Werbenetzwerke.<h3>5. Werbung in eigener Sache</h3>Auf der Startseite und am Ende der Stationenliste steht eine mit <strong>ANZEIGE</strong> gekennzeichnete Fläche, die auf die Tageszulassungen des Autohauses Mühlmann verweist. Diese Website und das Autohaus haben denselben Betreiber – es handelt sich also um Werbung in eigener Sache und nicht um ein fremdes Werbenetzwerk.<br><br>Die Fläche ist Bestandteil dieser Seite. Es wird nichts von einem anderen Server nachgeladen, auch das Logo nicht. Es werden keine Cookies gesetzt, keine Kennungen vergeben und keine Profile gebildet. Solange du die Anzeige nur siehst, werden <u>keine</u> Daten erhoben, und sie wird auch nicht gezählt.<br><br>Erst wenn du sie anklickst, rufst du autohaus-muehlmann.de auf. Dabei wird – wie bei jedem Seitenaufruf – technisch bedingt deine IP-Adresse an diesen Server übertragen. Der Link enthält einen Herkunftsvermerk (<em>ref=bpt-start</em> bzw. <em>ref=bpt</em>), damit dort erkennbar ist, wie viele Aufrufe von hier kommen. Gezählt wird nur der Aufruf; die IP-Adresse wird dort nicht gespeichert. Ab dem Klick gilt die Datenschutzerklärung von autohaus-muehlmann.de. Rechtsgrundlage für die Anzeige: Art. 6 Abs. 1 lit. f DSGVO (Eigenwerbung als berechtigtes Interesse).<h3>6. Ihre Rechte (Art. 15–22 DSGVO)</h3>Auskunft, Berichtigung, Löschung: info [at] bestpricetank [dot] de · Stand: September 2026</div></div></div>
 
-<div class="mbg" id="m-cookies" onclick="if(event.target===this)closeM('cookies')"><div class="mbox"><div class="mhead"><h2>Cookies & Speicherung</h2><button class="mx" onclick="closeM('cookies')">×</button></div><div class="mbody"><h3>Keine Tracking-Cookies</h3>Kein Google Analytics, keine Werbecookies.<h3>Technisch notwendig</h3><strong>bpt_userName</strong> – dein Name für den KI-Assistenten<br><strong>bpt_car</strong> – Fahrzeug, Tankgröße, Verbrauch<br><strong>bpt_alert</strong> – dein Preisalarm<br><strong>bpt_lang</strong> · <strong>bpt_speaker</strong> – Sprache und Sprachausgabe<br><strong>cookieOk</strong> – deine Cookie-Entscheidung<br><br>Verbleiben auf deinem Gerät, kein Transfer.<h3>Externe Dienste</h3>Für Karten, Preise und KI werden externe Dienste geladen. Details in der Datenschutzerklärung.<h3>Anzeige</h3>Die mit <strong>ANZEIGE</strong> gekennzeichnete Fläche ist Werbung in eigener Sache für das Autohaus Mühlmann. Sie setzt keine Cookies, lädt nichts von einem fremden Server und wird nicht gezählt. Erst beim Klick verlässt du diese Seite.</div></div></div>
+<div class="mbg" id="m-cookies" onclick="if(event.target===this)closeM('cookies')"><div class="mbox"><div class="mhead"><h2>Cookies & Speicherung</h2><button class="mx" onclick="closeM('cookies')">×</button></div><div class="mbody"><h3>Keine Tracking-Cookies</h3>Kein Google Analytics, keine Werbecookies.<h3>Technisch notwendig</h3><strong>bpt_userName</strong> – dein Name für den KI-Assistenten<br><strong>bpt_car</strong> – Fahrzeug, Tankgröße, Verbrauch<br><strong>bpt_alert</strong> – dein Preisalarm<br><strong>bpt_lang</strong> · <strong>bpt_speaker</strong> – Sprache und Sprachausgabe<br><strong>bpt_geo</strong> – ob du der Standortermittlung zugestimmt hast<br><strong>cookieOk</strong> – deine Cookie-Entscheidung<br><br>Verbleiben auf deinem Gerät, kein Transfer.<h3>Externe Dienste</h3>Für Karten, Preise und KI werden externe Dienste geladen. Details in der Datenschutzerklärung.<h3>Standort</h3>Wird nur ermittelt, wenn du den Standort-Knopf antippst. An unseren Server geht die Position auf rund fünf Kilometer gerundet. Details in der Datenschutzerklärung.<h3>Anzeige</h3>Die mit <strong>ANZEIGE</strong> gekennzeichnete Fläche ist Werbung in eigener Sache für das Autohaus Mühlmann. Sie setzt keine Cookies, lädt nichts von einem fremden Server und wird nicht gezählt. Erst beim Klick verlässt du diese Seite.</div></div></div>
 
 <!-- COMMUNITY PANEL -->
 <div class="spanel" id="panel-community">
@@ -1482,7 +1497,119 @@ let userLocationCoords = {lat:51.1534, lng:14.9853}; // default: Görlitz
 let userMarker = null;
 let userCircle = null;
 
+// ══════════════════════════════════════
+// STANDORT
+// ══════════════════════════════════════
+//
+// Die Seite kannte bisher keinen Standort: userLocationCoords stand fest auf
+// Goerlitz und aenderte sich nur, wenn jemand einen Ort ins Feld tippte.
+//
+// Bewusst kein Abfragen beim ersten Laden. Ein Standortfenster, das ungefragt
+// aufgeht, wird reflexhaft weggetippt - und eine einmal abgelehnte Freigabe
+// bekommt man ohne Ausflug in die Browsereinstellungen nicht zurueck. Deshalb:
+// ein Knopf, der fragt, wenn jemand ihn drueckt. Die Zustimmung merken wir uns
+// und holen den Standort beim naechsten Besuch von selbst - aber nur, wenn der
+// Browser bestaetigt, dass die Freigabe noch steht. Sonst gaebe es doch wieder
+// ein Fenster aus heiterem Himmel.
+//
+// Die genauen Koordinaten bleiben auf dem Geraet: Was an unseren Server geht,
+// ist auf 0,05 Grad gerundet - rund fuenf Kilometer. Und wir schicken sie auch
+// nicht zu Nominatim, um einen Ortsnamen daraus zu machen; im Feld steht
+// schlicht "Standort".
+
+const GEO_KEY = 'bpt_geo';
+let geoModus = false;   // true = Karte und Preise folgen dem Geraetestandort
+
+function geoStatus(klasse, symbol, titel){
+  const b = document.getElementById('geoBtn');
+  if(!b) return;
+  b.classList.remove('an','sucht','aus');
+  if(klasse) b.classList.add(klasse);
+  if(symbol) b.textContent = symbol;
+  if(titel){ b.title = titel; b.setAttribute('aria-label', titel); }
+}
+
+// Der Nutzer tippt selbst einen Ort: dann hat sein Text Vorrang.
+function geoAus(){
+  if(!geoModus) return;
+  geoModus = false;
+  geoStatus('', '📍', 'Meinen Standort verwenden');
+}
+
+function geoStandort(automatisch){
+  if(!navigator.geolocation){
+    if(!automatisch) alert('Dein Browser kann den Standort nicht bestimmen.');
+    return;
+  }
+  geoStatus('sucht', '📍', 'Standort wird bestimmt …');
+  navigator.geolocation.getCurrentPosition(
+    (pos)=>{
+      const lat = pos.coords.latitude, lng = pos.coords.longitude;
+      if(!isFinite(lat) || !isFinite(lng)){ geoFehler(automatisch); return; }
+      geoModus = true;
+      userLocationCoords = {lat, lng};
+      try{ localStorage.setItem(GEO_KEY,'ja'); }catch(e){}
+      const feld = document.getElementById('locInput');
+      // Kurz halten: Auf schmalen Geraeten ist das Feld nur 90 Pixel breit.
+      if(feld) feld.value = 'Standort';
+      geoStatus('an','🎯','Standort aktiv - zum Ändern einen Ort eintippen');
+      try{
+        showUserMarker(lat,lng);
+        if(bptMap){
+          const rad=+document.getElementById('locRadius')?.value||15;
+          const zoom=rad<=10?14:rad<=15?13:rad<=25?12:rad<=50?11:10;
+          bptMap.setView([lat,lng],zoom,{animate:true,duration:.8});
+        }
+      }catch(e){}
+      updateStaticDistances(userLocationCoords);
+      refreshPrices();
+    },
+    (err)=>{
+      // 1 = abgelehnt. Das merken wir uns, damit wir nicht bei jedem
+      // Besuch aufs Neue anklopfen.
+      if(err && err.code === 1){
+        try{ localStorage.setItem(GEO_KEY,'nein'); }catch(e){}
+        geoStatus('aus','📍','Standortfreigabe abgelehnt - in den Browsereinstellungen änderbar');
+        if(!automatisch) setDataWarning('geo',
+          'Ohne Standortfreigabe bleibt es bei Görlitz. Du kannst oben auch einen Ort eintippen.');
+        setTimeout(()=>clearDataWarning('geo'), 8000);
+      }else{
+        geoFehler(automatisch);
+      }
+    },
+    {enableHighAccuracy:false, timeout:10000, maximumAge:5*60*1000}
+  );
+}
+
+function geoFehler(automatisch){
+  geoStatus('', '📍', 'Meinen Standort verwenden');
+  if(!automatisch){
+    setDataWarning('geo','Der Standort ließ sich nicht bestimmen. Tippe oben einen Ort ein.');
+    setTimeout(()=>clearDataWarning('geo'), 8000);
+  }
+}
+
+// Beim Start nur dann von selbst holen, wenn schon einmal zugestimmt wurde
+// UND der Browser die Freigabe noch als erteilt meldet. Ohne diese zweite
+// Pruefung koennte doch ein Fenster aufgehen, das niemand angefordert hat.
+async function geoBeimStart(){
+  let gemerkt = null;
+  try{ gemerkt = localStorage.getItem(GEO_KEY); }catch(e){}
+  if(gemerkt === 'nein'){ geoStatus('aus','📍','Standortfreigabe abgelehnt'); return; }
+  if(gemerkt !== 'ja') return;
+  if(!navigator.permissions?.query){ return; }   // ohne Nachweis lieber nicht
+  try{
+    const st = await navigator.permissions.query({name:'geolocation'});
+    if(st.state === 'granted') geoStandort(true);
+    else if(st.state === 'denied') geoStatus('aus','📍','Standortfreigabe abgelehnt');
+  }catch(e){}
+}
+
 async function geocodeAndCenter(){
+  // Folgt die Karte dem Geraetestandort, darf der Text im Feld ihn nicht
+  // ueberschreiben - dort steht dann "Mein Standort", und Nominatim wuerde
+  // daraus irgendeinen Ort machen.
+  if(geoModus) return userLocationCoords;
   const query = document.getElementById('locInput')?.value?.trim();
   if(!query || query.length < 3) return userLocationCoords;
   try{
@@ -1561,6 +1688,11 @@ function renderDataWarnings(){
     el.id = 'data-warning';
     el.setAttribute('role','status');
     el.style.cssText = 'position:fixed;top:0;left:0;right:0;z-index:9999;background:#7a2c12;'
+      // Im Band ist nichts anklickbar. Ohne pointer-events:none legt es sich
+      // auf schmalen Geraeten ueber die Ortsleiste und schluckt deren Klicks -
+      // ausgerechnet dann, wenn eine Preisquelle streikt und man umso eher
+      // selbst einen anderen Ort eingeben will.
+      + 'pointer-events:none;'
       + 'color:#ffe9df;font:600 12px/1.45 system-ui,-apple-system,sans-serif;padding:8px 14px;'
       + 'text-align:center;box-shadow:0 2px 12px rgba(0,0,0,.45)';
     document.body.appendChild(el);
@@ -1568,6 +1700,8 @@ function renderDataWarnings(){
   el.textContent = '\u26A0 ' + msgs.join('  \u00B7  ');
   document.documentElement.style.setProperty('--warn-h', el.offsetHeight + 'px');
 }
+// Beim Drehen aendert sich die Zeilenzahl des Bandes und damit seine Hoehe.
+addEventListener('resize', ()=>{ if(Object.keys(DATA_WARNINGS).length) renderDataWarnings(); });
 
 // Polnische Preise: Zustand der Live-Quelle.
 // Fällt Dyskont Paliwowy aus, blieben bisher die im Code hinterlegten
@@ -3321,6 +3455,7 @@ setTimeout(async ()=>{
   await loadRates();
   await loadCZPrices();
   refreshPrices();
+  geoBeimStart();
 }, 800);
 setTimeout(()=>{loadWeather();loadTraffic();}, 1200);
 // Preisalarm nach Preis-Load prüfen
