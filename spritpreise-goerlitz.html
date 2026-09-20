@@ -15,7 +15,7 @@
 <meta property="og:type" content="website"/>
 <meta property="og:url" content="https://bestpricetank.de/spritpreise-goerlitz.html"/>
 <meta property="og:title" content="Günstig tanken ab Görlitz | Live Spritpreise Polen & Tschechien"/>
-<meta property="og:description" content="Diesel in Zgorzelec bis 40ct/L günstiger als in Görlitz. Live-Preise, Grenzrechner & KI-Assistent auf BestPriceTank.de."/>
+<meta property="og:description" content="Diesel in Zgorzelec rund {{ORT_ERSPARNIS_CENT}} ct/L günstiger als in Görlitz. Live-Preise, Grenzrechner & KI-Assistent auf BestPriceTank.de."/>
 <meta property="og:image" content="https://bestpricetank.de/og-image.png"/>
 <meta name="twitter:card" content="summary_large_image"/>
 
@@ -56,7 +56,7 @@
       {
         "@type": "Question",
         "name": "Wie viel spare ich beim Tanken in Zgorzelec?",
-        "acceptedAnswer": { "@type": "Answer", "text": "Aktuell (2026) ist Diesel in Polen rund 30–45 Cent pro Liter günstiger als in Deutschland. Bei 60 Litern ergibt das eine Brutto-Ersparnis von 18–27 €. Nach Abzug der Fahrtkosten (ca. 2–3 € für 5 km Umweg) bleibt eine Netto-Ersparnis von typisch 15–25 €." }
+        "acceptedAnswer": { "@type": "Answer", "text": "Heute liegt Diesel in Polen rund {{ORT_ERSPARNIS_CENT}} Cent pro Liter unter dem deutschen Preis (Stand {{STAND}}). Bei 60 Litern sind das rund {{ORT_ERSPARNIS_60L}} € brutto. Davon gehen die Fahrtkosten für den Umweg ab – der Grenzrechner zieht sie ab und nennt den Betrag, der übrig bleibt." }
       },
       {
         "@type": "Question",
@@ -280,17 +280,17 @@ footer a:hover{color:var(--muted)}
   <div class="hero">
     <div class="badge"><span class="ldot"></span> LIVE · DREILÄNDERECK</div>
     <h1>Günstig tanken ab <em>Görlitz</em></h1>
-    <p class="sub">Polen und Tschechien sind nur 5–20 Minuten entfernt — mit bis zu 40 Cent Ersparnis pro Liter. Live-Preise, Grenzrechner und alle Tankstellen.</p>
+    <p class="sub">Polen und Tschechien sind nur 5–20 Minuten entfernt — mit rund {{ORT_ERSPARNIS_CENT}} Cent Ersparnis pro Liter. Live-Preise, Grenzrechner und alle Tankstellen.</p>
     <a href="/" class="cta-main">🗺 Karte & Live-Preise öffnen →</a>
   </div>
 
   <!-- Saving Box -->
   <div class="saving-box">
-    <div class="saving-num">~40<span class="saving-sup">ct</span></div>
+    <div class="saving-num">{{ORT_ERSPARNIS_CENT}}<span class="saving-sup">ct</span></div>
     <div class="saving-txt">
       <strong>Günstiger pro Liter als Deutschland</strong><br>
       Bei 60 L Diesel: bis zu <strong>{{ERSPARNIS_60L}} € Brutto-Ersparnis</strong><br>
-      Netto nach Fahrtkosten typisch <strong>15–22 €</strong> · täglich berechnet
+      Was nach Abzug der Fahrtkosten übrig bleibt, rechnet der Grenzrechner aus · Stand {{STAND}}
     </div>
   </div>
 
@@ -403,7 +403,7 @@ footer a:hover{color:var(--muted)}
     </details>
     <details>
       <summary>Wie viel spare ich wirklich beim Tanken in Zgorzelec?</summary>
-      <p>Aktuell (2026) ist Diesel in Polen rund 30–45 Cent pro Liter günstiger als in Görlitz. Bei 60 Litern ergibt das eine Brutto-Ersparnis von 18–27 €. Nach Abzug der Fahrtkosten (ca. 2–3 € für ~5 km Umweg) bleibt typisch eine <strong>Netto-Ersparnis von 15–25 €</strong>. Der <a href="/">Grenzrechner auf BestPriceTank</a> berechnet das tagesaktuell. Alle <a href="/spritpreise-polen.html">Spritpreise in Polen heute</a> gibt's in der Übersicht.</p>
+      <p>Heute liegt Diesel in Polen rund {{ORT_ERSPARNIS_CENT}} Cent pro Liter unter dem Görlitzer Preis (Stand {{STAND}}). Bei 60 Litern sind das rund <strong>{{ORT_ERSPARNIS_60L}} € brutto</strong>. Abzüglich der Fahrtkosten für den Umweg bleibt der Betrag, den der Grenzrechner dir ausrechnet. Der <a href="/">Grenzrechner auf BestPriceTank</a> berechnet das tagesaktuell. Alle <a href="/spritpreise-polen.html">Spritpreise in Polen heute</a> gibt's in der Übersicht.</p>
     </details>
     <details>
       <summary>Welche Zahlungsmittel akzeptieren polnische Tankstellen?</summary>

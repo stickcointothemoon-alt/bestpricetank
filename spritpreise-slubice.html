@@ -60,7 +60,7 @@
       "name": "Wie viel spare ich in Słubice?",
       "acceptedAnswer": {
         "@type": "Answer",
-        "text": "Aktuell (2026) ca. 35–42 Cent/Liter gegenüber deutschen Preisen. Bei 60 L: 21–25 € Brutto. Nach ~2 km Umweg typisch 20–23 € Netto-Ersparnis."
+        "text": "Heute rund {{ORT_ERSPARNIS_CENT}} Cent pro Liter gegenüber deutschen Preisen (Stand {{STAND}}). Bei 60 L sind das rund {{ORT_ERSPARNIS_60L}} € brutto. Der Umweg über die Oderbrücke ist kurz, es bleibt also fast alles davon übrig."
       }
     },
     {
@@ -184,10 +184,10 @@ footer a:hover{color:var(--muted)}
     <a href="/" class="cta-main">🗺 Karte & Live-Preise öffnen →</a>
   </div>
   <div class="saving-box">
-    <div class="saving-num">40ct<span class="saving-sup">ct</span></div>
+    <div class="saving-num">{{ORT_ERSPARNIS_CENT}}<span class="saving-sup">ct</span></div>
     <div class="saving-txt">
       <strong>Günstiger pro Liter als Deutschland</strong><br>
-      Bei 60 L Diesel: bis zu <strong>{{ERSPARNIS_60L}} € Brutto-Ersparnis</strong><br>Netto nach Fahrtkosten typisch <strong>20–23 €</strong> · täglich berechnet
+      Bei 60 L Diesel: bis zu <strong>{{ERSPARNIS_60L}} € Brutto-Ersparnis</strong><br>Der Umweg ist kurz, es bleibt fast alles übrig · Stand {{STAND}}
     </div>
   </div>
   <h2>📍 Grenzübergang Frankfurt (Oder) / Słubice</h2>
@@ -265,7 +265,7 @@ footer a:hover{color:var(--muted)}
     </details>
     <details>
       <summary>Wie viel spare ich in Słubice?</summary>
-      <p>Aktuell (2026) ca. 35–42 Cent/Liter gegenüber deutschen Preisen. Bei 60 L: 21–25 € Brutto. Nach ~2 km Umweg typisch 20–23 € Netto-Ersparnis.</p>
+      <p>Heute rund {{ORT_ERSPARNIS_CENT}} Cent pro Liter gegenüber deutschen Preisen (Stand {{STAND}}). Bei 60 L sind das rund {{ORT_ERSPARNIS_60L}} € brutto. Der Umweg über die Oderbrücke ist kurz, es bleibt also fast alles davon übrig.</p>
     </details>
     <details>
       <summary>Welche Kraftstoffe gibt es in Słubice?</summary>

@@ -25,3 +25,81 @@
   for = "/.netlify/functions/*"
   [headers.values]
     Access-Control-Allow-Origin = "*"
+
+# ── Eine Adresse je Seite ───────────────────────────────────────────────
+# Netlify liefert jede Seite unter zwei Adressen aus: /x und /x.html.
+# In der Woche vom 13.09.2026 kamen rund 690 Aufrufe auf den Varianten ohne
+# Endung an - derselbe Inhalt unter zwei Adressen teilt die Google-Signale
+# auf. Alle canonical-Angaben zeigen auf die .html-Fassung, also leiten wir
+# dorthin. force = true ist noetig, weil Netlify die Datei sonst direkt
+# ausliefert, ohne die Weiterleitung anzuwenden.
+[[redirects]]
+  from = "/spritpreise-polen"
+  to = "/spritpreise-polen.html"
+  status = 301
+  force = true
+
+[[redirects]]
+  from = "/spritpreise-goerlitz"
+  to = "/spritpreise-goerlitz.html"
+  status = 301
+  force = true
+
+[[redirects]]
+  from = "/spritpreise-zgorzelec"
+  to = "/spritpreise-zgorzelec.html"
+  status = 301
+  force = true
+
+[[redirects]]
+  from = "/spritpreise-slubice"
+  to = "/spritpreise-slubice.html"
+  status = 301
+  force = true
+
+[[redirects]]
+  from = "/spritpreise-gubin"
+  to = "/spritpreise-gubin.html"
+  status = 301
+  force = true
+
+[[redirects]]
+  from = "/spritpreise-hagenwerder"
+  to = "/spritpreise-hagenwerder.html"
+  status = 301
+  force = true
+
+[[redirects]]
+  from = "/spritpreise-zittau"
+  to = "/spritpreise-zittau.html"
+  status = 301
+  force = true
+
+[[redirects]]
+  from = "/spritpreise-cottbus"
+  to = "/spritpreise-cottbus.html"
+  status = 301
+  force = true
+
+[[redirects]]
+  from = "/dieselpreis-polen"
+  to = "/dieselpreis-polen.html"
+  status = 301
+  force = true
+
+# Alte Kurzform, die noch verlinkt wird.
+[[redirects]]
+  from = "/slubice.html"
+  to = "/spritpreise-slubice.html"
+  status = 301
+  force = true
+
+# ── Apple-Touch-Icons ───────────────────────────────────────────────────
+# iOS fragt von sich aus nach Namensvarianten, die es nicht gibt:
+# -precomposed, -120x120, -152x152 und weitere. Das waren rund 990 vergebliche
+# Anfragen pro Woche. status = 200 liefert das vorhandene Icon aus, ohne
+# umzuleiten; die echte Datei gewinnt weiterhin, weil force fehlt.
+[[redirects]]
+  from = "/apple-touch-icon*"
+  to = "/apple-touch-icon.png"
+  status = 200
