@@ -70,7 +70,7 @@ async function deutschland() {
     const werte = offen.map((s) => s[feld]).filter(gueltig);
     return werte.length ? Math.min(...werte) : null;
   };
-  return { diesel: min('diesel'), e5: min('e5'), anzahl: offen.length, stand: d.fetchedAt };
+  return { diesel: min('diesel'), e10: min('e10'), anzahl: offen.length, stand: d.fetchedAt };
 }
 
 // ── Polen: die guenstigste Dyskont-Paliwowy-Station IN DER NAEHE ────────
@@ -101,7 +101,7 @@ async function polen() {
     : mitOrt.sort((a, b) => a.entfernung - b.entfernung)[0];
   return {
     diesel: s.diesel,
-    e5: gueltig(s.e5) ? s.e5 : null,
+    e10: gueltig(s.e10) ? s.e10 : null,   // = Pb95, die 95-Oktan-Sorte
     station: s.name,
     entfernung: Math.round(entfernung * 10) / 10,
     pln: s.diesel_pln ?? s.dieselPln ?? null,
@@ -154,9 +154,9 @@ function lesen() {
   const eintrag = {
     ts: new Date().toISOString(),
     de_diesel: drei(de.diesel),
-    de_e5: gueltig(de.e5) ? drei(de.e5) : null,
+    de_e10: gueltig(de.e10) ? drei(de.e10) : null,
     pl_diesel: drei(pl.diesel),
-    pl_e5: pl.e5 ? drei(pl.e5) : null,
+    pl_e10: pl.e10 ? drei(pl.e10) : null,
     cz_diesel: cz ? drei(cz) : null,
     pl_station: pl.station,
     pl_km: pl.entfernung,

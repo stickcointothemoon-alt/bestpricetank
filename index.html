@@ -140,7 +140,7 @@ select option{background:#0a1628}
 
 /* LOCATION + FUEL BAR */
 .locfuel{
-  position:absolute;top:calc(max(env(safe-area-inset-top),10px) + var(--warn-h,0px) + 90px);left:50%;transform:translateX(-50%);
+  position:absolute;top:calc(max(env(safe-area-inset-top),10px) + var(--warn-h,0px) + var(--sorte-h,0px) + 90px);left:50%;transform:translateX(-50%);
   display:flex;flex-direction:column;gap:6px;align-items:center;
   animation:drop .8s .15s var(--spring) both;
 }
@@ -179,6 +179,7 @@ select option{background:#0a1628}
 @keyframes spin{to{transform:rotate(360deg)}}
 
 /* FUEL PILLS */
+.fuelnote{margin:6px 2px 0;font-size:11.5px;line-height:1.45;color:rgba(170,190,240,.62)}
 .fuelpills{
   display:flex;gap:4px;padding:4px 6px;border-radius:999px;
   border:1px solid var(--rim2);background:var(--glass);
@@ -191,7 +192,7 @@ select option{background:#0a1628}
 
 /* AI CARD */
 .aic{
-  position:absolute;top:calc(max(env(safe-area-inset-top),10px) + var(--warn-h,0px) + 86px);left:16px;
+  position:absolute;top:calc(max(env(safe-area-inset-top),10px) + var(--warn-h,0px) + var(--sorte-h,0px) + 86px);left:16px;
   width:min(292px,calc(50vw - 24px));border-radius:20px;
   border:1px solid rgba(124,77,255,.28);background:var(--glass);
   backdrop-filter:blur(28px);-webkit-backdrop-filter:blur(28px);
@@ -231,7 +232,7 @@ select option{background:#0a1628}
 
 /* COUNTRY FILTER */
 .cfilter{
-  position:absolute;top:calc(max(env(safe-area-inset-top),10px) + var(--warn-h,0px) + 90px);right:14px;
+  position:absolute;top:calc(max(env(safe-area-inset-top),10px) + var(--warn-h,0px) + var(--sorte-h,0px) + 90px);right:14px;
   display:flex;flex-direction:column;gap:5px;
   animation:sil .8s .4s var(--spring) both;
 }
@@ -436,7 +437,7 @@ select option{background:#0a1628}
 /* RESPONSIVE */
 @media(max-width:900px){
   #legalBtn{display:grid!important}
-  .cfilter{top:calc(max(env(safe-area-inset-top),10px) + var(--warn-h,0px) + 60px)}
+  .cfilter{top:calc(max(env(safe-area-inset-top),10px) + var(--warn-h,0px) + var(--sorte-h,0px) + 60px)}
   .hnav,.hdiv:first-of-type{display:none}
   .hdr{width:calc(100vw - 20px);justify-content:space-between}
   .logo{margin-right:0}
@@ -446,7 +447,7 @@ select option{background:#0a1628}
   .locfuel{top:calc(max(env(safe-area-inset-top),10px) + var(--warn-h,0px) + 58px)}
   .live{display:none}
   .loc-input{width:110px}
-  .cfilter{top:calc(max(env(safe-area-inset-top),10px) + var(--warn-h,0px) + 148px);right:10px}
+  .cfilter{top:calc(max(env(safe-area-inset-top),10px) + var(--warn-h,0px) + var(--sorte-h,0px) + 148px);right:10px}
   .cfbtn{height:28px;font-size:10.5px;padding:0 9px}
   .spanel{width:100vw;border-left:none;border-top:1px solid var(--rim2);border-radius:20px 20px 0 0;top:auto;bottom:0;height:88dvh;transform:translateY(100%)}
   .spanel.open{transform:none}
@@ -518,7 +519,7 @@ select option{background:#0a1628}
 /* HOME Wetter Pill (unter Live Badge) */
 .wx-home{
   position:absolute;
-  top:calc(max(env(safe-area-inset-top),10px) + var(--warn-h,0px) + 178px);
+  top:calc(max(env(safe-area-inset-top),10px) + var(--warn-h,0px) + var(--sorte-h,0px) + 178px);
   left:50%;transform:translateX(-50%);
   display:flex;align-items:center;gap:8px;
   height:24px;padding:0 11px;
@@ -532,13 +533,13 @@ select option{background:#0a1628}
 .wx-home .wx-dot{width:5px;height:5px;border-radius:50%;background:var(--green);margin-right:2px}
 @media(max-width:900px){
   .wx-home{
-    top:calc(max(env(safe-area-inset-top),10px) + var(--warn-h,0px) + 162px);
+    top:calc(max(env(safe-area-inset-top),10px) + var(--warn-h,0px) + var(--sorte-h,0px) + 162px);
     font-size:10px;
     max-width:calc(100vw - 120px);
   }
 }
 @media(max-width:480px){
-  .wx-home{top:calc(max(env(safe-area-inset-top),10px) + var(--warn-h,0px) + 152px)}
+  .wx-home{top:calc(max(env(safe-area-inset-top),10px) + var(--warn-h,0px) + var(--sorte-h,0px) + 152px)}
 }
 
 
@@ -663,6 +664,7 @@ select option{background:#0a1628}
       <button class="fp" data-fuel="lpg" onclick="setFuel(this,'lpg')">💧 LPG</button>
       <button class="fp" data-fuel="ev" onclick="setFuel(this,'ev')" style="border-color:rgba(0,229,255,.25)">⚡ Laden</button>
     </div>
+    <div class="fuelnote" id="fuelnote" hidden></div>
   </div>
 
   <!-- AI Card -->
@@ -1677,13 +1679,27 @@ function updateStrip(){
   if(oil&&BPT_RATES.BRENT>0) oil.textContent=BPT_RATES.BRENT.toFixed(1)+'$';
 }
 
+// Alles, was oben zusaetzlich Platz braucht, laeuft ueber --warn-h:
+// das Stoerungsband und der Sortenhinweis. Elf Elemente sind per
+// top:calc(... + var(--warn-h) ...) darauf angewiesen. Wird der Hinweis
+// hier vergessen, legt sich die Wetterkachel darueber - genau das ist
+// beim Einbau passiert.
+function setzeKopfHoehe(){
+  const band = document.getElementById('data-warning');
+  const note = document.getElementById('fuelnote');
+  const st   = document.documentElement.style;
+  st.setProperty('--warn-h', (band ? band.offsetHeight : 0) + 'px');
+  st.setProperty('--sorte-h',
+    (note && !note.hidden ? Math.round(note.getBoundingClientRect().height + 6) : 0) + 'px');
+}
+
 const DATA_WARNINGS = {};
 function setDataWarning(key,msg){ DATA_WARNINGS[key]=msg; renderDataWarnings(); }
 function clearDataWarning(key){ delete DATA_WARNINGS[key]; renderDataWarnings(); }
 function renderDataWarnings(){
   const msgs = Object.values(DATA_WARNINGS);
   let el = document.getElementById('data-warning');
-  if(!msgs.length){ if(el) el.remove(); document.documentElement.style.setProperty('--warn-h','0px'); return; }
+  if(!msgs.length){ if(el) el.remove(); setzeKopfHoehe(); return; }
   if(!el){
     el = document.createElement('div');
     el.id = 'data-warning';
@@ -1699,10 +1715,13 @@ function renderDataWarnings(){
     document.body.appendChild(el);
   }
   el.textContent = '\u26A0 ' + msgs.join('  \u00B7  ');
-  document.documentElement.style.setProperty('--warn-h', el.offsetHeight + 'px');
+  setzeKopfHoehe();
 }
 // Beim Drehen aendert sich die Zeilenzahl des Bandes und damit seine Hoehe.
-addEventListener('resize', ()=>{ if(Object.keys(DATA_WARNINGS).length) renderDataWarnings(); });
+// Beim Drehen aendert sich die Zeilenzahl von Band UND Sortenhinweis.
+addEventListener('resize', ()=>{
+  if(Object.keys(DATA_WARNINGS).length) renderDataWarnings(); else setzeKopfHoehe();
+});
 
 // Polnische Preise: Zustand der Live-Quelle.
 // Fällt Dyskont Paliwowy aus, blieben bisher die im Code hinterlegten
@@ -2162,9 +2181,19 @@ async function sendReport(){
 // ══════════════════════════════════════
 // FUEL SELECTOR
 // ══════════════════════════════════════
+// Was in Polen an der Zapfsaeule steht, heisst anders als bei uns:
+// Pb95 ist dort seit Anfang 2024 E10, E5 gibt es nur noch als Pb98 mit
+// 98 Oktan. Ohne diesen Hinweis sieht der polnische E5-Preis aus wie ein
+// Fehler - er ist nur die teurere Sorte.
+const PL_SORTE = {
+  e10: 'In Polen heißt E10 <b>Pb95</b> – dieselbe Sorte, 95 Oktan.',
+  e5:  'E5 gibt es in Polen nur als <b>Pb98</b> (98 Oktan) – daher der höhere Preis.'
+};
 function setFuel(btn,fuel){
   currentFuel=fuel;
   document.querySelectorAll('.fp').forEach(b=>b.classList.toggle('on',b.dataset.fuel===fuel));
+  const fn=document.getElementById('fuelnote');
+  if(fn){ fn.innerHTML = PL_SORTE[fuel] || ''; fn.hidden = !PL_SORTE[fuel]; setzeKopfHoehe(); }
   // sync station panel fuel buttons
   ['diesel','e5','e10','lpg'].forEach(f=>{
     const q=document.getElementById('fq-'+f);
@@ -2465,14 +2494,14 @@ async function initChart(){
     const datasets = [
       mkDs(reihe('de_diesel'),'#448aff'),
       mkDs(reihe('pl_diesel'),'#00e676'),
-      mkDs(reihe('de_e5'),   'rgba(124,77,255,.6)',[4,3]),
-      mkDs(reihe('pl_e5'),   'rgba(255,171,0,.7)', [4,3]),
+      mkDs(reihe('de_e10'),  'rgba(124,77,255,.6)',[4,3]),
+      mkDs(reihe('pl_e10'),  'rgba(255,171,0,.7)', [4,3]),
     ];
     const canvas = document.getElementById('priceChart');
     if(!canvas) return;
     if(priceChartInstance) priceChartInstance.destroy();
 
-    const alleWerte = history.flatMap(h => [h.de_diesel,h.pl_diesel,h.de_e5,h.pl_e5])
+    const alleWerte = history.flatMap(h => [h.de_diesel,h.pl_diesel,h.de_e10,h.pl_e10])
                              .filter(v => typeof v === 'number');
     priceChartInstance = new Chart(canvas,{
       type:'line',

@@ -88,14 +88,20 @@ exports.handler = async () => {
       lng:     s.coordinates.lng,
       prices_pln: {
         diesel: s.prices.ON     ?? null,
-        e5:     s.prices.PB95   ?? null,
-        e10:    s.prices.PB98   ?? null,
+        // Pb95 ist in Polen seit dem 01.01.2024 E10, Pb98 ist die E5-Sorte.
+        // Bis zum 20.09.2026 stand es hier andersherum: Wer auf der Karte
+        // E10 waehlte, sah den Pb98-Preis (rund 20 Groschen zu hoch), und
+        // wer E5 waehlte, sah Pb95 - also E10. Das war nicht nur zu billig
+        // angezeigt, es war die falsche Sorte fuer ein Auto, das kein E10
+        // vertraegt.
+        e5:     s.prices.PB98   ?? null,
+        e10:    s.prices.PB95   ?? null,
         lpg:    s.prices.LPG    ?? null,
         adblue: s.prices.ADBLUE ?? null,
       },
       diesel: s.prices.ON   ? +(s.prices.ON   / plnRate).toFixed(3) : null,
-      e5:     s.prices.PB95 ? +(s.prices.PB95 / plnRate).toFixed(3) : null,
-      e10:    s.prices.PB98 ? +(s.prices.PB98 / plnRate).toFixed(3) : null,
+      e5:     s.prices.PB98 ? +(s.prices.PB98 / plnRate).toFixed(3) : null,
+      e10:    s.prices.PB95 ? +(s.prices.PB95 / plnRate).toFixed(3) : null,
       lpg:    s.prices.LPG  ? +(s.prices.LPG  / plnRate).toFixed(3) : null,
       logo:        'DP',
       source:      'dyskont_paliwowy',
