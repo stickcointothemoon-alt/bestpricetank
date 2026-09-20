@@ -3,6 +3,9 @@
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1"/>
+<!-- Hin und zurueck ab Goerlitz-Zentrum. Daraus rechnet scripts/build-pages.js
+     die Fahrtkosten; hier stand vorher ein festes "8-15 EUR netto". -->
+<meta name="bpt-fahrt-km" content="6"/>
 <title>Zgorzelec: Diesel ab {{ORT_DIESEL}} € · Spritpreise heute</title>
 <meta name="description" content="Diesel ab {{ORT_DIESEL}} €/L in Zgorzelec, {{ORT_ERSPARNIS_CENT}} ct unter Deutschland — {{ORT_ERSPARNIS_60L}} € bei 60 L. Preise in Euro und Złoty. Stand {{STAND}}."/>
 <meta name="keywords" content="tanken zgorzelec, spritpreise zgorzelec, diesel zgorzelec, günstig tanken görlitz, tankstelle zgorzelec"/>
@@ -192,7 +195,7 @@ footer a{color:rgba(170,190,240,.5)}
     </details>
     <details>
       <summary>Lohnt sich die Fahrt wirklich?</summary>
-      <p>Nutze den Grenzrechner auf BestPriceTank.de — er berechnet Brutto-Ersparnis minus Fahrtkosten. Bei 60L und 2–5km Entfernung ist die Ersparnis meist 8–15€ netto.</p>
+      <p>Bei 60 Litern und dem heutigen Unterschied von {{ORT_ERSPARNIS_CENT}} ct/L sind es <strong>{{ORT_ERSPARNIS_60L}} €</strong> brutto (Stand {{STAND}}, {{STAND_UHR}} Uhr). Ab Görlitz sind es {{ORT_FAHRT_KM}} km hin und zurück, das kostet {{ORT_FAHRTKOSTEN}} € — es bleiben <strong>{{ORT_NETTO_60L}} €</strong>. Der Grenzrechner auf BestPriceTank.de rechnet es mit deiner wirklichen Strecke.</p>
     </details>
   </div>
 

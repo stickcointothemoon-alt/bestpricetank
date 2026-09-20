@@ -27,6 +27,24 @@ const UA = { 'User-Agent': 'BestPriceTank-Build/1.0 (+https://bestpricetank.de)'
 const eur = (v) => v.toFixed(3).replace('.', ',');
 const eur2 = (v) => v.toFixed(2).replace('.', ',');
 const loc = (v, d = 2) => v.toFixed(d).replace('.', ',');
+// Echtes Minuszeichen, nicht der Bindestrich.
+const minus = (v) => eur2(v).replace(/^-/, '\u2212');
+
+// Eine Spanne "von bis". Zwei Sonderfaelle, beide schon aufgetreten:
+//   - Beide Enden runden auf denselben Wert (kurze Strecken): dann nur
+//     eine Zahl, nicht "0,86-0,86".
+//   - Ein Ende ist negativ (Fahrt teurer als die Ersparnis): dann "bis"
+//     statt Gedankenstrich, sonst steht da "\u22125,51\u2013\u22123,05" und niemand
+//     erkennt noch, was Trennzeichen und was Vorzeichen ist.
+function spanne(a, b, f = minus) {
+  const x = f(a), y = f(b);
+  if (x === y) return x;
+  return (a < 0 || b < 0) ? `${x} bis ${y}` : `${x}\u2013${y}`;
+}
+
+// Annahme fuer die Fahrtkosten, auf den Seiten offengelegt.
+const VERBRAUCH_MIN = 6;   // Liter Diesel je 100 km
+const VERBRAUCH_MAX = 8;
 
 async function getJson(url, headers = {}) {
   const res = await fetch(url, { headers: { ...UA, ...headers }, signal: AbortSignal.timeout(12000) });
@@ -183,8 +201,19 @@ async function collect(vorher) {
     hole('ČSÚ (CZ)', () => cz(r.czk), vorher?.cz),
   ]);
 
+  // Der Stand ist das Alter der PREISE, nicht der Zeitpunkt des Builds.
+  //
+  // Bisher stand hier unbedingt die aktuelle Uhrzeit. Faellt eine Quelle
+  // aus, uebernimmt collect() die alten Werte aus data/live.json - und
+  // stempelte ihnen dann die jetzige Uhrzeit auf. Am 20.09.2026 ist genau
+  // das passiert: "Stand 20.09.2026, 14:44 Uhr" ueber Preisen vom 05.09.
+  // Also: nur wenn wirklich alles frisch ist, ist es auch jetzt.
+  const alleFrisch = Object.values(quellen).every((v) => v === 'frisch');
+  if (!alleFrisch && vorher?.stand) {
+    console.warn(`   \u26a0 Nicht alles frisch - Stand bleibt ${vorher.stand}`);
+  }
   return {
-    stand: new Date().toISOString(),
+    stand: (alleFrisch || !vorher?.stand) ? new Date().toISOString() : vorher.stand,
     quellen,
     kurse: r, de: d, pl: p, cz: c,
     ersparnisProLiter: d.diesel - p.diesel,
@@ -230,6 +259,10 @@ function tokens(x) {
   const z = zeitTeile(new Date(x.stand));
   const dd = z.tag;
   const mm = z.monat;
+  // Benzin nur vergleichen, wenn beide Seiten gemessen sind. DE E10 und
+  // polnisches Pb95 sind beide 95 Oktan - das ist der saubere Vergleich,
+  // nicht DE E5 gegen Pb95.
+  const benzin = (x.de.e10 > 0 && x.pl.e10 > 0) ? x.de.e10 - x.pl.e10 : null;
   return {
     STAND: `${dd}.${mm}.${z.jahr}`,
     STAND_KURZ: `${dd}.${mm}.`,
@@ -243,8 +276,13 @@ function tokens(x) {
     PL_DIESEL: eur(x.pl.diesel),
     PL_DIESEL_PLN: loc(x.pl.dieselPln),
     PL_DIESEL_SPANNE: `${eur2(x.pl.diesel)}–${eur2(x.pl.dieselMax)}`,
-    PL_E10: x.pl.e10 ? eur(x.pl.e10) : eur(x.pl.diesel),
-    PL_E10_PLN: x.pl.e10Pln ? loc(x.pl.e10Pln) : loc(x.pl.dieselPln),
+    // Fehlt der polnische Benzinpreis, stand hier bis 20.09.2026 der
+    // DIESELPREIS - unter der Ueberschrift "E10 (Pb95)". Ein stiller
+    // Rueckfall auf die falsche Sorte ist schlimmer als eine Luecke.
+    PL_E10: x.pl.e10 ? eur(x.pl.e10) : '\u2014',
+    PL_E10_PLN: x.pl.e10Pln ? loc(x.pl.e10Pln) : '\u2014',
+    ERSPARNIS_BENZIN_CENT: benzin === null ? '\u2014' : String(Math.round(benzin * 100)),
+    ERSPARNIS_BENZIN_60L:  benzin === null ? '\u2014' : eur2(benzin * 60),
     PL_ANZAHL: String(x.pl.count),
     CZ_DIESEL: eur(x.cz.diesel),
     CZ_DIESEL_CZK: loc(x.cz.dieselCzk),
@@ -337,6 +375,38 @@ const esc = (t) => String(t).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&l
       ORT_ERSPARNIS_CENT: String(Math.round(ortErsparnis * 100)),
       ORT_ERSPARNIS_60L: eur2(ortErsparnis * 60),
     };
+
+    // Fahrtkosten und Netto-Ersparnis.
+    //
+    // Auf der Cottbus-Seite stand bis zum 20.09.2026 "8 bis 12 Euro" fest
+    // im Text. Das war zu einem Dieselpreis von rund 2,30 EUR gerechnet und
+    // wandert mit jedem Preis, ohne dass es jemand merkt - derselbe Fehler
+    // wie die "40 ct" auf den Ortsseiten. Also wird gerechnet.
+    //
+    // Bezugsgroesse ist der DEUTSCHE Literpreis fuer die ganze Strecke.
+    // Genau genommen faehrt man die Rueckfahrt mit polnischem Sprit und
+    // damit billiger; die Rechnung setzt die Kosten also eher zu hoch an.
+    // Eine Ersparnis lieber zu klein als zu gross ausweisen.
+    const mKm = s.match(/<meta\s+name="bpt-fahrt-km"\s+content="([\d.]+)"/i);
+    const brauchtFahrt = /\{\{ORT_(FAHRT|VERBRAUCH|NETTO)[A-Z0-9_]*\}\}/.test(s);
+    if (brauchtFahrt && !mKm) {
+      console.error(`\u274c ${f} verwendet Fahrtkosten-Platzhalter, hat aber kein`
+                  + ` <meta name="bpt-fahrt-km" content="..."> im Kopf.`);
+      process.exit(1);
+    }
+    if (mKm) {
+      const fkm  = parseFloat(mKm[1]);
+      const lMin = (fkm / 100) * VERBRAUCH_MIN;
+      const lMax = (fkm / 100) * VERBRAUCH_MAX;
+      const kMin = lMin * data.de.diesel;
+      const kMax = lMax * data.de.diesel;
+      const brutto = ortErsparnis * 60;
+      tSeite.ORT_FAHRT_KM     = loc(fkm, fkm % 1 ? 1 : 0);
+      tSeite.ORT_VERBRAUCH    = `${VERBRAUCH_MIN} bis ${VERBRAUCH_MAX}`;
+      tSeite.ORT_FAHRT_LITER  = spanne(lMin, lMax, (v) => loc(v, 1));
+      tSeite.ORT_FAHRTKOSTEN  = spanne(kMin, kMax, eur2);
+      tSeite.ORT_NETTO_60L    = spanne(brutto - kMax, brutto - kMin);
+    }
 
     s = s.replace(/\{\{([A-Z0-9_]+)\}\}/g, (m, k) => {
       if (!(k in tSeite)) { console.error(`❌ Unbekannter Platzhalter ${m} in ${f}`); process.exit(1); }
