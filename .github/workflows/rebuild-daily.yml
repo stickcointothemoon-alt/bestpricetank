@@ -1,9 +1,16 @@
 # Schreibt zweimal taeglich den Preisverlauf fort und laesst Netlify neu bauen,
 # damit auch die statischen Ortsseiten frische Preise bekommen.
 #
-# Der Commit auf main loest den Netlify-Build von selbst aus - der Build-Hook
-# wird nur noch gebraucht, wenn es nichts zu committen gab (etwa weil eine
-# Preisquelle gerade ausgefallen ist). So bleibt es bei zwei Builds am Tag.
+# Der Build wird am Ende IMMER ueber den Build-Hook angestossen, unabhaengig
+# davon, ob es etwas zu committen gab.
+#
+# Warum nicht einfach auf den Commit vertrauen: Am 19.09.2026 hat der Lauf um
+# 17:57 sauber einen Punkt committet und gepusht - Netlify hat darauf aber
+# nicht gebaut, und data/history.json blieb auf der Seite leer. Pushes aus dem
+# Workflow heraus erreichen den Netlify-Build offenbar nicht zuverlaessig.
+# Der Hook tut es, das ist belegt. Ein Build dauert rund zehn Sekunden, ein
+# gelegentlich doppelter kostet also praktisch nichts - eine Kurve, die sich
+# nicht fuellt, kostet mehr.
 #
 # Einrichtung, einmalig:
 #   1. Netlify → Site configuration → Build & deploy → Build hooks
@@ -58,20 +65,21 @@ jobs:
           else
             git commit -m "Preisverlauf $(date '+%d.%m.%Y %H:%M')"
             git push
-            echo "✅ Neuer Punkt gepusht, Netlify baut gleich."
+            echo "✅ Neuer Punkt committet und gepusht."
             echo "committed=ja" >> "$GITHUB_OUTPUT"
           fi
 
-      # Nur noch als Rueckfall: ohne Commit baut Netlify sonst gar nicht, und
-      # die Ortsseiten trugen dann weiter die Preise von gestern.
-      - name: Build anstoßen, falls nichts committet wurde
-        if: steps.commit.outputs.committed == 'nein'
+      # Immer, nicht nur als Rueckfall. Sonst haengt der frisch gepushte Punkt
+      # im Repository fest und erscheint nie auf der Seite.
+      - name: Build anstoßen
+        if: always()
         env:
           HOOK: ${{ secrets.NETLIFY_BUILD_HOOK }}
         run: |
           if [ -z "$HOOK" ]; then
-            echo "::warning::NETLIFY_BUILD_HOOK ist nicht gesetzt, es wurde kein Build angestossen."
-            exit 0
+            echo "::error::NETLIFY_BUILD_HOOK ist nicht gesetzt - es wurde kein Build angestossen."
+            echo "::error::Neue Verlaufspunkte erscheinen dann nicht auf der Seite. Siehe Kommentar oben."
+            exit 1
           fi
           code=$(curl -sS -o /dev/null -w '%{http_code}' -X POST -d '{}' "$HOOK")
           echo "Netlify antwortete mit HTTP $code"
