@@ -1955,10 +1955,17 @@ function syncAd(){
 }
 addEventListener('resize',()=>{posAd();});
 try{
-  new MutationObserver(syncAd).observe(document.getElementById('aic'),
-    {attributes:true,attributeFilter:['style']});
+  const aic = document.getElementById('aic');
+  // Sichtbarkeit mitnehmen: sv() schaltet die KI-Karte ueber style um.
+  new MutationObserver(syncAd).observe(aic,{attributes:true,attributeFilter:['style']});
+  // Und die Hoehe mitnehmen. Genau daran ist es gescheitert: Die Anzeige wurde
+  // nur zu drei festen Zeitpunkten nach dem Laden ausgerichtet. Die KI-Karte
+  // waechst aber spaeter noch, wenn die Preise eintreffen und aus "-" ein
+  // Betrag wird - danach lag die Anzeige auf dem Knopf der Karte.
+  // Ein ResizeObserver meldet jede Aenderung, egal wodurch sie kommt.
+  if(window.ResizeObserver) new ResizeObserver(()=>posAd()).observe(aic);
 }catch(e){}
-[100,600,1500].forEach(t=>setTimeout(posAd,t));
+[100,600,1500,3000].forEach(t=>setTimeout(posAd,t));
 
 function cp(name){
   const p=document.getElementById('panel-'+name);
