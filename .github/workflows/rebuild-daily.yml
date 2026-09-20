@@ -45,29 +45,61 @@ jobs:
         with:
           node-version: '20'
 
-      # Faellt eine Preisquelle aus, endet das Skript mit Code 2 und schreibt
-      # nichts. Das ist gewollt: eine Luecke in der Kurve ist ehrlicher als ein
-      # geschaetzter Punkt. Der Lauf soll deswegen aber nicht rot werden.
-      - name: Preisverlauf fortschreiben
-        id: verlauf
-        continue-on-error: true
-        run: node scripts/verlauf.js
-
-      - name: Neuen Punkt committen
+      # Punkt holen, committen, pushen - mit Wiederholung.
+      #
+      # Der Lauf am 20.09.2026 um 11:40 ist daran gescheitert, dass zwischen
+      # dem Auschecken und dem Push von Hand gepusht wurde: "! [rejected]
+      # main -> main (fetch first)". Der Punkt war gueltig, er kam nur nicht
+      # an - und weil der Schritt rot wurde, blieb auch der Build liegen.
+      #
+      # Deshalb wird vor jedem Versuch der aktuelle Stand geholt und der Punkt
+      # darauf neu geschrieben. Ein Rebase mit moeglichem Konflikt in der
+      # JSON-Datei braucht es so gar nicht erst.
+      #
+      # Faellt eine Preisquelle aus, endet verlauf.js mit Code 2 und schreibt
+      # nichts. Das ist gewollt - eine Luecke in der Kurve ist ehrlicher als
+      # ein geschaetzter Punkt - und darf den Lauf nicht rot faerben.
+      - name: Preisverlauf fortschreiben und veröffentlichen
         id: commit
         run: |
           git config user.name  "PriceBot"
           git config user.email "bot@bestpricetank.de"
-          git add data/history.json
-          if git diff --staged --quiet; then
-            echo "Kein neuer Punkt - es gab nichts zu committen."
-            echo "committed=nein" >> "$GITHUB_OUTPUT"
-          else
-            git commit -m "Preisverlauf $(date '+%d.%m.%Y %H:%M')"
-            git push
-            echo "✅ Neuer Punkt committet und gepusht."
-            echo "committed=ja" >> "$GITHUB_OUTPUT"
-          fi
+
+          ergebnis=offen
+          for versuch in 1 2 3; do
+            echo "── Versuch $versuch ──────────────────────────────"
+            git fetch --quiet origin main
+            git reset --hard --quiet origin/main
+
+            if ! node scripts/verlauf.js; then
+              ergebnis=kein_punkt
+              break
+            fi
+
+            git add data/history.json
+            if git diff --staged --quiet; then
+              echo "Der Punkt ist schon vorhanden - nichts zu committen."
+              ergebnis=kein_punkt
+              break
+            fi
+
+            git commit --quiet -m "Preisverlauf $(date '+%d.%m.%Y %H:%M')"
+            if git push --quiet origin HEAD:main; then
+              echo "✅ Neuer Punkt committet und gepusht."
+              ergebnis=gepusht
+              break
+            fi
+            echo "Push abgelehnt - in der Zwischenzeit wurde gepusht."
+            echo "Neuer Anlauf auf dem aktuellen Stand."
+          done
+
+          case "$ergebnis" in
+            gepusht)    echo "committed=ja"   >> "$GITHUB_OUTPUT" ;;
+            kein_punkt) echo "committed=nein" >> "$GITHUB_OUTPUT" ;;
+            *) echo "::error::Push nach drei Versuchen nicht moeglich."
+               echo "committed=nein" >> "$GITHUB_OUTPUT"
+               exit 1 ;;
+          esac
 
       # Immer, nicht nur als Rueckfall. Sonst haengt der frisch gepushte Punkt
       # im Repository fest und erscheint nie auf der Seite.
