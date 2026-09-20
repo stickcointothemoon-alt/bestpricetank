@@ -385,15 +385,65 @@
     document.getElementById('stand-date').textContent = s;
   })();
 
-  /* Kraftstoff-Tabs. Hier später eure echten Preis-Datensätze je Sorte
-     einhängen; die Startwerte (Diesel) stehen bereits im HTML fürs SEO. */
-  document.querySelectorAll('#fuelTabs button').forEach(function(b){
-    b.addEventListener('click', function(){
-      document.querySelectorAll('#fuelTabs button').forEach(function(x){x.classList.remove('on')});
-      b.classList.add('on');
-      /* TODO: renderPrices(b.dataset.fuel) aus eurer API */
+  /* Kraftstoff-Tabs.
+     Bis zum 20.09.2026 stand hier nur "TODO: renderPrices(...) aus eurer
+     API" - die Knoepfe faerbten sich ein und sonst passierte nichts.
+     Ein Abruf zur Laufzeit ist dafuer gar nicht noetig: scripts/build-pages.js
+     schreibt beim Deploy alle Sorten als data-preise an jede Zeile.
+     Faellt eine Sorte bei einer Station aus, steht dort ein Strich -
+     kein umgerechneter Ersatzwert. */
+  (function(){
+    var tabs  = document.getElementById('fuelTabs');
+    var reihen = [].slice.call(document.querySelectorAll('#ptable .prow[data-preise]'));
+    if(!tabs || !reihen.length) return;
+
+    var daten = reihen.map(function(r){
+      try { return JSON.parse(r.getAttribute('data-preise')) || {}; }
+      catch(e){ return {}; }
     });
-  });
+
+    function zuZahl(t){ return parseFloat(String(t).replace(',','.')); }
+
+    function zeige(sorte){
+      /* Guenstigste je Sorte neu bestimmen - bei E10 kann das eine andere
+         Station sein als bei Diesel. */
+      var besteIdx = -1, bester = Infinity;
+      daten.forEach(function(d,i){
+        if(d[sorte] && zuZahl(d[sorte].eur) < bester){ bester = zuZahl(d[sorte].eur); besteIdx = i; }
+      });
+
+      reihen.forEach(function(r,i){
+        var p    = daten[i][sorte];
+        var zelle = r.querySelector('.js-preis');
+        var pln   = zelle && zelle.querySelector('.pln');
+        if(zelle){
+          zelle.childNodes[0].nodeValue = (p ? p.eur : '\u2013') + ' ';
+          if(pln) pln.textContent = p ? p.pln + ' zł/L' : 'kein Preis gemeldet';
+          zelle.style.opacity = p ? '' : '.5';
+        }
+        var alt = r.querySelector('.st-badge');
+        if(alt) alt.remove();
+        if(i === besteIdx){
+          var name = r.querySelector('.st-name');
+          if(name){
+            var b = document.createElement('span');
+            b.className = 'st-badge';
+            b.textContent = 'günstigste';
+            name.appendChild(document.createTextNode(' '));
+            name.appendChild(b);
+          }
+        }
+      });
+    }
+
+    tabs.addEventListener('click', function(ev){
+      var b = ev.target.closest('button[data-fuel]');
+      if(!b) return;
+      [].forEach.call(tabs.querySelectorAll('button'), function(x){ x.classList.remove('on'); });
+      b.classList.add('on');
+      zeige(b.dataset.fuel);
+    });
+  })();
 </script>
 </body>
 </html>

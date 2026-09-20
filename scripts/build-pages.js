@@ -134,13 +134,26 @@ async function pl(plnRate) {
   const d = await getJson('https://api.dyskontpaliwowy.pl/api/v1/station-prices', { 'X-API-Key': key });
   if (d.status !== 'success' || !Array.isArray(d.stations)) throw new Error('DP: unerwartete Antwort');
 
+  // Sortenzuordnung. Pb95 ist in Polen seit dem 01.01.2024 E10,
+  // Pb98 ist die E5-Sorte. Siehe auch netlify/functions/dp-prices.js.
+  const SORTEN = { diesel: 'ON', e10: 'PB95', e5: 'PB98', lpg: 'LPG' };
+  const plausibel = (v) => typeof v === 'number' && v > 0.5 && v < 20;
+
   const nah = d.stations
     .filter((s) => s.is_active && s.coordinates?.lat && s.prices?.ON > 3 && s.prices.ON < 15)
-    .map((s) => ({
-      name: s.name, city: s.city,
-      onPln: s.prices.ON, pbPln: s.prices.PB95 > 3 ? s.prices.PB95 : null,
-      entfernung: +km(GOERLITZ, { lat: s.coordinates.lat, lng: s.coordinates.lng }).toFixed(1),
-    }))
+    .map((s) => {
+      const preise = {};
+      for (const [sorte, feld] of Object.entries(SORTEN)) {
+        preise[sorte] = plausibel(s.prices[feld])
+          ? { pln: s.prices[feld], eur: s.prices[feld] / plnRate }
+          : null;
+      }
+      return {
+        name: s.name, city: s.city, preise,
+        onPln: s.prices.ON, pbPln: s.prices.PB95 > 3 ? s.prices.PB95 : null,
+        entfernung: +km(GOERLITZ, { lat: s.coordinates.lat, lng: s.coordinates.lng }).toFixed(1),
+      };
+    })
     .filter((s) => s.entfernung <= UMKREIS_KM)
     .sort((a, b) => a.onPln - b.onPln);
 
@@ -295,14 +308,30 @@ function tokens(x) {
 }
 
 // Erzeugt die Zeilen der Preistabelle aus echten Stationen.
+// Jede Zeile traegt alle Sorten bei sich. Die Sortenknoepfe auf
+// spritpreise-polen.html hatten bis zum 20.09.2026 nur einen Kommentar
+// als Inhalt ("TODO: renderPrices(...) aus eurer API") - sie wurden
+// eingefaerbt und sonst passierte nichts, egal was man anklickte.
+// Ein Abruf zur Laufzeit braucht es dafuer nicht: die Preise stehen
+// beim Bauen ohnehin schon alle zur Verfuegung.
 function tabelle(st) {
   if (!st.length) return '<div class="prow"><div>Derzeit keine Preise abrufbar.</div><div></div><div></div></div>';
-  return st.map((s, i) => `<div class="prow">
+  return st.map((s, i) => {
+    // Ein data/live.json aus der Zeit vor den Sorten kennt nur Diesel.
+    // Dann wenigstens den, statt einer leeren Tabelle.
+    const quelle = s.preise || { diesel: { eur: s.eur, pln: s.onPln } };
+    const daten = {};
+    for (const [sorte, v] of Object.entries(quelle)) {
+      if (v && isFinite(v.eur) && isFinite(v.pln)) daten[sorte] = { eur: eur(v.eur), pln: loc(v.pln) };
+    }
+    const d0 = daten.diesel;
+    return `<div class="prow" data-preise='${JSON.stringify(daten)}'>
         <div><div class="st-name">🇵🇱 ${esc(s.name)}${i === 0 ? ' <span class="st-badge">günstigste</span>' : ''}</div>
           <div class="st-meta">${esc(s.city || '')} · gemessener Stationspreis</div></div>
-        <div class="price">${eur(s.eur)} €<span class="pln">${loc(s.onPln)} zł/L</span></div>
+        <div class="price js-preis">${d0 ? d0.eur : '\u2013'} €<span class="pln">${d0 ? d0.pln + ' zł/L' : 'kein Preis gemeldet'}</span></div>
         <div class="price st-cell-3">${loc(s.entfernung, 1)} km</div>
-      </div>`).join('\n      ');
+      </div>`;
+  }).join('\n      ');
 }
 
 const esc = (t) => String(t).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
