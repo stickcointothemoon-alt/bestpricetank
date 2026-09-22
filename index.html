@@ -897,7 +897,7 @@ select option{background:#0a1628}
       </div>
       <div style="padding:12px;border-radius:14px;border:1px solid rgba(0,230,118,.2);background:rgba(0,230,118,.07)"><div id="t-hl" style="font-size:14px;font-weight:900;line-height:1.35">–</div></div>
       <div id="t-bars"></div>
-      <div style="padding:9px 11px;border-radius:12px;border:1px solid var(--rim);background:rgba(255,255,255,.03);font-size:11.5px;color:var(--muted)">🇩🇪 Energiesteuer + CO₂-Abgabe + MwSt. = über 40% des Preises.</div>
+      <div style="padding:9px 11px;border-radius:12px;border:1px solid var(--rim);background:rgba(255,255,255,.03);font-size:11.5px;color:var(--muted)"><span id="t-note">🇩🇪 Energiesteuer + CO₂-Abgabe + MwSt. machen den größten Teil des Preises aus.</span></div>
       <button id="t-detail-btn" onclick="toggleTD()" style="height:38px;border-radius:11px;border:1px solid var(--rim);background:rgba(255,255,255,.05);color:var(--text);font:800 12px var(--sans)">Details anzeigen</button>
       <div id="t-detail" style="display:none;border-radius:13px;border:1px solid var(--rim);background:rgba(255,255,255,.03);overflow:hidden">
         <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;padding:8px 11px;border-bottom:1px solid var(--rim);font:800 9.5px var(--mono);color:var(--faint)"><span>Posten</span><span>DE</span><span>PL</span><span>CZ</span></div>
@@ -1208,12 +1208,47 @@ const PRICES = {
   e10:   {de:1.669,pl:1.459,cz:1.659,label:'Super E10'},
   lpg:   {de:0.979,pl:0.937,cz:0.891,label:'LPG'}
 };
-const TAX = {
-  diesel:{de:{p:2.359,net:1.366,eng:.4704,co2:.1458,vat:.3766},pl:{p:1.577,net:1.167,eng:.0753,co2:.040,vat:.2949},cz:{p:1.597,net:1.192,eng:.0780,co2:.050,vat:.2772}},
-  e5:{de:{p:2.199,net:1.250,eng:.6545,co2:.120,vat:.1745},pl:{p:1.439,net:1.065,eng:.080,co2:.035,vat:.259},cz:{p:1.637,net:1.210,eng:.085,co2:.040,vat:.302}},
-  e10:{de:{p:2.169,net:1.225,eng:.6545,co2:.115,vat:.1745},pl:{p:1.419,net:1.050,eng:.080,co2:.035,vat:.254},cz:{p:1.637,net:1.210,eng:.085,co2:.040,vat:.302}},
-  lpg:{de:{p:.979,net:.620,eng:.180,co2:.045,vat:.134},pl:{p:.927,net:.710,eng:.040,co2:.018,vat:.159},cz:{p:.812,net:.620,eng:.035,co2:.016,vat:.141}}
+// Steuersaetze fuer den Steuer-Rechner.
+//
+// Hier stand bis zum 22.09.2026 eine Tabelle mit festen PREISEN:
+//   diesel: de {p:2.359 ...}, pl {p:1.577 ...}, cz {p:1.597 ...}
+// Der deutsche Wert war zufaellig aktuell, die beiden anderen waren
+// Monate alt. Der Rechner zeigte damit "Polen ist 0,782 EUR/L guenstiger,
+// bei 60 L = 46,92 EUR" - gemessen waren es an dem Tag 0,299 EUR/L und
+// 17,94 EUR. Das Zweieinhalbfache, an der auffaelligsten Stelle der Seite.
+//
+// Jetzt stehen hier nur noch die Saetze, und die sind wirklich konstant:
+// Energiesteuer und CO2-Abgabe sind feste Betraege je Liter, die MwSt.
+// ist ein Prozentsatz. Der PREIS kommt aus den Live-Daten.
+const STEUER = {
+  de: { mwst:0.19, eng:{diesel:.4704,e5:.6545,e10:.6545,lpg:.180},
+                   co2:{diesel:.1458,e5:.120, e10:.115, lpg:.045} },
+  pl: { mwst:0.23, eng:{diesel:.0753,e5:.080, e10:.080, lpg:.040},
+                   co2:{diesel:.040, e5:.035, e10:.035, lpg:.018} },
+  cz: { mwst:0.21, eng:{diesel:.0780,e5:.085, e10:.085, lpg:.035},
+                   co2:{diesel:.050, e5:.040, e10:.040, lpg:.016} }
 };
+
+// Guenstigster gemessener Preis eines Landes fuer diese Sorte.
+// Gibt es keinen, kommt null zurueck - und der Rechner sagt das auch,
+// statt eine alte Zahl weiterzureichen.
+function livePreis(land, sorte){
+  const st = STATIONS
+    .filter(s => s.country === land && s[sorte] > 0.3 && s[sorte] < 5)
+    .sort((a,b) => a[sorte] - b[sorte])[0];
+  return st ? st[sorte] : null;
+}
+
+// Zerlegt einen Preis in seine Bestandteile.
+// MwSt. rechnet sich aus dem Bruttopreis heraus, Energiesteuer und
+// CO2-Abgabe sind feste Betraege - was uebrig bleibt, ist der Nettopreis.
+function steuerTeile(preis, land, sorte){
+  const t = STEUER[land]; if(!t || !preis) return null;
+  const vat = preis * t.mwst / (1 + t.mwst);
+  const eng = t.eng[sorte] ?? 0;
+  const co2 = t.co2[sorte] ?? 0;
+  return { p:preis, vat, eng, co2, net: preis - vat - eng - co2 };
+}
 // DP-Benchmark — wird von Dyskont-Paliwowy-API live überschrieben
 let DP_BENCH = {diesel:1.440,e5:1.472,e10:1.452,lpg:0.929};
 
@@ -2648,32 +2683,62 @@ function updateCigCalc(){
 // STEUERVERGLEICH
 // ══════════════════════════════════════
 function tcalc(){
-  const f=document.getElementById('t-fuel').value||'diesel';
-  const lit=+document.getElementById('t-lit').value||60;
-  const td=TAX[f];if(!td) return;
-  const diff=td.de.p-td.pl.p;
-  const diffCz=td.de.p-td.cz.p;
-  document.getElementById('t-hl').innerHTML=
-    `Polen ist <strong style="color:var(--green)">${e3(diff)}/L</strong> günstiger · Bei ${lit}L = <strong style="color:var(--green)">${money(diff*lit)}</strong>`;
-  const maxP=Math.max(td.de.p,td.pl.p,td.cz.p);
-  document.getElementById('t-bars').innerHTML=[
-    {flag:'🇩🇪',name:'Deutschland',t:td.de,col:'#448aff'},
-    {flag:'🇵🇱',name:'Polen',t:td.pl,col:'#00e676'},
-    {flag:'🇨🇿',name:'Tschechien',t:td.cz,col:'#ffab00'}
-  ].map(b=>{
-    const nPct=(b.t.net/b.t.p*100).toFixed(0);
-    return`<div class="tbar">
+  const f   = document.getElementById('t-fuel').value || 'diesel';
+  const lit = +document.getElementById('t-lit').value || 60;
+
+  const laender = [
+    {id:'de', flag:'🇩🇪', name:'Deutschland', col:'#448aff'},
+    {id:'pl', flag:'🇵🇱', name:'Polen',       col:'#00e676'},
+    {id:'cz', flag:'🇨🇿', name:'Tschechien',  col:'#ffab00'}
+  ].map(l => ({...l, t: steuerTeile(livePreis(l.id, f), l.id, f)}));
+
+  const de = laender[0].t, pl = laender[1].t;
+
+  // Ueberschrift nur, wenn beide Seiten wirklich gemessen sind.
+  const hl = document.getElementById('t-hl');
+  if (de && pl) {
+    const diff = de.p - pl.p;
+    hl.innerHTML = diff > 0
+      ? `Polen ist <strong style="color:var(--green)">${e3(diff)}/L</strong> günstiger · `
+        + `Bei ${lit} L = <strong style="color:var(--green)">${money(diff*lit)}</strong>`
+      : `Heute ist Polen <strong>nicht</strong> günstiger – Unterschied ${e3(Math.abs(diff))}/L.`;
+  } else {
+    hl.innerHTML = 'Für diese Sorte liegt uns gerade kein gemessener Preis auf beiden '
+                 + 'Seiten vor. Deshalb steht hier keine Zahl.';
+  }
+
+  document.getElementById('t-bars').innerHTML = laender.map(b => {
+    if (!b.t) return `<div class="tbar"><div class="tbarlbl">
+        <div class="tbarnm">${b.flag} ${b.name}</div>
+        <div class="tbarpr" style="color:var(--muted)">–</div></div>
+      <div class="tmeta">kein gemessener Preis für diese Sorte</div></div>`;
+    const nPct = (b.t.net / b.t.p * 100).toFixed(0);
+    return `<div class="tbar">
       <div class="tbarlbl"><div class="tbarnm">${b.flag} ${b.name}</div><div class="tbarpr" style="color:${b.col}">${e3(b.t.p)}</div></div>
       <div class="ttrack"><div class="tnet" style="width:${nPct}%"></div><div class="ttax" style="width:${100-nPct}%"></div></div>
-      <div class="tmeta">Netto ${e3(b.t.net)} · Abgaben ${e3(b.t.p-b.t.net)}</div>
+      <div class="tmeta">Netto ${e3(b.t.net)} · Abgaben ${e3(b.t.p - b.t.net)}</div>
     </div>`;
   }).join('');
-  document.getElementById('t-rows').innerHTML=[
-    {l:'Netto/L',v:[td.de.net,td.pl.net,td.cz.net]},
-    {l:'Energiesteuer/L',v:[td.de.eng,td.pl.eng,td.cz.eng]},
-    {l:'CO₂/L',v:[td.de.co2,td.pl.co2,td.cz.co2]},
-    {l:'MwSt./L',v:[td.de.vat,td.pl.vat,td.cz.vat]},
-  ].map(r=>`<div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;padding:7px 11px;border-bottom:1px solid var(--rim);font-size:11.5px"><span style="color:var(--muted)">${r.l}</span><span style="font-weight:800">${e3(r.v[0])}</span><span style="font-weight:800;color:var(--green)">${e3(r.v[1])}</span><span style="font-weight:800;color:var(--amber)">${e3(r.v[2])}</span></div>`).join('');
+
+  // Der Abgabenanteil stand fest im HTML ("über 40%"). Auch das rechnen
+  // wir jetzt, sonst ist es die naechste Zahl, die irgendwann nicht mehr stimmt.
+  const note = document.getElementById('t-note');
+  if (note) note.innerHTML = de
+    ? `🇩🇪 Energiesteuer + CO₂-Abgabe + MwSt. machen `
+      + `<strong>${Math.round((de.p - de.net) / de.p * 100)} %</strong> des deutschen Preises aus.`
+    : '🇩🇪 Energiesteuer, CO₂-Abgabe und MwSt. machen den größten Teil des Preises aus.';
+
+  const z = (t, k) => t ? e3(t[k]) : '–';
+  document.getElementById('t-rows').innerHTML = [
+    {l:'Netto/L',         k:'net'},
+    {l:'Energiesteuer/L', k:'eng'},
+    {l:'CO₂/L',           k:'co2'},
+    {l:'MwSt./L',         k:'vat'},
+  ].map(r => `<div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;padding:7px 11px;border-bottom:1px solid var(--rim);font-size:11.5px">`
+    + `<span style="color:var(--muted)">${r.l}</span>`
+    + `<span style="font-weight:800">${z(laender[0].t, r.k)}</span>`
+    + `<span style="font-weight:800;color:var(--green)">${z(laender[1].t, r.k)}</span>`
+    + `<span style="font-weight:800;color:var(--amber)">${z(laender[2].t, r.k)}</span></div>`).join('');
 }
 function toggleTD(){
   const d=document.getElementById('t-detail');
