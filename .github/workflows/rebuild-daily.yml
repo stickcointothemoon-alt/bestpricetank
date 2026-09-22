@@ -39,6 +39,22 @@ jobs:
     steps:
       - name: Quelltext holen
         uses: actions/checkout@v4
+        with:
+          # Ohne diese Zeile holt actions/checkout nur den letzten Commit
+          # (fetch-depth 1, ein flacher Klon). Das ging gut, solange sich
+          # am Remote zwischen Auschecken und Push nichts bewegt hat.
+          #
+          # Am 21. und 22.09.2026 ist der Lauf dreimal hintereinander daran
+          # gescheitert:
+          #     ! [remote rejected] HEAD -> main (missing necessary objects)
+          # Der Punkt war jedesmal sauber gerechnet (DE 2,289 / PL 2,068),
+          # er kam nur nicht an. Aus einem flachen Klon kann GitHub die
+          # Verbindung zur Historie nicht nachvollziehen, sobald der Remote
+          # inzwischen weitergelaufen ist - und dagegen hilft kein zweiter
+          # Versuch, der Fehler ist strukturell.
+          #
+          # 0 = ganze Historie. Kostet bei diesem Repo ein paar Sekunden.
+          fetch-depth: 0
 
       - name: Node einrichten
         uses: actions/setup-node@v4
@@ -84,10 +100,26 @@ jobs:
             fi
 
             git commit --quiet -m "Preisverlauf $(date '+%d.%m.%Y %H:%M')"
-            if git push --quiet origin HEAD:main; then
+            if git push origin HEAD:main 2>/tmp/push.err; then
               echo "✅ Neuer Punkt committet und gepusht."
               ergebnis=gepusht
               break
+            fi
+            cat /tmp/push.err
+
+            # Nicht jeder abgelehnte Push ist ein Wettlauf. Bei diesen hier
+            # bringt ein zweiter Versuch nichts - dann lieber sofort mit
+            # Klartext abbrechen, statt dreimal dasselbe zu probieren.
+            if grep -q "missing necessary objects" /tmp/push.err; then
+              echo "::error::Push strukturell abgelehnt (missing necessary objects)."
+              echo "::error::Das passiert bei einem flachen Klon. In diesem Workflow"
+              echo "::error::muss actions/checkout mit fetch-depth: 0 laufen."
+              exit 1
+            fi
+            if grep -qi "protected branch\|refusing to allow" /tmp/push.err; then
+              echo "::error::Der Branch main laesst diesen Push nicht zu."
+              echo "::error::Branch-Schutz oder fehlende Rechte - Wiederholen hilft nicht."
+              exit 1
             fi
             echo "Push abgelehnt - in der Zwischenzeit wurde gepusht."
             echo "Neuer Anlauf auf dem aktuellen Stand."
