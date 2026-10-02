@@ -2759,6 +2759,20 @@ try{ localStorage.removeItem('bpt_price_history'); }catch(e){}
 const money=v=>v.toLocaleString('de-DE',{minimumFractionDigits:2,maximumFractionDigits:2})+'€';
 const e3=v=>v.toFixed(3).replace('.',',')+'€';
 function glit(v){document.getElementById('g-lit').textContent=v;gcalc()}
+// Guenstigste Station eines Landes IN DER NAEHE, fuer genau diese Sorte.
+// Bis zum 02.10.2026 nahm der Grenzrechner die landesweit guenstigste -
+// eine Dyskont-Paliwowy-Station womoeglich hunderte Kilometer entfernt -
+// und schrieb trotzdem "Citronex Zgorzelec · 8,4 km" daneben. Fehlte eine
+// Sorte, sprang ausserdem der Dieselpreis ein. Umkreis wie in der
+// Stationsliste: der gewaehlte Radius, mindestens 35 km (damit Hradek fuer
+// Tschechien dabei ist).
+function guenstigsteInNaehe(land, f){
+  const rad = Math.max(+document.getElementById('locRadius')?.value || 15, 35);
+  return STATIONS
+    .filter(s => s.country===land && s[f] > 0 && (s.dist == null || s.dist <= rad))
+    .sort((a,b) => a[f]-b[f])[0] || null;
+}
+
 function gcalc(){
   const lit=+document.getElementById('g-lit').textContent||60;
   const use=+document.getElementById('g-use').value||7;
@@ -2767,8 +2781,10 @@ function gcalc(){
   const f=document.getElementById('g-fuel').value||'diesel';
   const p=PRICES[f]||PRICES.diesel;
   // Use real live prices if available
-  const deRef = (STATIONS.filter(s=>s.country==='de'&&(s[f]||s.diesel)>0).sort((a,b)=>(a[f]||a.diesel)-(b[f]||b.diesel))[0]?.[f]) || p.de;
-  const plRef = (STATIONS.filter(s=>s.country===ziel&&(s[f]||s.diesel)>0).sort((a,b)=>(a[f]||a.diesel)-(b[f]||b.diesel))[0]?.[f]) || p[ziel];
+  const deSt = guenstigsteInNaehe('de', f);
+  const plSt = guenstigsteInNaehe(ziel, f);
+  const deRef = deSt?.[f] || p.de;
+  const plRef = plSt?.[f] || p[ziel];
   // Ohne beide Preise kein Ergebnis - frueher wurde hier mit Aprilwerten
   // aus PRICES weitergerechnet.
   if(!(deRef>0 && plRef>0)){
@@ -2776,6 +2792,15 @@ function gcalc(){
       const el=document.getElementById(id); if(el) el.textContent='–';
     });
     const st=document.getElementById('g-status'); if(st) st.textContent='Preise gerade nicht abrufbar';
+    // Was da ist, bleibt sichtbar; der fehlende Teil sagt es.
+    const dn=document.getElementById('g-de-name');
+    if(dn) dn.textContent = deSt ? deSt.name : 'Günstigste DE Station';
+    if(deSt){ const dp=document.getElementById('g-de-price'); if(dp) dp.textContent=e3(deRef); }
+    const pz=document.getElementById('g-pl-price')?.parentElement;
+    const pn=pz?.querySelector('.cn b'), pd=pz?.querySelector('.cn small');
+    if(pn) pn.textContent = plSt ? plSt.name : 'kein aktueller Preis';
+    if(pd) pd.textContent = plSt && plSt.dist!=null ? '📍 '+(+plSt.dist).toFixed(1).replace('.',',')+' km' : '';
+    if(plSt){ const pp=document.getElementById('g-pl-price'); if(pp) pp.textContent=e3(plRef); }
     const cr=document.getElementById('canister-result'); if(cr) cr.style.display='none';
     window._gcalcNet = 0;
     try{ updateCigCalc(); }catch(e){}
@@ -2792,17 +2817,21 @@ function gcalc(){
   document.getElementById('g-be').textContent='ab '+be+'L';
   document.getElementById('g-status').textContent=net>15?'✅ LOHNT SICH KLAR':net>5?'✅ LOHNT SICH':net>0?'🟡 LOHNT KNAPP':'🔴 LOHNT NICHT';
   // Use real cheapest stations from live data
-  const deStations = STATIONS.filter(s=>s.country==='de'&&(s[f]||s.diesel)>0).sort((a,b)=>(a[f]||a.diesel)-(b[f]||b.diesel));
-  const plStations = STATIONS.filter(s=>s.country===ziel&&(s[f]||s.diesel)>0).sort((a,b)=>(a[f]||a.diesel)-(b[f]||b.diesel));
-  const bestDe = deStations[0];
-  const bestPl = plStations[0];
-  const realDe = bestDe?(bestDe[f]||bestDe.diesel):p.de;
-  const realPl = bestPl?(bestPl[f]||bestPl.diesel):p[ziel];
+  const bestDe = deSt;
+  const bestPl = plSt;
+  const realDe = deRef;
+  const realPl = plRef;
   // Update names
   const deName = document.getElementById('g-de-name');
   if(deName) deName.textContent = bestDe?.name||'Günstigste DE Station';
   const deDist = deName?.parentElement?.querySelector('small');
-  if(deDist&&bestDe) deDist.textContent = '📍 '+bestDe.dist.toFixed(1)+' km';
+  if(deDist&&bestDe) deDist.textContent = '📍 '+bestDe.dist.toFixed(1).replace('.',',')+' km';
+  // Polnische (bzw. tschechische) Station: echter Name und Entfernung statt
+  // des festen "Citronex Zgorzelec · 8,4 km".
+  const plZeile = document.getElementById('g-pl-price')?.parentElement;
+  const plName = plZeile?.querySelector('.cn b'), plDist = plZeile?.querySelector('.cn small');
+  if(plName && bestPl) plName.textContent = bestPl.name;
+  if(plDist && bestPl && bestPl.dist != null) plDist.textContent = '📍 '+(+bestPl.dist).toFixed(1).replace('.',',')+' km';
   // Update prices with real data
   document.getElementById('g-de-price').textContent=e3(realDe);
   document.getElementById('g-pl-price').textContent=e3(realPl);
@@ -3096,9 +3125,9 @@ async function sendKI(){
     const v=(st?.[currentFuel]||st?.diesel)||(PRICES[currentFuel]||PRICES.diesel)[land];
     return v>0 ? v.toFixed(3).replace('.',',') : '–';
   };
-  const bestPl=STATIONS.filter(s=>s.country==='pl'&&(s[currentFuel]||s.diesel)>0).sort((a,b)=>(a[currentFuel]||a.diesel)-(b[currentFuel]||b.diesel))[0];
-  const bestDe=STATIONS.filter(s=>s.country==='de'&&(s[currentFuel]||s.diesel)>0).sort((a,b)=>(a[currentFuel]||a.diesel)-(b[currentFuel]||b.diesel))[0];
-  const bestCz=STATIONS.filter(s=>s.country==='cz'&&(s[currentFuel]||s.diesel)>0).sort((a,b)=>(a[currentFuel]||a.diesel)-(b[currentFuel]||b.diesel))[0];
+  const bestPl=guenstigsteInNaehe('pl', currentFuel);
+  const bestDe=guenstigsteInNaehe('de', currentFuel);
+  const bestCz=guenstigsteInNaehe('cz', currentFuel);
 
   try{
     const res=await fetch('/.netlify/functions/ki-chat',{method:'POST',headers:{'Content-Type':'application/json'},
@@ -3576,8 +3605,8 @@ function buildGrenzContext(){
     const ziel = document.getElementById('g-ziel')?.value || 'pl';
     const f   = currentFuel;
     const p   = PRICES[f] || PRICES.diesel;
-    const deRef = (STATIONS.filter(s=>s.country==='de'&&(s[f]||s.diesel)>0).sort((a,b)=>(a[f]||a.diesel)-(b[f]||b.diesel))[0]?.[f]) || p.de;
-    const plRef = (STATIONS.filter(s=>s.country===ziel&&(s[f]||s.diesel)>0).sort((a,b)=>(a[f]||a.diesel)-(b[f]||b.diesel))[0]?.[f]) || p[ziel];
+    const deRef = guenstigsteInNaehe('de', f)?.[f] || p.de;
+    const plRef = guenstigsteInNaehe(ziel, f)?.[f] || p[ziel];
     if(!(deRef>0 && plRef>0)) return '';
     const diff = deRef - plRef;
     const gross = diff * lit;
