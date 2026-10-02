@@ -1205,11 +1205,18 @@ select option{background:#0a1628}
 // ══════════════════════════════════════
 
 
+// Bis zum 02.10.2026 standen hier feste Preise vom April 2026 (z. B. Diesel
+// PL 1,440 / DE 1,649). Sie dienten im Grenzrechner, im E-Auto-Rechner und
+// in der Frage an den KI-Assistenten als Ersatz, wenn keine Live-Daten da
+// waren - und wurden dann als aktuelle Preise ausgegeben. Jetzt: 0 = kein
+// Preis. Die Rechner sagen das dann, statt mit Aprilwerten zu rechnen.
+// Beschrieben werden diese Felder nur noch aus Live-Daten (DE-Bestpreis,
+// CSU-Durchschnitt fuer CZ).
 const PRICES = {
-  diesel:{de:1.649,pl:1.440,cz:1.619,label:'Diesel'},
-  e5:    {de:1.699,pl:1.479,cz:1.579,label:'Super E5'},
-  e10:   {de:1.669,pl:1.459,cz:1.659,label:'Super E10'},
-  lpg:   {de:0.979,pl:0.937,cz:0.891,label:'LPG'}
+  diesel:{de:0,pl:0,cz:0,label:'Diesel'},
+  e5:    {de:0,pl:0,cz:0,label:'Super E5'},
+  e10:   {de:0,pl:0,cz:0,label:'Super E10'},
+  lpg:   {de:0,pl:0,cz:0,label:'LPG'}
 };
 // Steuersaetze fuer den Steuer-Rechner.
 //
@@ -1253,7 +1260,7 @@ function steuerTeile(preis, land, sorte){
   return { p:preis, vat, eng, co2, net: preis - vat - eng - co2 };
 }
 // DP-Benchmark — wird von Dyskont-Paliwowy-API live überschrieben
-let DP_BENCH = {diesel:1.440,e5:1.472,e10:1.452,lpg:0.929};
+let DP_BENCH = {diesel:null,e5:null,e10:null,lpg:null};   // nur aus Live-Daten
 
 // Statische Stationen — verifizierte GPS-Koordinaten (April 2026)
 // PL-Preise = DP-Benchmark + Aufschlag je Station
@@ -1376,8 +1383,20 @@ let STATIONS = [
   // ── DEUTSCHLAND (DE) — TK-API liefert echte Positionen ───────
 ];
 
+// Die Preise in den festen polnischen Eintraegen oben (1,450 usw.) sind
+// Startwerte vom April 2026. Bis zum 02.10.2026 standen sie beim Laden der
+// Seite kurz auf der Karte und bei einem Ausfall von Dyskont Paliwowy
+// dauerhaft - als "≈1,450". Ab hier zaehlen von diesen Eintraegen nur noch
+// Name, Koordinaten und ob es dort LPG gibt. Preise setzt ausschliesslich
+// adjustPLPricesToBenchmark() aus gemessenen Dyskont-Paliwowy-Werten.
+STATIONS.forEach(s=>{
+  if(s.country!=='pl' || s.source) return;
+  s.hatLpg = s.lpg > 0;
+  s.diesel = 0; s.e5 = 0; s.e10 = 0; s.lpg = 0;
+});
+
 // Nach DP-API-Load: PL-Preise relativ zum echten DP-Benchmark setzen
-function adjustPLPricesToBenchmark(dpDiesel, dpE5, dpE10){
+function adjustPLPricesToBenchmark(dpDiesel, dpE5, dpE10, dpLpg, basisNote){
   if(!dpDiesel||dpDiesel<=0) return;
   DP_BENCH.diesel = dpDiesel;
   const SURCHARGE = {
@@ -1410,10 +1429,14 @@ function adjustPLPricesToBenchmark(dpDiesel, dpE5, dpE10){
   STATIONS.filter(s=>s.country==='pl'&&!s.source).forEach(s=>{
     const add = SURCHARGE[s.id] ?? 0.010;
     s.diesel = +(dpDiesel + add).toFixed(3);
-    s.e5     = +((dpE5  || dpDiesel + 0.037) + add).toFixed(3);
-    s.e10    = +((dpE10 || dpDiesel + 0.017) + add).toFixed(3);
+    // Benzin und LPG nur, wenn Dyskont Paliwowy dafuer selbst einen Preis
+    // meldet. Bis zum 02.10.2026 wurde Benzin sonst aus Diesel + 3,7 ct
+    // erfunden, und LPG blieb immer auf dem Aprilwert 0,929.
+    s.e5     = dpE5  > 0 ? +(dpE5  + add).toFixed(3) : 0;
+    s.e10    = dpE10 > 0 ? +(dpE10 + add).toFixed(3) : 0;
+    s.lpg    = (s.hatLpg && dpLpg > 0) ? +(dpLpg + add).toFixed(3) : 0;
     s.estimate = true;                       // Benchmark plus Aufschlag
-    s.priceNote = 'Basis Dyskont Paliwowy';
+    s.priceNote = basisNote || 'Basis Dyskont Paliwowy';
   });
   console.log('✅ PL-Preise auf DP-Benchmark angepasst: Diesel', dpDiesel.toFixed(3),'€/L');
 }
@@ -1701,11 +1724,26 @@ async function loadRates(){
   try{
     const r = await fetch('/.netlify/functions/dp-prices');
     const d = await r.json();
-    if(d.pln_eur_rate > 0) BPT_RATES.PLN = d.pln_eur_rate;
-    if(d.czk_eur_rate > 0) BPT_RATES.CZK = d.czk_eur_rate;
-    updateStrip();
-    renderMapMarkers();
-  }catch(e){ console.warn('Kursabruf fehlgeschlagen:',e.message); updateStrip(); }
+    // Den festen Notkurs (kurs_quelle 'notwert') nicht uebernehmen - dann
+    // setzt plLetzterStand() den letzten echten Kurs.
+    if(d.kurs_quelle !== 'notwert'){
+      if(d.pln_eur_rate > 0) BPT_RATES.PLN = d.pln_eur_rate;
+      if(d.czk_eur_rate > 0) BPT_RATES.CZK = d.czk_eur_rate;
+    }
+  }catch(e){ console.warn('Kursabruf fehlgeschlagen:',e.message); }
+  // Rueckfall: der NBP-Kurs des letzten Builds. Ohne ihn blieben bei einem
+  // Ausfall der polnischen Preisfunktion auch die tschechischen Preise weg,
+  // weil der CZK-Kurs bisher nur von dort kam.
+  if(!(BPT_RATES.PLN > 0 && BPT_RATES.CZK > 0)){
+    try{
+      const r = await fetch('/data/live.json', {cache:'no-store', signal:AbortSignal.timeout(6000)});
+      const k = r.ok ? (await r.json())?.kurse : null;
+      if(!(BPT_RATES.PLN > 0) && k?.pln > 3 && k.pln < 6)   BPT_RATES.PLN = k.pln;
+      if(!(BPT_RATES.CZK > 0) && k?.czk > 15 && k.czk < 35) BPT_RATES.CZK = k.czk;
+    }catch(e){ console.warn('Letzter Kurs nicht lesbar:', e.message); }
+  }
+  updateStrip();
+  try{ renderMapMarkers(); }catch(e){}
 }
 
 function updateStrip(){
@@ -1766,23 +1804,161 @@ addEventListener('resize', ()=>{
 // Startwerte stehen und sahen aus wie gemessene Preise. Dann fährt jemand
 // wegen einer Ersparnis los, die es so nicht gibt. Deshalb: als Schätzung
 // kennzeichnen, warnen, und keine Ersparnis mehr versprechen.
-let PL_STALE = false;
+//
+// Seit dem 02.10.2026 drei Zustaende (PL_ZUSTAND):
+//   'live'             - Dyskont Paliwowy hat eben geliefert.
+//   'letzter_stand'    - Die Quelle klemmt; es gelten die gemessenen Werte
+//                        des letzten Builds aus /data/live.json, sofern sie
+//                        hoechstens PL_FRISCH_STD alt sind - mit Uhrzeit.
+//   'nicht_verfuegbar' - Auch das nicht: KEINE polnischen Preise, keine
+//                        Schaetzungen, keine Ersparnis. Nie mehr Aprilwerte.
+// Dieselbe Grenze wie beim Bauen der Seiten (scripts/build-pages.js).
+const PL_FRISCH_STD = 30;
+let PL_ZUSTAND = 'live';
+let PL_LS_TEXT = '';      // "Stand 16:34" bzw. "Stand 02.10." fuer den letzten Stand
+let PL_STALE = false;     // true = keine polnischen Preise verfuegbar
+// Deutschland: de-prices liefert bei einer Stoerung einen gespeicherten
+// Stand; der Notvorrat kann beliebig alt sein.
+let DE_ALT = false;       // aelter als PL_FRISCH_STD
+let DE_FEHLT = false;     // gar keine deutschen Preise
+
+function standKurz(iso){
+  const d = new Date(iso);
+  if(!isFinite(d)) return '';
+  const heute = new Date().toDateString() === d.toDateString();
+  return heute
+    ? 'Stand ' + d.toLocaleTimeString('de-DE',{hour:'2-digit',minute:'2-digit'})
+    : 'Stand ' + d.toLocaleDateString('de-DE',{day:'2-digit',month:'2-digit'});   // "02.10." 
+}
+
 function markPLStale(grund){
   PL_STALE = true;
+  PL_ZUSTAND = 'nicht_verfuegbar';
   STATIONS = STATIONS.filter(s => s.source !== 'dyskont_paliwowy');
   STATIONS.forEach(s => {
     if(s.country !== 'pl') return;
+    // Kein Preis statt eines erfundenen. Stationen ohne Preis blendet die
+    // Karte aus, wie bei jeder Sorte, die es an einer Station nicht gibt.
+    s.diesel = 0; s.e5 = 0; s.e10 = 0; s.lpg = 0;
     s.estimate   = true;
-    s.priceNote  = 'Stand unbekannt';
+    s.priceNote  = 'kein aktueller Preis';
     s.gemessenAm = null;
     s.best       = false;
   });
-  setDataWarning('pl', grund + ' Die angezeigten PL-Preise sind nur Schätzwerte.');
+  setDataWarning('pl', grund + ' Polnische Preise sind gerade nicht verfügbar.');
   try{ updateAICard(); renderMapMarkers(); renderStationList(); gcalc(); }catch(e){}
 }
 function clearPLStale(){
   PL_STALE = false;
+  PL_ZUSTAND = 'live';
+  PL_LS_TEXT = '';
   clearDataWarning('pl');
+}
+
+// Fallback, wenn Dyskont Paliwowy im Browser nicht antwortet: die gemessenen
+// Werte des letzten Builds. /data/live.json schreibt scripts/build-pages.js
+// bei jedem Build; zeiten.pl sagt, wann Polen zuletzt wirklich geliefert hat.
+async function plLetzterStand(grund){
+  try{
+    const r = await fetch('/data/live.json', {cache:'no-store', signal:AbortSignal.timeout(6000)});
+    if(!r.ok) throw new Error('HTTP ' + r.status);
+    const lj = await r.json();
+    const zeit = lj?.zeiten?.pl || lj?.stand;
+    const alter = (Date.now() - Date.parse(zeit)) / 3600000;
+    if(!(alter >= 0 && alter <= PL_FRISCH_STD)) throw new Error('letzter Stand zu alt (' + Math.round(alter) + ' h)');
+    const kurs = +lj?.kurse?.pln;
+    const eurVon = v => (v && v.eur > 0.3 && v.eur < 5) ? +(+v.eur).toFixed(3) : null;
+    const stations = (Array.isArray(lj?.pl?.alle) ? lj.pl.alle : [])
+      .filter(x => eurVon(x?.preise?.diesel) && isFinite(+x.lat) && isFinite(+x.lng))
+      .map((x, i) => ({
+        id: 'dp_ls_' + i, name: x.name, brand: 'Dyskont Paliwowy', city: x.city || '',
+        country: 'pl', lat: +x.lat, lng: +x.lng,
+        diesel: eurVon(x.preise.diesel), e5: eurVon(x.preise.e5),
+        e10: eurVon(x.preise.e10), lpg: eurVon(x.preise.lpg),
+        logo: 'DP', source: 'dyskont_paliwowy', last_update: zeit,
+      }));
+    if(!stations.length) throw new Error('keine gemessenen Stationen im letzten Stand');
+    uebernehmeDP({status:'success', data_timestamp: zeit, pln_eur_rate: kurs > 3 ? kurs : 0, stations},
+                 {zeit, grund});
+  }catch(e){
+    console.warn('PL letzter Stand nicht nutzbar:', e.message);
+    markPLStale(grund);
+  }
+}
+
+// Uebernimmt gemessene Dyskont-Paliwowy-Stationen - frisch aus der API
+// (letzter = null) oder aus dem letzten Build (letzter = {zeit, grund}).
+// Bis zum 02.10.2026 stand dieser Teil direkt in refreshPrices().
+function uebernehmeDP(dpdata, letzter){
+    // Remove old DP stations, keep manual PL/CZ/DE stations
+    STATIONS=STATIONS.filter(s=>s.source!=='dyskont_paliwowy');
+    // Update exchange rate
+    if(dpdata.pln_eur_rate>0){
+      BPT_RATES.PLN=dpdata.pln_eur_rate;
+      updateStrip();
+    }
+    const GOERLITZ={lat:51.1534,lng:14.9853};
+    dpdata.stations.forEach(s=>{
+      // dist: vom User wenn GPS, sonst von Görlitz
+      const base = (userLocationCoords?.lat) ? userLocationCoords : GOERLITZ;
+      const km = +haversine({lat:base.lat,lng:base.lng},{lat:s.lat,lng:s.lng}).toFixed(1);
+      STATIONS.push({
+        ...s,
+        dist: km,
+        logo: 'DP',
+        group: 'dp',   // Markierung für eigenen Listenbereich
+        best: false,
+        estimate: false,
+        gemessenAm: s.last_update || dpdata.data_timestamp || null,
+      });
+    });
+    // Nach Distanz sortieren
+    STATIONS.sort((a,b)=>{
+      if(a.group==='dp'&&b.group!=='dp') return 1;
+      if(b.group==='dp'&&a.group!=='dp') return -1;
+      return a.dist-b.dist;
+    });
+    console.log('✅ Dyskont Paliwowy:',dpdata.stations.length,'Stationen, Kurs:',dpdata.pln_eur_rate,'PLN/EUR');
+    // DP-Bezugsstation: die guenstigste Dyskont-Paliwowy-Station IN DER
+    // NAEHE - fuer Goerlitz also die billigere der beiden in Zgorzelec.
+    //
+    // Vorher wurde die landesweit guenstigste genommen. Am 19.09.2026 war
+    // das Nowa Ruda, rund 120 km entfernt und 10 Groschen unter Zgorzelec.
+    // Alle geschaetzten PL-Preise im Grenzgebiet lagen dadurch etwa 2,3
+    // Cent zu niedrig, und die Karte wies eine BP guenstiger aus als den
+    // Diskonter. Die blosse Naehe genuegt aber auch nicht: In Zgorzelec
+    // stehen zwei DP-Stationen, die sich im Preis unterscheiden koennen
+    // (05.09.: 8,54 und 8,64 PLN). Massgeblich ist die guenstigere.
+    const DP_NAH_KM = 25;
+    const dpRef = (userLocationCoords?.lat) ? userLocationCoords : GOERLITZ;
+    const dpMitKm = dpdata.stations
+      .filter(s=>s.diesel>0 && isFinite(s.lat) && isFinite(s.lng))
+      .map(s=>({s, km: haversine(dpRef, {lat:+s.lat, lng:+s.lng})}));
+    const dpNah = dpMitKm.filter(x=>x.km <= DP_NAH_KM);
+    const dpBest = (dpNah.length
+      ? dpNah.sort((a,b)=>a.s.diesel-b.s.diesel)      // in der Naehe: die guenstigste
+      : dpMitKm.sort((a,b)=>a.km-b.km)                // sonst: wenigstens die naechste
+    ).map(x=>x.s)[0];
+    if(dpBest) adjustPLPricesToBenchmark(dpBest.diesel, dpBest.e5, dpBest.e10, dpBest.lpg,
+      letzter ? 'Basis letzter Stand ' + standKurz(letzter.zeit).replace('Stand ','') : null);
+    // Beste PL-Station neu berechnen
+    const pl=STATIONS.filter(s=>s.country==='pl'&&s[currentFuel]>0);
+    const cheap=pl.sort((a,b)=>a[currentFuel]-b[currentFuel])[0];
+    STATIONS.forEach(s=>s.best=false);
+    if(cheap) cheap.best=true;
+    if(letzter){
+      PL_STALE = false;
+      PL_ZUSTAND = 'letzter_stand';
+      PL_LS_TEXT = standKurz(letzter.zeit);
+      setDataWarning('pl', letzter.grund + ' Angezeigt wird der letzte gemessene Stand ('
+        + PL_LS_TEXT.replace('Stand ','') + (PL_LS_TEXT.includes(':') ? ' Uhr' : '') + ').');
+    } else {
+      clearPLStale();
+    }
+    updateAICard();
+    renderMapMarkers();
+    renderStationList();
+    gcalc();
 }
 
 async function refreshPrices(){
@@ -1846,96 +2022,54 @@ const res=await fetch(url);
     renderMapMarkers();
     renderStationList();
     gcalc();
+    DE_FEHLT = false;
     if(data.stale){
-      const t=data.fetchedAt?new Date(data.fetchedAt).toLocaleTimeString('de-DE',{hour:'2-digit',minute:'2-digit'}):'?';
-      setDataWarning('de','Deutsche Preise vom '+t+' Uhr - Tankerkoenig ist gerade nicht erreichbar.');
-    } else clearDataWarning('de');
+      // Bis zum 02.10.2026 nur mit Uhrzeit - bei einem Notvorrat von vor
+      // Wochen stand dann "Deutsche Preise vom 13:02 Uhr".
+      const d=data.fetchedAt?new Date(data.fetchedAt):null;
+      const t=d&&isFinite(d)?d.toLocaleDateString('de-DE',{day:'2-digit',month:'2-digit'})+', '
+        +d.toLocaleTimeString('de-DE',{hour:'2-digit',minute:'2-digit'}):'?';
+      DE_ALT = !(d && (Date.now()-d.getTime())/3600000 <= PL_FRISCH_STD);
+      setDataWarning('de','Deutsche Preise vom '+t+' Uhr - Tankerkoenig ist gerade nicht erreichbar.'
+        +(DE_ALT?' Ein Preisvergleich ist damit gerade nicht möglich.':''));
+      updateAICard();
+    } else { DE_ALT = false; clearDataWarning('de'); }
     console.log('✅ TK geladen:',STATIONS.filter(s=>s.country==='de').length,'DE Stationen');
   }catch(e){
     console.warn('TK Fehler:',e.message);
     STATIONS = STATIONS.filter(s=>s.country!=='de');
+    DE_FEHLT = true;
     setDataWarning('de','Deutsche Preise sind gerade nicht abrufbar. Es werden keine DE-Stationen angezeigt.');
+    try{ updateAICard(); }catch(e2){}
   }
   // Load PL stations from Dyskont Paliwowy Live API
+  // Klappt das nicht, gilt der letzte gemessene Stand (plLetzterStand) -
+  // und wenn auch der fehlt oder zu alt ist: keine polnischen Preise.
+  let plGrund = null;
   try{
     const dpurl = `/.netlify/functions/dp-prices`;
     const dpres=await fetch(dpurl,{cache:'no-store',signal:AbortSignal.timeout(8000)});
     if(dpres.ok){
       const dpdata=await dpres.json();
-      if(dpdata.status==='success'&&dpdata.stations?.length){
-        // Remove old DP stations, keep manual PL/CZ/DE stations
-        STATIONS=STATIONS.filter(s=>s.source!=='dyskont_paliwowy');
-        // Update exchange rate
-        if(dpdata.pln_eur_rate>0){
-          BPT_RATES.PLN=dpdata.pln_eur_rate;
-          updateStrip();
-        }
-        const GOERLITZ={lat:51.1534,lng:14.9853};
-        dpdata.stations.forEach(s=>{
-          // dist: vom User wenn GPS, sonst von Görlitz
-          const base = (userLocationCoords?.lat) ? userLocationCoords : GOERLITZ;
-          const km = +haversine({lat:base.lat,lng:base.lng},{lat:s.lat,lng:s.lng}).toFixed(1);
-          STATIONS.push({
-            ...s,
-            dist: km,
-            logo: 'DP',
-            group: 'dp',   // Markierung für eigenen Listenbereich
-            best: false,
-            estimate: false,
-            gemessenAm: s.last_update || dpdata.data_timestamp || null,
-          });
-        });
-        // Nach Distanz sortieren
-        STATIONS.sort((a,b)=>{
-          if(a.group==='dp'&&b.group!=='dp') return 1;
-          if(b.group==='dp'&&a.group!=='dp') return -1;
-          return a.dist-b.dist;
-        });
-        console.log('✅ Dyskont Paliwowy:',dpdata.stations.length,'Stationen, Kurs:',dpdata.pln_eur_rate,'PLN/EUR');
-        // DP-Bezugsstation: die guenstigste Dyskont-Paliwowy-Station IN DER
-        // NAEHE - fuer Goerlitz also die billigere der beiden in Zgorzelec.
-        //
-        // Vorher wurde die landesweit guenstigste genommen. Am 19.09.2026 war
-        // das Nowa Ruda, rund 120 km entfernt und 10 Groschen unter Zgorzelec.
-        // Alle geschaetzten PL-Preise im Grenzgebiet lagen dadurch etwa 2,3
-        // Cent zu niedrig, und die Karte wies eine BP guenstiger aus als den
-        // Diskonter. Die blosse Naehe genuegt aber auch nicht: In Zgorzelec
-        // stehen zwei DP-Stationen, die sich im Preis unterscheiden koennen
-        // (05.09.: 8,54 und 8,64 PLN). Massgeblich ist die guenstigere.
-        const DP_NAH_KM = 25;
-        const dpRef = (userLocationCoords?.lat) ? userLocationCoords : GOERLITZ;
-        const dpMitKm = dpdata.stations
-          .filter(s=>s.diesel>0 && isFinite(s.lat) && isFinite(s.lng))
-          .map(s=>({s, km: haversine(dpRef, {lat:+s.lat, lng:+s.lng})}));
-        const dpNah = dpMitKm.filter(x=>x.km <= DP_NAH_KM);
-        const dpBest = (dpNah.length
-          ? dpNah.sort((a,b)=>a.s.diesel-b.s.diesel)      // in der Naehe: die guenstigste
-          : dpMitKm.sort((a,b)=>a.km-b.km)                // sonst: wenigstens die naechste
-        ).map(x=>x.s)[0];
-        if(dpBest) adjustPLPricesToBenchmark(dpBest.diesel, dpBest.e5, dpBest.e10);
-        // Beste PL-Station neu berechnen
-        const pl=STATIONS.filter(s=>s.country==='pl'&&s[currentFuel]>0);
-        const cheap=pl.sort((a,b)=>a[currentFuel]-b[currentFuel])[0];
-        STATIONS.forEach(s=>s.best=false);
-        if(cheap) cheap.best=true;
-        clearPLStale();
-        updateAICard();
-        renderMapMarkers();
-        renderStationList();
-        gcalc();
+      if(dpdata.status==='success'&&dpdata.stations?.length&&dpdata.kurs_quelle==='notwert'){
+        // Euro-Werte mit dem festen Notkurs gerechnet - nicht belastbar.
+        plGrund='Der Wechselkurs der Nationalbank war gerade nicht abrufbar.';
+      } else if(dpdata.status==='success'&&dpdata.stations?.length){
+        uebernehmeDP(dpdata, null);
       } else if(dpdata.status==='no_key'){
         console.info('DP API: Key noch nicht konfiguriert (Netlify Dashboard)');
-        markPLStale('Die polnische Preisquelle ist nicht angebunden.');
+        plGrund='Die polnische Preisquelle ist nicht angebunden.';
       } else {
-        markPLStale('Die polnische Preisquelle liefert gerade keine Daten.');
+        plGrund='Die polnische Preisquelle liefert gerade keine Daten.';
       }
     } else {
-      markPLStale('Die polnische Preisquelle ist gerade nicht erreichbar (Fehler ' + dpres.status + ').');
+      plGrund='Die polnische Preisquelle ist gerade nicht erreichbar (Fehler ' + dpres.status + ').';
     }
   }catch(e){
     console.warn('DP Fehler:',e.message);
-    markPLStale('Die polnischen Preise konnten nicht geladen werden.');
+    plGrund='Die polnischen Preise konnten nicht geladen werden.';
   }
+  if(plGrund) await plLetzterStand(plGrund);
   if(btn){btn.classList.remove('spin');btn.textContent='🔄'}
 }
 
@@ -1953,18 +2087,34 @@ function updateAICard(){
   const dePrice=preis(deSt[0]||{});
   const havePl=plPrice>0, haveDe=dePrice>0;
   // Ohne belastbare PL-Preise keine Ersparnis ausweisen.
-  const save=(havePl&&haveDe&&!PL_STALE)?Math.max(0,(dePrice-plPrice)*60):null;
+  const save=(havePl&&haveDe&&!PL_STALE&&!DE_ALT)?Math.max(0,(dePrice-plPrice)*60):null;
+  // Ueberschrift: Gibt es keinen belastbaren Vergleich, sagt sie das, statt
+  // "Heute bis zu – sparen". Sonst die uebliche Zeile der Sprache.
+  const hl=document.querySelector('.ai-hl');
+  const keinVergleich = PL_ZUSTAND==='nicht_verfuegbar' || DE_ALT || DE_FEHLT;
+  if(hl){
+    if(keinVergleich){
+      hl.textContent = ({de:'Preisvergleich gerade nicht möglich', pl:'Porównanie cen chwilowo niedostępne',
+        cz:'Srovnání cen momentálně nedostupné', en:'Price comparison currently unavailable'})[currentLang]
+        || 'Preisvergleich gerade nicht möglich';
+    } else if(!document.getElementById('ai-save')){
+      const t=I18N[currentLang]||I18N.de;
+      hl.innerHTML = t.ai_hl + '<br><strong id="ai-save">–</strong> '+t.ai_at;
+    }
+  }
   const fmtE=v=>v.toFixed(2).replace('.',',')+' €';
   const fmtL=v=>v.toFixed(3).replace('.',',')+'€/L';
   const el=document.getElementById('ai-save');
   if(el) el.textContent = save===null ? '–' : fmtE(save);
   const bp=document.getElementById('ai-best-price');
   // Bei ausgefallener PL-Quelle als Schätzung kennzeichnen, wie in Liste und Karte.
-  if(bp) bp.textContent = havePl ? (PL_STALE?'≈':'') + fmtL(plPrice) : '–';
+  if(bp) bp.textContent = havePl
+    ? fmtL(plPrice) + (PL_ZUSTAND==='letzter_stand' && PL_LS_TEXT ? ' · ' + PL_LS_TEXT : '')
+    : (PL_ZUSTAND==='nicht_verfuegbar' ? 'gerade nicht abrufbar' : '–');
   const ks=document.getElementById('ki-save-demo');
   if(ks) ks.textContent = save===null ? '–' : fmtE(Math.max(0,save-1.2));
   const kp=document.getElementById('ki-pl-demo');
-  if(kp) kp.textContent = havePl ? (PL_STALE?'≈':'') + fmtL(plPrice) : '–';
+  if(kp) kp.textContent = havePl ? fmtL(plPrice) : '–';
 }
 
 // ══════════════════════════════════════
@@ -2609,6 +2759,20 @@ try{ localStorage.removeItem('bpt_price_history'); }catch(e){}
 const money=v=>v.toLocaleString('de-DE',{minimumFractionDigits:2,maximumFractionDigits:2})+'€';
 const e3=v=>v.toFixed(3).replace('.',',')+'€';
 function glit(v){document.getElementById('g-lit').textContent=v;gcalc()}
+// Guenstigste Station eines Landes IN DER NAEHE, fuer genau diese Sorte.
+// Bis zum 02.10.2026 nahm der Grenzrechner die landesweit guenstigste -
+// eine Dyskont-Paliwowy-Station womoeglich hunderte Kilometer entfernt -
+// und schrieb trotzdem "Citronex Zgorzelec · 8,4 km" daneben. Fehlte eine
+// Sorte, sprang ausserdem der Dieselpreis ein. Umkreis wie in der
+// Stationsliste: der gewaehlte Radius, mindestens 35 km (damit Hradek fuer
+// Tschechien dabei ist).
+function guenstigsteInNaehe(land, f){
+  const rad = Math.max(+document.getElementById('locRadius')?.value || 15, 35);
+  return STATIONS
+    .filter(s => s.country===land && s[f] > 0 && (s.dist == null || s.dist <= rad))
+    .sort((a,b) => a[f]-b[f])[0] || null;
+}
+
 function gcalc(){
   const lit=+document.getElementById('g-lit').textContent||60;
   const use=+document.getElementById('g-use').value||7;
@@ -2617,8 +2781,31 @@ function gcalc(){
   const f=document.getElementById('g-fuel').value||'diesel';
   const p=PRICES[f]||PRICES.diesel;
   // Use real live prices if available
-  const deRef = (STATIONS.filter(s=>s.country==='de'&&(s[f]||s.diesel)>0).sort((a,b)=>(a[f]||a.diesel)-(b[f]||b.diesel))[0]?.[f]) || p.de;
-  const plRef = (STATIONS.filter(s=>s.country===ziel&&(s[f]||s.diesel)>0).sort((a,b)=>(a[f]||a.diesel)-(b[f]||b.diesel))[0]?.[f]) || p[ziel];
+  const deSt = guenstigsteInNaehe('de', f);
+  const plSt = guenstigsteInNaehe(ziel, f);
+  const deRef = deSt?.[f] || p.de;
+  const plRef = plSt?.[f] || p[ziel];
+  // Ohne beide Preise kein Ergebnis - frueher wurde hier mit Aprilwerten
+  // aus PRICES weitergerechnet.
+  if(!(deRef>0 && plRef>0)){
+    ['g-gross','g-cost','g-net','g-be','g-de-price','g-pl-price','g-diff'].forEach(id=>{
+      const el=document.getElementById(id); if(el) el.textContent='–';
+    });
+    const st=document.getElementById('g-status'); if(st) st.textContent='Preise gerade nicht abrufbar';
+    // Was da ist, bleibt sichtbar; der fehlende Teil sagt es.
+    const dn=document.getElementById('g-de-name');
+    if(dn) dn.textContent = deSt ? deSt.name : 'Günstigste DE Station';
+    if(deSt){ const dp=document.getElementById('g-de-price'); if(dp) dp.textContent=e3(deRef); }
+    const pz=document.getElementById('g-pl-price')?.parentElement;
+    const pn=pz?.querySelector('.cn b'), pd=pz?.querySelector('.cn small');
+    if(pn) pn.textContent = plSt ? plSt.name : 'kein aktueller Preis';
+    if(pd) pd.textContent = plSt && plSt.dist!=null ? '📍 '+(+plSt.dist).toFixed(1).replace('.',',')+' km' : '';
+    if(plSt){ const pp=document.getElementById('g-pl-price'); if(pp) pp.textContent=e3(plRef); }
+    const cr=document.getElementById('canister-result'); if(cr) cr.style.display='none';
+    window._gcalcNet = 0;
+    try{ updateCigCalc(); }catch(e){}
+    return;
+  }
   const diff=deRef-plRef;
   const gross=diff*lit;
   const cost=(km*2/100)*use*deRef;
@@ -2630,17 +2817,21 @@ function gcalc(){
   document.getElementById('g-be').textContent='ab '+be+'L';
   document.getElementById('g-status').textContent=net>15?'✅ LOHNT SICH KLAR':net>5?'✅ LOHNT SICH':net>0?'🟡 LOHNT KNAPP':'🔴 LOHNT NICHT';
   // Use real cheapest stations from live data
-  const deStations = STATIONS.filter(s=>s.country==='de'&&(s[f]||s.diesel)>0).sort((a,b)=>(a[f]||a.diesel)-(b[f]||b.diesel));
-  const plStations = STATIONS.filter(s=>s.country===ziel&&(s[f]||s.diesel)>0).sort((a,b)=>(a[f]||a.diesel)-(b[f]||b.diesel));
-  const bestDe = deStations[0];
-  const bestPl = plStations[0];
-  const realDe = bestDe?(bestDe[f]||bestDe.diesel):p.de;
-  const realPl = bestPl?(bestPl[f]||bestPl.diesel):p[ziel];
+  const bestDe = deSt;
+  const bestPl = plSt;
+  const realDe = deRef;
+  const realPl = plRef;
   // Update names
   const deName = document.getElementById('g-de-name');
   if(deName) deName.textContent = bestDe?.name||'Günstigste DE Station';
   const deDist = deName?.parentElement?.querySelector('small');
-  if(deDist&&bestDe) deDist.textContent = '📍 '+bestDe.dist.toFixed(1)+' km';
+  if(deDist&&bestDe) deDist.textContent = '📍 '+bestDe.dist.toFixed(1).replace('.',',')+' km';
+  // Polnische (bzw. tschechische) Station: echter Name und Entfernung statt
+  // des festen "Citronex Zgorzelec · 8,4 km".
+  const plZeile = document.getElementById('g-pl-price')?.parentElement;
+  const plName = plZeile?.querySelector('.cn b'), plDist = plZeile?.querySelector('.cn small');
+  if(plName && bestPl) plName.textContent = bestPl.name;
+  if(plDist && bestPl && bestPl.dist != null) plDist.textContent = '📍 '+(+bestPl.dist).toFixed(1).replace('.',',')+' km';
   // Update prices with real data
   document.getElementById('g-de-price').textContent=e3(realDe);
   document.getElementById('g-pl-price').textContent=e3(realPl);
@@ -2764,6 +2955,17 @@ function evcalc(){
   const liveStation = STATIONS.filter(s=>s.country===c&&(s[fk]||s.diesel)>0).sort((a,b)=>(a[fk]||a.diesel)-(b[fk]||b.diesel))[0];
   const fp = (liveStation?.[fk]||liveStation?.diesel) || PRICES[fk]?.[c] || PRICES.diesel[c];
   const evT=(km/100)*kwh,evC=evT*pr,fuT=(km/100)*lkm,fuC=fuT*fp,diff=fuC-evC;
+  if(!(fp>0)){
+    // Kein Kraftstoffpreis fuer dieses Land: kein Vergleich (frueher: Aprilwert).
+    document.getElementById('ev-cost').textContent=money(evC);
+    document.getElementById('ev-kwh-t').textContent=evT.toFixed(1)+' kWh';
+    document.getElementById('ev-fcost').textContent='–';
+    document.getElementById('ev-fuel-t').textContent=fuT.toFixed(1)+' L';
+    const bd0=document.getElementById('ev-diff');
+    bd0.textContent='Kraftstoffpreis gerade nicht abrufbar'; bd0.className='evdiff';
+    document.getElementById('ev-story').textContent='';
+    return;
+  }
   document.getElementById('ev-cost').textContent=money(evC);
   document.getElementById('ev-kwh-t').textContent=evT.toFixed(1)+' kWh';
   document.getElementById('ev-fcost').textContent=money(fuC);
@@ -2919,9 +3121,13 @@ async function sendKI(){
   t.innerHTML='<div class="typing"><div class="td"></div><div class="td"></div><div class="td"></div></div>';
   msgs.appendChild(t);msgs.scrollTop=msgs.scrollHeight;
 
-  const bestPl=STATIONS.filter(s=>s.country==='pl'&&(s[currentFuel]||s.diesel)>0).sort((a,b)=>(a[currentFuel]||a.diesel)-(b[currentFuel]||b.diesel))[0];
-  const bestDe=STATIONS.filter(s=>s.country==='de'&&(s[currentFuel]||s.diesel)>0).sort((a,b)=>(a[currentFuel]||a.diesel)-(b[currentFuel]||b.diesel))[0];
-  const bestCz=STATIONS.filter(s=>s.country==='cz'&&(s[currentFuel]||s.diesel)>0).sort((a,b)=>(a[currentFuel]||a.diesel)-(b[currentFuel]||b.diesel))[0];
+  const kiPreis=(st,land)=>{
+    const v=(st?.[currentFuel]||st?.diesel)||(PRICES[currentFuel]||PRICES.diesel)[land];
+    return v>0 ? v.toFixed(3).replace('.',',') : '–';
+  };
+  const bestPl=guenstigsteInNaehe('pl', currentFuel);
+  const bestDe=guenstigsteInNaehe('de', currentFuel);
+  const bestCz=guenstigsteInNaehe('cz', currentFuel);
 
   try{
     const res=await fetch('/.netlify/functions/ki-chat',{method:'POST',headers:{'Content-Type':'application/json'},
@@ -2934,9 +3140,11 @@ async function sendKI(){
         priceAlert,
         history: kiHistory.slice(0,-1), // alles außer aktuelle Frage
         prices:{
-          de:((bestDe?.[currentFuel]||bestDe?.diesel)||(PRICES[currentFuel]||PRICES.diesel).de).toFixed(3).replace('.',','),
-          pl:((bestPl?.[currentFuel]||bestPl?.diesel)||(PRICES[currentFuel]||PRICES.diesel).pl).toFixed(3).replace('.',','),
-          cz:((bestCz?.[currentFuel]||bestCz?.diesel)||(PRICES[currentFuel]||PRICES.diesel).cz).toFixed(3).replace('.',','),
+          // Ohne Live-Preis ein Strich - der Assistent sagt dann, dass er
+          // keinen Preis hat, statt einen Aprilwert zu nennen.
+          de:kiPreis(bestDe,'de'),
+          pl:kiPreis(bestPl,'pl'),
+          cz:kiPreis(bestCz,'cz'),
           bestPlStation: bestPl?.name||'Dyskont Paliwowy',
           bestDeStation: bestDe?.name||'günstigste DE Station',
           fuel: currentFuel.toUpperCase(),
@@ -3155,6 +3363,7 @@ function setLang(l) {
   if(aiBadge) { const av=aiBadge.querySelector('.ai-av'); aiBadge.textContent=''; if(av) aiBadge.appendChild(av); aiBadge.append(t.ai_badge); }
   const aiHl = document.querySelector('.ai-hl');
   if(aiHl) aiHl.innerHTML = t.ai_hl + '<br><strong id="ai-save">–</strong> '+t.ai_at;
+  try{ updateAICard(); }catch(e){}
   document.querySelectorAll('.ai-cta').forEach(b => b.innerHTML = t.ai_cta);
   document.querySelectorAll('.ai-cta-mob').forEach(b => b.innerHTML = t.ai_cta_mob);
 
@@ -3396,8 +3605,9 @@ function buildGrenzContext(){
     const ziel = document.getElementById('g-ziel')?.value || 'pl';
     const f   = currentFuel;
     const p   = PRICES[f] || PRICES.diesel;
-    const deRef = (STATIONS.filter(s=>s.country==='de'&&(s[f]||s.diesel)>0).sort((a,b)=>(a[f]||a.diesel)-(b[f]||b.diesel))[0]?.[f]) || p.de;
-    const plRef = (STATIONS.filter(s=>s.country===ziel&&(s[f]||s.diesel)>0).sort((a,b)=>(a[f]||a.diesel)-(b[f]||b.diesel))[0]?.[f]) || p[ziel];
+    const deRef = guenstigsteInNaehe('de', f)?.[f] || p.de;
+    const plRef = guenstigsteInNaehe(ziel, f)?.[f] || p[ziel];
+    if(!(deRef>0 && plRef>0)) return '';
     const diff = deRef - plRef;
     const gross = diff * lit;
     const cost = (km*2/100) * use * deRef;
