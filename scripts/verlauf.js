@@ -90,6 +90,11 @@ async function polen() {
   if (d.status !== 'success' || !Array.isArray(d.stations)) {
     throw new Error('dp-prices: ' + (d.message || 'unerwartete Antwort'));
   }
+  // Die Euro-Preise haengen am Kurs. Ist der nur der feste Notwert,
+  // sind sie nicht belastbar - dann lieber eine Luecke im Verlauf.
+  if (d.kurs_quelle === 'notwert') {
+    throw new Error('dp-prices rechnet mit dem festen Notwert-Kurs, nicht mit der NBP');
+  }
   const mitOrt = d.stations
     .filter((s) => gueltig(s.diesel) && isFinite(s.lat) && isFinite(s.lng))
     .map((s) => ({ s, entfernung: km(GOERLITZ, { lat: +s.lat, lng: +s.lng }) }));

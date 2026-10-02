@@ -203,17 +203,17 @@
 
   <!-- HERO -->
   <div class="hero">
-    <span class="eyebrow"><span class="dot"></span>Live · Diesel · Grenze DE / PL</span>
+    <span class="eyebrow"><span class="dot"></span>{{LIVE_LABEL}} · Diesel · Grenze DE / PL</span>
     <h1>Dieselpreis <em>Polen</em> heute</h1>
-    <p class="lede">Aktuelle Dieselpreise (Olej napędowy) aller polnischen Grenztankstellen — live und direkt in Euro umgerechnet. Diesel liegt in Polen heute rund {{ERSPARNIS_CENT}} Cent pro Liter unter dem deutschen Preis (Stand {{STAND}}, {{STAND_UHR}} Uhr).</p>
-    <div class="stand">🕐 Stand: <b>{{STAND}}, {{STAND_UHR}} Uhr</b> · Preise werden zweimal täglich abgerufen</div>
+    <p class="lede">Aktuelle Dieselpreise (Olej napędowy) aller polnischen Grenztankstellen — live und direkt in Euro umgerechnet. Diesel liegt in Polen {{HEUTE}} rund {{ERSPARNIS_CENT}} Cent pro Liter unter dem deutschen Preis (Stand {{STAND}}, {{STAND_UHR}} Uhr).</p>
+    <div class="stand">🕐 Stand: <b>{{PL_STAND}}, {{PL_STAND_UHR}} Uhr</b> · Preise werden zweimal täglich abgerufen</div>{{STAND_HINWEIS}}
     <!-- Antwortblock: der gemessene Preis auf einen Blick. Bewusst kein
          "Polen-Durchschnitt" - den haben wir nicht. Werte setzt scripts/build-pages.js. -->
     <div class="cbox pl" style="margin-top:16px;max-width:600px">
-      <div class="lab">Gemessener Dieselpreis · {{PL_NAH_NAME}}</div>
+      <div class="lab">{{PL_NAH_LABEL}} · {{PL_NAH_NAME}}</div>
       <div class="val">{{PL_NAH_PLN}} zł/L <span style="font-size:18px;font-weight:700">≈ {{PL_NAH_EUR}} €/L</span></div>
-      <div class="st-meta" style="margin-top:8px">Günstigste Tankstelle Raum Görlitz: <b>{{DE_DIESEL}} €/L</b> · {{PL_NAH_VERGLEICH}}</div>
-      <div class="st-meta">Kurs 1 € = {{KURS_PLN}} zł (Polnische Nationalbank) · Quellen: Dyskont Paliwowy, Tankerkönig (MTS-K)</div>
+      <div class="st-meta" style="margin-top:8px">{{DE_ZEILE}} · {{PL_NAH_VERGLEICH}}</div>
+      <div class="st-meta">{{KURS_ZEILE}} · Quellen: Dyskont Paliwowy, Tankerkönig (MTS-K)</div>
       <div class="st-meta" style="margin-top:6px"><b>Das ist ein gemessener Stationspreis, kein polnischer Landesdurchschnitt.</b></div>
     </div>
   </div>
