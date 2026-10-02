@@ -26,11 +26,31 @@ async function fetchRates() {
     // EUR/CZK = PLN/EUR ÷ PLN/CZK  → z.B. 4.2589 / 0.1685 = 25.27 CZK pro EUR
     const czkRate = +(plnRate / czkPln).toFixed(4);
 
-    return { plnRate: +plnRate.toFixed(4), czkRate };
+    return { plnRate: +plnRate.toFixed(4), czkRate,
+             quelle: 'nbp', datum: eurData?.rates?.[0]?.effectiveDate || null };
   } catch (err) {
-    console.warn('NBP Fallback:', err.message);
-    return { plnRate: 4.25, czkRate: 25.20 }; // Fallback
+    console.warn('NBP nicht erreichbar:', err.message);
   }
+
+  // Rueckfall 1: der Kurs des letzten erfolgreichen Builds, mit seinem
+  // NBP-Datum. Bis zum 02.10.2026 stand hier sofort ein fester Kurs von
+  // 4,25 - ohne jede Kennzeichnung, und weit weg vom echten (4,37 am
+  // 02.10.). Alle Euro-Preise waeren damit rund 3 % zu hoch gewesen.
+  try {
+    const basis = process.env.URL || 'https://bestpricetank.de';
+    const res = await fetch(`${basis}/data/live.json`, { signal: AbortSignal.timeout(4000) });
+    const k = (await res.json())?.kurse;
+    if (k?.pln > 3 && k.pln < 6 && k?.czk > 15 && k.czk < 35) {
+      return { plnRate: k.pln, czkRate: k.czk, quelle: 'letzter_stand', datum: k.datum || null };
+    }
+  } catch (err) {
+    console.warn('Letzter Kurs nicht lesbar:', err.message);
+  }
+
+  // Rueckfall 2, nur als technische Notloesung: fester Kurs. Ausdruecklich
+  // als 'notwert' gekennzeichnet; scripts/verlauf.js schreibt damit keinen
+  // Verlaufspunkt.
+  return { plnRate: 4.25, czkRate: 25.20, quelle: 'notwert', datum: null };
 }
 
 exports.handler = async () => {
@@ -127,6 +147,10 @@ exports.handler = async () => {
       status:         'success',
       data_timestamp: dpData.data_timestamp,
       pln_eur_rate:   plnRate,
+      // Herkunft des Kurses: 'nbp' (heute abgerufen), 'letzter_stand'
+      // (vom letzten Build, siehe kurs_datum) oder 'notwert' (fest, unzuverlaessig).
+      kurs_quelle:    rates.quelle,
+      kurs_datum:     rates.datum,
       czk_eur_rate:   czkRate,   // NEU: CZK-Kurs für Frontend
       count:          stations.length,
       stations,

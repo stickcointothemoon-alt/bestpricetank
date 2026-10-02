@@ -18,6 +18,10 @@
 //   2. Gleichstand: Hat das Repository einen neueren Punkt als die Live-
 //      Seite, und ist der schon aelter als VEROEFFENTLICHT_NACH_STD, dann
 //      wurde gebaut, aber nicht veroeffentlicht - genau der Fehler von oben.
+//   3. Quellen (seit 02.10.2026): /data/live.json fuehrt je Quelle die Zeit
+//      ihrer letzten erfolgreichen Lieferung. Polen und Deutschland duerfen
+//      hoechstens MAX_ALTER_STD alt sein. NBP und ČSÚ werden nur berichtet:
+//      die NBP veroeffentlicht nur werktags, die ČSÚ nur woechentlich.
 //
 // Endet mit Code 1, wenn etwas nicht stimmt. Dann wird der GitHub-Lauf rot,
 // und GitHub schickt eine Mail.
@@ -103,9 +107,38 @@ function bericht(zeilen) {
     }
   }
 
+  // Quellen einzeln, aus dem live.json des letzten Builds.
+  const quellZeilen = [];
+  try {
+    const res = await fetch(`${BASIS}/data/live.json?pruefung=${jetzt}`, {
+      headers: { 'User-Agent': 'BestPriceTank-Livepruefung/1.0 (+https://bestpricetank.de)',
+                 'Cache-Control': 'no-cache' },
+      signal: AbortSignal.timeout(20000),
+    });
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const lj = await res.json();
+    const z = lj.zeiten || {};
+    // Ein live.json von vor dem 02.10.2026 kennt nur den gemeinsamen Stand.
+    for (const [key, name] of [['pl', 'Polen (Dyskont Paliwowy)'], ['de', 'Deutschland (Tankerkönig)']]) {
+      const t = Date.parse(z[key] || lj.stand);
+      if (!isFinite(t)) { fehler.push(`${name}: kein Zeitstempel in /data/live.json.`); continue; }
+      const alter = (jetzt - t) / STD;
+      quellZeilen.push(`- ${name}: ${zeit(t)} (${Math.round(alter)} h)`);
+      if (alter > MAX_ALTER_STD) {
+        fehler.push(`${name}: Die Preise auf der Seite sind ${Math.round(alter)} Stunden alt `
+                  + `(${zeit(t)}). Die Quelle war beim Bauen offenbar mehrfach nicht erreichbar.`);
+      }
+    }
+    if (lj.kurse?.datum) quellZeilen.push(`- NBP-Kurs: ${lj.kurse.pln} zł/€ vom ${lj.kurse.datum}`);
+    if (lj.cz?.week) quellZeilen.push(`- Tschechien (ČSÚ): ${lj.cz.week}`);
+  } catch (e) {
+    quellZeilen.push(`- /data/live.json nicht lesbar (${e.message})`);
+  }
+
   const zeilen = ['## Live-Prüfung bestpricetank.de', ''];
   zeilen.push(`- Neuester Preis live: ${live !== null ? zeit(live) : '—'}`);
   zeilen.push(`- Neuester Preis im Repository: ${repo !== null ? zeit(repo) : '—'}`);
+  zeilen.push('', '**Quellen im letzten Build:**', '', ...quellZeilen);
   zeilen.push('');
   if (fehler.length) {
     zeilen.push('### ❌ Die Live-Seite ist nicht aktuell', '');

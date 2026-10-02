@@ -62,7 +62,12 @@ async function rates() {
   ]);
   const pln = e?.rates?.[0]?.mid, czkPln = c?.rates?.[0]?.mid;
   if (!pln || !czkPln) throw new Error('NBP: Kurs fehlt');
-  return { pln: +pln.toFixed(4), czk: +(pln / czkPln).toFixed(4) };
+  // effectiveDate: der Tag, fuer den die NBP den Kurs festgesetzt hat.
+  // Das ist das Datum, das zaehlt - nicht der Zeitpunkt unseres Abrufs.
+  // Am Wochenende und an Feiertagen veroeffentlicht die NBP nichts, dann
+  // bleibt der letzte Werktagskurs gueltig.
+  const datum = e?.rates?.[0]?.effectiveDate || null;
+  return { pln: +pln.toFixed(4), czk: +(pln / czkPln).toFixed(4), datum };
 }
 
 // ── Deutschland: Tankerkönig ─────────────────────────────────────────
@@ -88,20 +93,43 @@ function notvorratSchreiben(stationen) {
   } catch (e) { console.warn('   · Notvorrat nicht schreibbar:', e.message); }
 }
 
+// Bis zum 02.10.2026 galt jede Antwort von de-prices als frisch - auch
+// eine aus dem Zwischenspeicher (bis 12 Stunden alt) oder aus dem
+// Notvorrat. Der Build stempelte ihr dann die aktuelle Uhrzeit auf. Jetzt
+// traegt ein gespeicherter Stand seine eigene Abrufzeit (__zeit), und es
+// wird zuerst noch Tankerkoenig direkt versucht.
 async function de() {
   const basis = process.env.URL || 'https://bestpricetank.de';
+  let gespeichert = null;
   try {
     const d = await getJson(`${basis}/.netlify/functions/de-prices?lat=51.15&lng=14.99`);
     if (d.ok && Array.isArray(d.stations)) {
-      if (d.stale) console.log(`   · de-prices lieferte den Stand von vor ${d.ageMinutes} Min.`);
-      else notvorratSchreiben(d.stations);
-      return auswerten(d.stations);
+      if (!d.stale) {
+        notvorratSchreiben(d.stations);
+        return auswerten(d.stations);
+      }
+      console.log(`   · de-prices lieferte nur den Stand von vor ${d.ageMinutes} Min. (${d.quelle || '?'})`);
+      if (d.fetchedAt && isFinite(Date.parse(d.fetchedAt))) {
+        gespeichert = { ...auswerten(d.stations), __zeit: d.fetchedAt, __status: 'zwischengespeichert' };
+      }
+    } else {
+      throw new Error(d.message || 'unerwartete Antwort');
     }
-    throw new Error(d.message || 'unerwartete Antwort');
   } catch (e) {
     console.warn(`   · de-prices nicht nutzbar (${e.message}), versuche Tankerkönig direkt`);
   }
+  try {
+    return await deDirekt();
+  } catch (e) {
+    if (gespeichert) {
+      console.warn(`   · Tankerkönig direkt: ${e.message} - nehme den gespeicherten Stand`);
+      return gespeichert;
+    }
+    throw e;
+  }
+}
 
+async function deDirekt() {
   const key = process.env.TK_KEY || process.env.TK_API_KEY;
   if (!key) throw new Error('TK_KEY nicht gesetzt');
   const d = await getJson(
@@ -208,26 +236,39 @@ async function cz(czkRate) {
 
 // Jede Quelle einzeln. Klemmt eine, werden die anderen trotzdem
 // aktualisiert und nur der fehlende Teil kommt aus dem letzten Stand.
+//
+// Seit dem 02.10.2026 fuehrt live.json fuer JEDE Quelle ihre eigene Zeit
+// (zeiten.de / .pl / .nbp / .cz): wann sie zuletzt wirklich geliefert hat.
+// Vorher gab es nur einen gemeinsamen Stand, und der blieb stehen, sobald
+// irgendeine Quelle klemmte - auch die woechentliche ČSÚ, die mit den
+// Polen-Seiten gar nichts zu tun hat.
 async function collect(vorher) {
   const quellen = {};
-  const hole = async (name, fn, rueckfall) => {
+  const zeiten = {};
+  const jetzt = new Date().toISOString();
+  const hole = async (name, key, fn, rueckfall) => {
     try {
       const v = await fn();
-      quellen[name] = 'frisch';
+      zeiten[key] = v.__zeit || jetzt;
+      quellen[name] = v.__status || 'frisch';
+      delete v.__zeit; delete v.__status;
       return v;
     } catch (e) {
       console.warn(`   ⚠ ${name}: ${e.message}`);
       if (!rueckfall) throw new Error(`${name} fehlgeschlagen und kein Rückfall vorhanden`);
       quellen[name] = 'aus dem letzten Stand';
+      // Ein live.json von vor dem 02.10.2026 kennt nur den gemeinsamen
+      // Stand. Der ist hoechstens so neu wie die Quelle - also vorsichtig.
+      zeiten[key] = vorher?.zeiten?.[key] || vorher?.stand || null;
       return rueckfall;
     }
   };
 
-  const r = await hole('Wechselkurse (NBP)', rates, vorher?.kurse);
+  const r = await hole('Wechselkurse (NBP)', 'nbp', rates, vorher?.kurse);
   const [d, p, c] = await Promise.all([
-    hole('Tankerkönig (DE)', () => de(), vorher?.de),
-    hole('Dyskont Paliwowy (PL)', () => pl(r.pln), vorher?.pl),
-    hole('ČSÚ (CZ)', () => cz(r.czk), vorher?.cz),
+    hole('Tankerkönig (DE)', 'de', () => de(), vorher?.de),
+    hole('Dyskont Paliwowy (PL)', 'pl', () => pl(r.pln), vorher?.pl),
+    hole('ČSÚ (CZ)', 'cz', () => cz(r.czk), vorher?.cz),
   ]);
 
   // Der Stand ist das Alter der PREISE, nicht der Zeitpunkt des Builds.
@@ -237,12 +278,17 @@ async function collect(vorher) {
   // stempelte ihnen dann die jetzige Uhrzeit auf. Am 20.09.2026 ist genau
   // das passiert: "Stand 20.09.2026, 14:44 Uhr" ueber Preisen vom 05.09.
   // Also: nur wenn wirklich alles frisch ist, ist es auch jetzt.
-  const alleFrisch = Object.values(quellen).every((v) => v === 'frisch');
-  if (!alleFrisch && vorher?.stand) {
-    console.warn(`   \u26a0 Nicht alles frisch - Stand bleibt ${vorher.stand}`);
-  }
+  //
+  // Seit dem 02.10.2026: Der gemeinsame Stand ist die AELTERE der beiden
+  // Zeiten, auf denen die Preisvergleiche beruhen - Polen und Deutschland.
+  // ČSÚ (woechentlich) und NBP (Kursdatum, siehe KURS_DATUM) zaehlen nicht
+  // hinein; sie werden mit ihrem eigenen Datum ausgewiesen.
+  const aelter = (a, b) => (!a ? b : !b ? a : (Date.parse(a) < Date.parse(b) ? a : b));
+  const stand = aelter(zeiten.pl, zeiten.de) || jetzt;
+  if (stand !== jetzt) console.warn(`   \u26a0 Nicht alles frisch - Stand ${stand}`);
   return {
-    stand: (alleFrisch || !vorher?.stand) ? new Date().toISOString() : vorher.stand,
+    stand,
+    zeiten,
     quellen,
     kurse: r, de: d, pl: p, cz: c,
     ersparnisProLiter: d.diesel - p.diesel,
@@ -284,10 +330,42 @@ function zeitTeile(d) {
            min: String(d.getUTCMinutes()).padStart(2, '0') };
 }
 
+// Ab wann ein Preis nicht mehr als "heute"/"live" gelten darf.
+//
+// Die Seiten werden zweimal taeglich gebaut. Faellt ein Abruf aus, ist der
+// Stand rund 24 Stunden alt - das ist noch der gestrige Abend oder heutige
+// Morgen. 30 Stunden lassen einen ausgefallenen Lauf zu; beim zweiten
+// wechseln die Seiten auf "Stand TT.MM." und einen sichtbaren Hinweis.
+const FRISCH_STD = 30;
+// Die NBP veroeffentlicht nur an Werktagen. Ein Freitagskurs ist am Montag
+// noch der gueltige; mit einem Feiertag dazu sind es 4 Tage.
+const NBP_FRISCH_TAGE = 4;
+
+function alterStd(iso, jetzt) {
+  const t = Date.parse(iso);
+  return isFinite(t) ? (jetzt - t) / 3600000 : Infinity;
+}
+
 function tokens(x) {
+  const jetzt = Date.now();
+  const zeiten = x.zeiten || {};
   const z = zeitTeile(new Date(x.stand));
   const dd = z.tag;
   const mm = z.monat;
+  // Zeit je Quelle; ein live.json ohne zeiten faellt auf den Stand zurueck.
+  const plIso = zeiten.pl || x.stand;
+  const deIso = zeiten.de || x.stand;
+  const zp = zeitTeile(new Date(plIso));
+  const zd = zeitTeile(new Date(deIso));
+  const plFrisch = alterStd(plIso, jetzt) <= FRISCH_STD;
+  const deFrisch = alterStd(deIso, jetzt) <= FRISCH_STD;
+  // NBP: nach dem Kursdatum, nicht nach der Abrufzeit.
+  const kursDatum = x.kurse?.datum || null;
+  const kursAlterTage = kursDatum ? (jetzt - Date.parse(kursDatum + 'T12:00:00Z')) / 86400000 : Infinity;
+  const kursFrisch = kursAlterTage <= NBP_FRISCH_TAGE;
+  const kursText = kursDatum
+    ? `${kursDatum.slice(8, 10)}.${kursDatum.slice(5, 7)}.${kursDatum.slice(0, 4)}`
+    : null;
   // Benzin nur vergleichen, wenn beide Seiten gemessen sind. DE E10 und
   // polnisches Pb95 sind beide 95 Oktan - das ist der saubere Vergleich,
   // nicht DE E5 gegen Pb95.
@@ -308,7 +386,10 @@ function tokens(x) {
   const nahDiff = nah ? x.de.diesel - nah.eur : null;
   const nahCent = nahDiff === null ? null : Math.round(nahDiff * 100);
   let vergleich = '\u2014';
-  if (nahCent !== null) {
+  if (nahCent !== null && (!deFrisch || !plFrisch)) {
+    // Einer der beiden Preise ist zu alt: keinen Unterschied behaupten.
+    vergleich = 'Vergleich derzeit nicht möglich';
+  } else if (nahCent !== null) {
     if (nahCent > 0) vergleich = `Polen ${nahCent} ct/L günstiger · bei 60 L rund ${eur2(nahDiff * 60)} €`;
     else if (nahCent < 0) vergleich = `Polen ${-nahCent} ct/L teurer`;
     else vergleich = 'kein nennenswerter Unterschied';
@@ -348,8 +429,36 @@ function tokens(x) {
     // Startwerte fuer die KI-Karte der Startseite, im selben Format, das
     // updateAICard() spaeter selbst schreibt. Ohne JavaScript - also fuer
     // Suchmaschinen und KI-Crawler - stand dort bisher nur ein Strich.
-    AI_PREIS: nah ? `${eur(nah.eur)}€/L` : '\u2013',
-    AI_SAVE: nahDiff === null ? '\u2013' : `${eur2(Math.max(0, nahDiff) * 60)} €`,
+    // Nur frische Werte vorab einsetzen. Ist eine Seite zu alt, bleibt der
+    // Strich stehen, bis JavaScript die aktuellen Preise geholt hat.
+    AI_PREIS: (nah && plFrisch) ? `${eur(nah.eur)}€/L` : '\u2013',
+    AI_SAVE: (nahDiff === null || !plFrisch || !deFrisch)
+      ? '\u2013' : `${eur2(Math.max(0, nahDiff) * 60)} €`,
+
+    // ── Zeit je Quelle (seit 02.10.2026) ──
+    PL_STAND: `${zp.tag}.${zp.monat}.${zp.jahr}`,
+    PL_STAND_UHR: `${zp.std}:${zp.min}`,
+    DE_STAND: `${zd.tag}.${zd.monat}.${zd.jahr}`,
+    DE_STAND_UHR: `${zd.std}:${zd.min}`,
+    // Woerter, die nur bei frischen polnischen Daten stimmen.
+    LIVE_LABEL: plFrisch ? 'Live' : `Stand ${zp.tag}.${zp.monat}.`,
+    // "heute" steht dort vor einem Unterschied DE/PL - es braucht also
+    // BEIDE Preise frisch. Sonst das Datum des aelteren.
+    HEUTE: (plFrisch && deFrisch) ? 'heute' : `am ${dd}.${mm}.`,
+    PL_NAH_LABEL: plFrisch ? 'Gemessener Dieselpreis' : 'Letzter verfügbarer Dieselpreis',
+    // Eigene Zeile unter dem Stand-Kasten; im Kasten selbst bricht es auf
+    // dem Handy in schmale Spalten.
+    STAND_HINWEIS: plFrisch ? ''
+      : '<div style="margin-top:10px;font-size:14px;font-weight:700;color:#b45309">'
+        + 'Ältere Daten: Die polnische Preisquelle war zuletzt nicht erreichbar.</div>',
+    // Deutsche Vergleichszeile im Antwortblock.
+    DE_ZEILE: deFrisch
+      ? `Günstigste Tankstelle Raum Görlitz: <b>${eur(x.de.diesel)} €/L</b>`
+      : `Deutscher Vergleichspreis nicht aktuell (Stand ${zd.tag}.${zd.monat}., ${zd.std}:${zd.min} Uhr)`,
+    // Kurs mit Datum. Ein alter Kurs wird als solcher benannt.
+    KURS_ZEILE: kursText
+      ? `Kurs 1 € = ${loc(x.kurse.pln)} zł (Polnische Nationalbank, ${kursText}${kursFrisch ? '' : ', älterer Kurs'})`
+      : `Kurs 1 € = ${loc(x.kurse.pln)} zł (Polnische Nationalbank)`,
   };
 }
 
@@ -382,8 +491,35 @@ function tabelle(st) {
 
 const esc = (t) => String(t).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
 
+// Der letzte gute Stand fuer den Fall, dass eine Quelle beim Bauen klemmt.
+//
+// data/live.json im Repository wird nie aktualisiert: Netlify schreibt die
+// frische Fassung nur in den Build, nicht zurueck ins Repository. Dort lag
+// am 02.10.2026 noch der Stand vom 05.09. Fiel eine Quelle aus, kamen
+// vier Wochen alte Preise auf die Seite.
+//
+// Die veroeffentlichte Seite dagegen traegt immer den Stand des letzten
+// erfolgreichen Builds. Also wird sie zuerst gefragt; die Datei im
+// Repository bleibt nur der Rueckfall, wenn die Seite nicht erreichbar ist.
+// Genommen wird der neuere der beiden.
+async function vorherLaden() {
+  let lokal = null, live = null;
+  try { lokal = fs.existsSync(LIVE) ? JSON.parse(fs.readFileSync(LIVE, 'utf8')) : null; } catch {}
+  try {
+    const basis = process.env.URL || 'https://bestpricetank.de';
+    const d = await getJson(`${basis}/data/live.json?build=${Date.now()}`);
+    if (d && d.stand && d.de && d.pl && d.kurse) live = d;
+  } catch (e) {
+    console.warn(`   · Live-Stand nicht lesbar (${e.message}), nehme data/live.json`);
+  }
+  const zeit = (x) => (x && isFinite(Date.parse(x.stand)) ? Date.parse(x.stand) : -Infinity);
+  const wahl = zeit(live) >= zeit(lokal) ? live : lokal;
+  if (wahl) console.log(`   · Letzter guter Stand: ${wahl === live ? 'Live-Seite' : 'data/live.json'} vom ${wahl.stand}`);
+  return wahl;
+}
+
 (async () => {
-  const vorher = fs.existsSync(LIVE) ? JSON.parse(fs.readFileSync(LIVE, 'utf8')) : null;
+  const vorher = await vorherLaden();
   let data, frisch = true;
   try {
     data = await collect(vorher);
