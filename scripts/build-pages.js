@@ -292,6 +292,27 @@ function tokens(x) {
   // polnisches Pb95 sind beide 95 Oktan - das ist der saubere Vergleich,
   // nicht DE E5 gegen Pb95.
   const benzin = (x.de.e10 > 0 && x.pl.e10 > 0) ? x.de.e10 - x.pl.e10 : null;
+
+  // Bezugsstation fuer den Antwortblock auf dieselpreis-polen.html und die
+  // KI-Karte der Startseite: die guenstigste GEMESSENE Dyskont-Paliwowy-
+  // Station bis 15 km von Goerlitz - in der Praxis eine der beiden in
+  // Zgorzelec. Dieselbe Grenze nutzt die Startseite selbst (Umkreis 15 km),
+  // damit der vorab eingesetzte Wert dem entspricht, was JavaScript danach
+  // anzeigt. Nur wenn dort keine Station misst, die guenstigste im Umkreis.
+  //
+  // Bewusst KEIN Landesdurchschnitt: den haben wir nicht. Der Block sagt
+  // das auch ausdruecklich.
+  const stListe = Array.isArray(x.pl.stationen) ? x.pl.stationen : [];
+  const nah = stListe.find((st) => st.entfernung <= 15 && isFinite(st.eur) && st.onPln > 0)
+           || stListe.find((st) => isFinite(st.eur) && st.onPln > 0) || null;
+  const nahDiff = nah ? x.de.diesel - nah.eur : null;
+  const nahCent = nahDiff === null ? null : Math.round(nahDiff * 100);
+  let vergleich = '\u2014';
+  if (nahCent !== null) {
+    if (nahCent > 0) vergleich = `Polen ${nahCent} ct/L günstiger · bei 60 L rund ${eur2(nahDiff * 60)} €`;
+    else if (nahCent < 0) vergleich = `Polen ${-nahCent} ct/L teurer`;
+    else vergleich = 'kein nennenswerter Unterschied';
+  }
   return {
     STAND: `${dd}.${mm}.${z.jahr}`,
     STAND_KURZ: `${dd}.${mm}.`,
@@ -320,6 +341,15 @@ function tokens(x) {
     ERSPARNIS_CENT: String(Math.round(x.ersparnisProLiter * 100)),
     ERSPARNIS_60L: eur2(x.ersparnisProLiter * 60),
     TABELLE_PL: tabelle(x.pl.stationen || []),
+    PL_NAH_NAME: nah ? esc(nah.name) : '\u2014',
+    PL_NAH_EUR: nah ? eur(nah.eur) : '\u2014',
+    PL_NAH_PLN: nah ? loc(nah.onPln) : '\u2014',
+    PL_NAH_VERGLEICH: vergleich,
+    // Startwerte fuer die KI-Karte der Startseite, im selben Format, das
+    // updateAICard() spaeter selbst schreibt. Ohne JavaScript - also fuer
+    // Suchmaschinen und KI-Crawler - stand dort bisher nur ein Strich.
+    AI_PREIS: nah ? `${eur(nah.eur)}€/L` : '\u2013',
+    AI_SAVE: nahDiff === null ? '\u2013' : `${eur2(Math.max(0, nahDiff) * 60)} €`,
   };
 }
 

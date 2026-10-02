@@ -221,7 +221,7 @@
     <span class="eyebrow"><span class="dot"></span>Live · Grenze DE / PL</span>
     <h1>Tanken in <em>Polen</em> — lohnt es sich?</h1>
     <p class="lede">Aktuelle Diesel-, Benzin- und LPG-Preise aller polnischen Grenztankstellen — live und direkt in Euro umgerechnet. So siehst du sofort, ob sich die Fahrt über die Grenze heute lohnt.</p>
-    <div class="stand">🕐 Stand: <b id="stand-date">heute</b> · Preise mehrmals täglich aktualisiert</div>
+    <div class="stand">🕐 Stand: <b>{{STAND}}, {{STAND_UHR}} Uhr</b> · Preise werden zweimal täglich abgerufen</div>
   </div>
 
   <!-- PREISTABELLE — Money-Block direkt oben -->
@@ -378,13 +378,6 @@
 </footer>
 
 <script>
-  /* Sichtbares tagesaktuelles Datum — starkes "heute"-Frischesignal */
-  (function(){
-    var d = new Date();
-    var s = d.toLocaleDateString('de-DE',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
-    document.getElementById('stand-date').textContent = s;
-  })();
-
   /* Kraftstoff-Tabs.
      Bis zum 20.09.2026 stand hier nur "TODO: renderPrices(...) aus eurer
      API" - die Knoepfe faerbten sich ein und sonst passierte nichts.
