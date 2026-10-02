@@ -22,13 +22,13 @@ exports.handler = async (event) => {
   // ── GRENZÜBERGÄNGE ────────────────────────────────────────────
   const crossings = `
 DE/PL Grenzübergänge (von Süd nach Nord):
-- Sieniawka/Zittau (~30km): AB Tank, BP — kleiner Übergang, kaum Kontrollen, Geheimtipp!
+- Sieniawka/Zittau (~30km): AB Tank, BP — kleiner Übergang
 - Zgorzelec/Görlitz (~3km): Dyskont Paliwowy (günstigste!), Shell, BP, Circle K, ORLEN, MOL
 - Jędrzychowice/Ludwigsdorf A4 (~9km): Groil, Watis, Shell — A4-Autobahn, häufig kontrolliert
 - Ruszów/Hagenwerder (~30km): Jersak, Pieprzyk — ruhiger Übergang
 - Przewóz/Forst-Zasieki (~37km): Pieprzyk, Apexim AB
 - Łęknica/Bad Muskau (~45km): Apexim AB — touristisch, meist fließend
-- Gubin/Guben (~90km): Shell, ORLEN, Horex, BP, Avia, Moya, Lotos — A15
+- Gubin/Guben (~90km): Shell, ORLEN, Horex, BP, Avia, Moya
 - Słubice/Frankfurt(Oder) (~136km): Shell, Avia, Aral, ORLEN, Amic, Total, BP, EkoTank
 - Kostrzyn/Küstrin (~160km): ORLEN, BP
 - Krajnik Dolny/Schwedt (~214km): Apexim AB — sehr ruhig
@@ -41,21 +41,25 @@ Startort-Empfehlungen:
 - Hamburg → Kołbaskowo/Stettin (A11/A6)
 - Dresden → Zgorzelec (A4/A17, 45min)
 - Görlitz → Dyskont Paliwowy Zgorzelec (3km, 5min!)
-- Zittau → Sieniawka (5min, kaum Kontrollen)
+- Zittau → Sieniawka (5min)
 - Cottbus → Gubin (A15, 30min)
 - Leipzig → Zgorzelec (A4, 2h) oder Słubice (A9/A2, 2.5h)
 - Rostock → Kołbaskowo/Stettin (A20/A11)`;
 
   // ── GRENZKONTROLLEN ───────────────────────────────────────────
+  // Stand 02.10.2026. Quelle: Polen hat seine Kontrollen an der Grenze zu
+  // Deutschland am 01.10.2026 bis 30.03.2027 verlaengert, Deutschland seine
+  // bis Mitte Maerz 2027. Fuer die deutsch-polnische Grenze gibt es KEINE
+  // offiziellen Live-Wartezeiten (der polnische Grenzschutz veroeffentlicht
+  // nur die EU-Aussengrenzen). Bis zu diesem Datum stand hier "seit Sept.
+  // 2024", "10-30 Min" und "Sieniawka: kaum Kontrollen - BESTER TIPP".
   const borderControls = `
-AKTUELLE GRENZKONTROLLEN (seit Sept. 2024):
-- Deutschland kontrolliert an ALLEN Schengen-Grenzen stationär
-- Nicht jedes Auto wird kontrolliert — aber Ausweis/Pass immer dabei haben!
-- A4 Ludwigsdorf/Jędrzychowice: AM HÄUFIGSTEN kontrolliert, 10-30 Min möglich
-- A15 Forst/Gubin: manchmal, meist fließend
-- Görlitz Stadtbrücke: selten kontrolliert — sehr empfehlenswert
-- Sieniawka/Zittau: kaum Kontrollen — BESTER TIPP für entspanntes Tanken ohne Stress
-- Wartezeiten live: autobahn.de oder Google Maps checken
+GRENZKONTROLLEN (Stand Oktober 2026):
+- BEIDE Seiten kontrollieren vorübergehend: Deutschland (verlängert bis Mitte März 2027) und Polen (verlängert bis 30. März 2027).
+- Kontrolliert wird vor allem an den großen Übergängen, z. B. A4 Ludwigsdorf/Jędrzychowice, A15 Forst/Olszyna, A12 Frankfurt (Oder)/Świecko, A11 Pomellen/Kołbaskowo. Stichprobenartig, nicht jedes Auto.
+- An kleineren Übergängen (z. B. Görlitz Stadtbrücke, Zittau/Sieniawka) sind Kontrollen seltener, aber möglich. KEINE Garantie geben, nicht als "kontrollfrei" empfehlen.
+- Ausweis oder Pass immer dabeihaben.
+- Für die deutsch-polnische Grenze gibt es keine offiziellen Live-Wartezeiten. NENNE KEINE Wartezeiten aus dem Kopf. Verweise auf die Stau-Meldungen unten (Autobahn GmbH) oder auf Google Maps.
 ${borderInfo?.crossings?.length ? `\nAktuelle Meldungen:\n${borderInfo.crossings.map(c=>`- ${c.name}: ${c.waitMin > 0 ? c.waitMin+' Min' : 'frei'}`).join('\n')}` : ''}`;
 
   // ── AUTO-PROFIL ───────────────────────────────────────────────
@@ -70,12 +74,17 @@ NUTZER-FAHRZEUG (immer damit rechnen!):
 → Alle Berechnungen mit diesen Werten, NICHT mit Standard-60L/7L!` : '';
 
   // ── PREISALARM ────────────────────────────────────────────────
-  const currentAlertPrice = priceAlert?.country === 'pl' ? parseFloat(prices.pl) : parseFloat(prices.de);
+  // Preise kommen als "2,089" (Komma) oder "–" an. parseFloat("2,089") ist
+  // 2 und parseFloat("–") NaN - bis zum 02.10.2026 landete das so im Prompt.
+  const zahl = (v) => { const n = parseFloat(String(v ?? '').replace(',', '.')); return isFinite(n) && n > 0 ? n : null; };
+  const currentAlertPrice = priceAlert?.country === 'pl' ? zahl(prices.pl) : zahl(prices.de);
   const alertContext = priceAlert ? `
 PREISALARM DES NUTZERS:
 - Ziel: ${priceAlert.fuel} in ${priceAlert.country === 'pl' ? 'Polen' : 'Deutschland'} unter ${priceAlert.threshold}€/L
-- Aktuell: ${currentAlertPrice?.toFixed(3)}€/L
-- Status: ${currentAlertPrice <= priceAlert.threshold ? '🔔 ALARM! Zielpreis erreicht — JETZT TANKEN!' : `Noch ${(currentAlertPrice - priceAlert.threshold).toFixed(3)}€ über Ziel`}` : '';
+- Aktuell: ${currentAlertPrice === null ? 'kein aktueller Preis verfügbar' : currentAlertPrice.toFixed(3).replace('.', ',') + '€/L'}
+- Status: ${currentAlertPrice === null ? 'kann gerade nicht geprüft werden'
+           : currentAlertPrice <= priceAlert.threshold ? '🔔 ALARM! Zielpreis erreicht — JETZT TANKEN!'
+           : `Noch ${(currentAlertPrice - priceAlert.threshold).toFixed(3).replace('.', ',')}€ über Ziel`}` : '';
 
   // ── SYSTEM PROMPT ─────────────────────────────────────────────
   const systemPrompt = isZapfi ? `
@@ -92,7 +101,7 @@ PERSÖNLICHKEIT:
 ANTWORT-LÄNGE (wichtig!):
 - Einfache Ja/Nein Fragen: 2-3 Zeilen + konkrete Zahl
 - Routenfragen, Vergleiche, Strategie: 5-8 Zeilen, strukturiert mit <br>
-- Grenzkontrollen: immer vollständig + Geheimtipp nennen
+- Grenzkontrollen: sachlich nach dem Abschnitt GRENZKONTROLLEN, keine Wartezeiten erfinden
 - Preisalarm ausgelöst: kurz und klar — JETZT handeln!
 - Kreative/lustige Fragen: locker, gerne etwas länger, Persönlichkeit zeigen
 - Auto-Profil Fragen: immer mit den echten Nutzerwerten rechnen und erklären
@@ -100,7 +109,7 @@ ANTWORT-LÄNGE (wichtig!):
 KERNKOMPETENZEN:
 1. Polen lohnt? → Netto-Ersparnis mit echten Preisen
 2. Bester Übergang → konkret mit km, Tankstellen, Kontrollen-Status
-3. Grenzkontrollen → ehrlich + Geheimtipp Sieniawka erwähnen
+3. Grenzkontrollen → ehrlich nach dem Abschnitt GRENZKONTROLLEN
 4. Tanktaktik → wann, wo, wieviel
 5. Fahrzeug-spezifisch → mit Nutzerwerten rechnen wenn vorhanden
 6. Wetter + Stau → kombiniert mit Empfehlung
@@ -110,6 +119,12 @@ RECHENFORMEL:
 Brutto = (DE-Preis - PL-Preis) × ${tankL}L
 Fahrtkosten = (km×2 / 100) × ${consL} × DE-Preis
 Netto = Brutto - Fahrtkosten
+
+EHRLICHKEIT BEI DATEN (wichtig!):
+- Steht bei einem Preis "–", hast du dafür KEINEN Preis. Sag das, nenne keine Zahl und keine Ersparnis.
+- Steht beim Stand "letzter gemessener Stand", nenne die Uhrzeit bzw. das Datum dazu und sag nicht "jetzt" oder "live".
+- Ist ein Stand "veraltet" oder "nicht verfügbar", rechne keine Ersparnis aus.
+- Ist der Verkehr "unbekannt", sag das - behaupte nicht, die Strecke sei frei.
 
 ANTWORTE IMMER auf ${responseLang}.
 HTML <strong> und <br> sind erlaubt. Zahlen mit Komma: 1,439€
@@ -133,13 +148,13 @@ ${history.length > 0 ? `Letzter Gesprächskontext:\n${history.slice(-3).map(h=>`
 Aktuelle Frage: ${question}
 ${userName ? `Nutzername: ${userName}` : ''}
 
-LIVE-PREISE (jetzt aktuell):
-- ${prices.fuel || 'Diesel'} Deutschland (${prices.bestDeStation || 'günstigste'}): ${prices.de || '–'} €/L
-- ${prices.fuel || 'Diesel'} Polen (${prices.bestPlStation || 'günstigste'}): ${prices.pl || '–'} €/L
-- ${prices.fuel || 'Diesel'} Tschechien: ${prices.cz || '–'} €/L
-- Wechselkurs: 1€ = ${prices.pln || '4,24'} PLN
+PREISE (günstigste Station in der Nähe; "–" = kein Preis vorhanden):
+- ${prices.fuel || 'Diesel'} Deutschland (${prices.bestDeStation || 'günstigste'}): ${prices.de || '–'} €/L · Stand: ${prices.stand_de || 'unbekannt'}
+- ${prices.fuel || 'Diesel'} Polen (${prices.bestPlStation || 'günstigste'}): ${prices.pl || '–'} €/L · Stand: ${prices.stand_pl || 'unbekannt'}
+- ${prices.fuel || 'Diesel'} Tschechien: ${prices.cz || '–'} €/L (Landesdurchschnitt plus Zuschlag, keine Stationsmessung)
+- Wechselkurs: 1€ = ${prices.pln || 'unbekannt'} PLN
 - Wetter: ${prices.wetter || 'nicht verfügbar'}
-- Stau/Verkehr: ${prices.stau || 'A4+A15 keine Meldungen'}
+- Stau/Verkehr (Autobahn GmbH): ${prices.stau || 'unbekannt'}
 - Grenzrechner (${tankL}L, 8km hin+zurück): ${prices.grenz || 'nicht berechnet'}
 `;
 
@@ -178,7 +193,7 @@ LIVE-PREISE (jetzt aktuell):
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         answer: isZapfi
-          ? 'Kurzer Schluckauf meinerseits. 😅<br>Aber die gute Nachricht: Polen lohnt sich heute trotzdem. Einfach rüber! ⛽'
+          ? 'Kurzer Schluckauf meinerseits. 😅<br>Die aktuellen Preise und den Grenzrechner findest du oben auf der Karte. ⛽'
           : 'Fehler beim KI-Service. Bitte erneut versuchen.'
       })
     };
