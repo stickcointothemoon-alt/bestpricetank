@@ -206,7 +206,16 @@
     <span class="eyebrow"><span class="dot"></span>Live · Diesel · Grenze DE / PL</span>
     <h1>Dieselpreis <em>Polen</em> heute</h1>
     <p class="lede">Aktuelle Dieselpreise (Olej napędowy) aller polnischen Grenztankstellen — live und direkt in Euro umgerechnet. Diesel liegt in Polen heute rund {{ERSPARNIS_CENT}} Cent pro Liter unter dem deutschen Preis (Stand {{STAND}}, {{STAND_UHR}} Uhr).</p>
-    <div class="stand">🕐 Stand: <b id="stand-date">heute</b> · Preise mehrmals täglich aktualisiert</div>
+    <div class="stand">🕐 Stand: <b>{{STAND}}, {{STAND_UHR}} Uhr</b> · Preise werden zweimal täglich abgerufen</div>
+    <!-- Antwortblock: der gemessene Preis auf einen Blick. Bewusst kein
+         "Polen-Durchschnitt" - den haben wir nicht. Werte setzt scripts/build-pages.js. -->
+    <div class="cbox pl" style="margin-top:16px;max-width:600px">
+      <div class="lab">Gemessener Dieselpreis · {{PL_NAH_NAME}}</div>
+      <div class="val">{{PL_NAH_PLN}} zł/L <span style="font-size:18px;font-weight:700">≈ {{PL_NAH_EUR}} €/L</span></div>
+      <div class="st-meta" style="margin-top:8px">Günstigste Tankstelle Raum Görlitz: <b>{{DE_DIESEL}} €/L</b> · {{PL_NAH_VERGLEICH}}</div>
+      <div class="st-meta">Kurs 1 € = {{KURS_PLN}} zł (Polnische Nationalbank) · Quellen: Dyskont Paliwowy, Tankerkönig (MTS-K)</div>
+      <div class="st-meta" style="margin-top:6px"><b>Das ist ein gemessener Stationspreis, kein polnischer Landesdurchschnitt.</b></div>
+    </div>
   </div>
 
   <!-- PREISTABELLE -->
@@ -333,13 +342,5 @@
   </div>
 </footer>
 
-<script>
-  /* Sichtbares tagesaktuelles Datum — "heute"-Frischesignal */
-  (function(){
-    var d = new Date();
-    var s = d.toLocaleDateString('de-DE',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
-    document.getElementById('stand-date').textContent = s;
-  })();
-</script>
 </body>
 </html>
