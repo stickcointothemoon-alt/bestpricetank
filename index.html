@@ -3151,7 +3151,13 @@ async function sendKI(){
           pln: BPT_RATES.PLN>0?BPT_RATES.PLN.toFixed(2):'unbekannt',
           grenz:buildGrenzContext().replace('\nGrenzrechner (aktuell): ',''),
           wetter:Object.values(wxData).map(w=>`${w.name} ${w.temp}°C ${w.desc}`).join(', ')||'',
-          stau:stauData.length?stauData.map(s=>`${s.road}: ${s.items.map(i=>i.title).join(', ')}`).join(' | '):'A4+A15 frei',
+          stau:stauData.length?stauData.map(s=>`${s.road}: ${s.items.map(i=>i.title).join(', ')}`).join(' | ')
+            :(STAU_OK?'A4+A15: keine Meldungen':'unbekannt - Verkehrsdaten gerade nicht abrufbar'),
+          // Wie alt die Preise sind. Zapfi soll einen letzten Stand nicht
+          // als "jetzt" ausgeben und bei fehlenden Preisen nichts erfinden.
+          stand_pl: PL_ZUSTAND==='letzter_stand' ? ('letzter gemessener Stand ('+PL_LS_TEXT.replace('Stand ','')+')')
+                  : PL_ZUSTAND==='nicht_verfuegbar' ? 'nicht verfügbar' : 'aktuell',
+          stand_de: DE_FEHLT ? 'nicht verfügbar' : DE_ALT ? 'veraltet' : 'aktuell',
         }
       })});
     let data={};
@@ -3507,6 +3513,10 @@ const WX_LOCS = [
 ];
 let wxData = {};   // { goerlitz: {temp,emoji,wind,desc}, ... }
 let stauData = []; // [{road, items:[]}]
+// Ob die Autobahn-Daten wirklich angekommen sind. Bis zum 02.10.2026 zeigte
+// der A4-Chip "✅ A4 frei" und Zapfi bekam "A4+A15 frei" auch dann, wenn
+// die Abfrage gescheitert war.
+let STAU_OK = false;
 
 function wxCode(c){
   if(c===0) return{e:'☀️',d:'klar'};
@@ -3567,12 +3577,15 @@ const AUTOBAHN_ROADS = ['A4','A15'];
 async function loadTraffic(){
   stauData=[];
   let totalItems=0;
+  let fehlgeschlagen=0;
+  const holeJson = url => fetch(url,{signal:AbortSignal.timeout(5000)})
+    .then(x=>{ if(!x.ok) throw new Error('HTTP '+x.status); return x.json(); });
   try{
     await Promise.all(AUTOBAHN_ROADS.map(async road=>{
       const [w,r]=await Promise.all([
-        fetch(`https://verkehr.autobahn.de/o/autobahn/${road}/services/warning`,{signal:AbortSignal.timeout(5000)}).then(x=>x.ok?x.json():{warning:[]}),
-        fetch(`https://verkehr.autobahn.de/o/autobahn/${road}/services/roadworks`,{signal:AbortSignal.timeout(5000)}).then(x=>x.ok?x.json():{roadworks:[]}),
-      ]).catch(()=>[{warning:[]},{roadworks:[]}]);
+        holeJson(`https://verkehr.autobahn.de/o/autobahn/${road}/services/warning`),
+        holeJson(`https://verkehr.autobahn.de/o/autobahn/${road}/services/roadworks`),
+      ]).catch(()=>{ fehlgeschlagen++; return [{warning:[]},{roadworks:[]}]; });
       const items=[
         ...(w.warning||[]).map(x=>({type:'warn',title:x.title||'Warnung',desc:(x.description||[]).join(' ').slice(0,80)})),
         ...(r.roadworks||[]).map(x=>({type:'work',title:x.title||'Baustelle',desc:(x.description||[]).join(' ').slice(0,80)})),
@@ -3580,11 +3593,16 @@ async function loadTraffic(){
       if(items.length) stauData.push({road,items});
       totalItems+=items.length;
     }));
+    STAU_OK = fehlgeschlagen===0;
     // Update A4 chip
     const chip=document.getElementById('wx-a4');
     if(chip){
       const a4=stauData.find(s=>s.road==='A4');
-      if(a4&&a4.items.length){
+      if(!STAU_OK && !(a4&&a4.items.length)){
+        // Keine Daten heisst nicht "frei".
+        chip.innerHTML=`<b>A4</b> keine Verkehrsdaten`;
+        chip.classList.remove('good','warn','load');
+      }else if(a4&&a4.items.length){
         chip.innerHTML=`⚠️ <b>A4</b> ${a4.items.length} Meldung${a4.items.length>1?'en':''}`;
         chip.classList.add('warn');chip.classList.remove('load','good');
       }else{
@@ -3593,7 +3611,7 @@ async function loadTraffic(){
       }
     }
     console.log('✅ Stau/Baustellen:',totalItems,'Meldungen auf',AUTOBAHN_ROADS.join('+'));
-  }catch(e){console.warn('Autobahn-API:',e.message)}
+  }catch(e){ STAU_OK=false; console.warn('Autobahn-API:',e.message); }
 }
 
 // Grenzrechner-Kontext für KI
