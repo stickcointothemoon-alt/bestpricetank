@@ -99,7 +99,17 @@ jobs:
               break
             fi
 
-            git commit --quiet -m "Preisverlauf $(date '+%d.%m.%Y %H:%M')"
+            # [skip netlify] im Commit: Netlify baut auf diesen Push NICHT.
+            # Gebaut wird einmal, weiter unten ueber den Build-Hook.
+            #
+            # Bis zum 02.10.2026 loeste jeder Lauf zwei Produktions-Deploys aus:
+            # einen durch diesen Push, einen durch den Hook - im Deploy-Log als
+            # Paare mit derselben Commit-Kennung zu sehen. Jeder Deploy kostet
+            # Netlify-Credits, und am 01.10.2026 wurde ein Build wegen
+            # erschoepfter Credits uebersprungen. Der Hook bleibt, weil er
+            # nachweislich zuverlaessig baut (siehe Kommentar ganz oben).
+            # Ein Build ueber den Hook beachtet diese Markierung nicht.
+            git commit --quiet -m "Preisverlauf $(date '+%d.%m.%Y %H:%M') [skip netlify]"
             if git push origin HEAD:main 2>/tmp/push.err; then
               echo "✅ Neuer Punkt committet und gepusht."
               ergebnis=gepusht

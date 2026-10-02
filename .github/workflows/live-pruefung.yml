@@ -1,0 +1,36 @@
+# Prueft von aussen, ob bestpricetank.de frische Preise ausliefert.
+#
+# Hintergrund: Vom 22.09. bis 02.10.2026 war in Netlify "Auto publishing"
+# abgeschaltet. Jeder Build lief gruen durch, veroeffentlicht wurde keiner,
+# und die Seite zeigte zehn Tage lang alte Preise. Kein Lauf ist rot
+# geworden, weil keiner auf die fertige Seite geschaut hat. Das tut dieser.
+#
+# Wird er rot, schickt GitHub eine Mail (an den, der den Zeitplan in dieser
+# Datei zuletzt geaendert hat). Was genau nicht stimmt, steht in der
+# Zusammenfassung des Laufs. Einzelheiten: scripts/live-pruefen.js
+#
+# Kostet keine Netlify-Credits: Es wird nur gelesen, nichts gebaut.
+
+name: Live-Prüfung
+
+on:
+  schedule:
+    - cron: '17 */6 * * *'   # alle sechs Stunden
+  workflow_dispatch:
+
+jobs:
+  pruefen:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - name: Quelltext holen
+        uses: actions/checkout@v4
+
+      - name: Node einrichten
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Live-Seite prüfen
+        run: node scripts/live-pruefen.js
