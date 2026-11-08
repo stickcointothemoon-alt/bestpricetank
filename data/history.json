@@ -1054,5 +1054,16 @@
   "pl_station": "Dyskont Paliwowy Zgorzelec",
   "pl_km": 3,
   "de_anzahl": 15
+ },
+ {
+  "ts": "2026-11-08T19:35:13.349Z",
+  "de_diesel": 2.119,
+  "de_e10": 1.939,
+  "pl_diesel": 1.773,
+  "pl_e10": 1.386,
+  "cz_diesel": null,
+  "pl_station": "Dyskont Paliwowy Zgorzelec",
+  "pl_km": 3,
+  "de_anzahl": 13
  }
 ]
